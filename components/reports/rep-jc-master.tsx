@@ -36,6 +36,7 @@ import CustomDropdown from '../CustomDropdown';
 import { Label } from '../ui/label';
 import axios from 'axios';
 import { Dialog, DialogHeader,DialogTitle ,DialogContent} from '../ui/dialog';
+import { getWindingImagePath } from '@/utills/new/getWindingImagePath';
 
 interface JobCardReportData {
   CompanyName: string;
@@ -84,6 +85,8 @@ interface JobCardReportData {
   ThermalPrintingRequired: string;
   RibbonType:string;
   PlateFolderNo: string;
+
+  ArtworkNo: string;
 
 }
 interface PreviewJobCardParams {
@@ -407,8 +410,8 @@ console.log("Report " , reportData)
       
       if (printContent) {
         const printStyles = `
-          <style>
-            @page {
+         <style>
+             @page {
               size: A4;
               margin: 1cm;
             }
@@ -439,14 +442,24 @@ console.log("Report " , reportData)
               background-color: #f5f5f5;
               font-weight: bold;
             }
+            .header-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background-color: #f0f0f0;
+              padding: 10px;
+             
+              margin-bottom: 10px;
+            }
             .header {
               text-align: center;
               font-weight: bold;
               font-size: 20px;
-              background-color: #f0f0f0;
-              padding: 10px;
-              border-bottom: 2px solid #000;
-              margin-bottom: 10px;
+              flex-grow: 1;
+            }
+            .qr-code {
+              width: 80px; /* Smaller size for better fit */
+              height: 80px;
             }
             .jc-number {
               color: #E53E3E;
@@ -459,10 +472,21 @@ console.log("Report " , reportData)
             .value-cell {
               font-weight: 600;
             }
+            .winding-image {
+              max-height: 40px;
+              width: auto;
+              display: block;
+              
+              margin-bottom: 2px;
+            }
             @media print {
               body { zoom: 100%; }
               table { border: 2px solid #000 !important; }
               th, td { border: 2px solid #000 !important; }
+              .qr-code { width: 80px !important; height: 80px !important; }
+              .winding-image {
+            max-height: 40px !important;
+          }
             }
           </style>
         `;
@@ -475,8 +499,10 @@ console.log("Report " , reportData)
             ${printStyles}
           </head>
           <body>
-            <div class="print-container">
-              <div class="header">JOB CONTROL</div>
+             <div class="header-container">
+              <div class="header">JOB CONTROL MASTER</div>
+              <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${selectedJobCard?.JobCardNumber}" alt="QR Code">
+            </div>
               ${printContent.innerHTML}
             </div>
             <script>
@@ -565,7 +591,7 @@ console.log("Report " , reportData)
                   <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.MatDesc}</td>
                 </tr>
                 <tr className="">
-                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Lamination Material Varnish</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Lamination Material / Varnish</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.LaminationMaterial || "NA"}</td>
                 </tr>
                 <tr className="">
@@ -576,6 +602,14 @@ console.log("Report " , reportData)
                 <tr className="">
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Special Characteristics</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.SpecialCharacteristic || "-"}</td>
+                </tr>
+                <tr className="">
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Artwork No.</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.ArtworkNo || "-"}</td>
+                </tr>
+                <tr className="">
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Machine</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.Machine || "-"}</td>
                 </tr>
                 <tr className="">
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Thermal Printing Required</td>
@@ -603,7 +637,14 @@ console.log("Report " , reportData)
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Winding Direction</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.WindingDirection}</td>
+                  {/* <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.WindingDirection}</td> */}
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">
+                    <img
+                        className="winding-image"
+                        src={getWindingImagePath(jobCard.WindingDirection)}
+                        alt="Winding Image"
+                      />
+                  </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Gap Across</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.GapAcross || "1"}</td>
                 </tr>
@@ -886,9 +927,9 @@ console.log("Report " , reportData)
                           <TableCell>{row.JobCardNumber}</TableCell>
                           <TableCell>{row.LabelType}</TableCell>
                           <TableCell>{row.CompanyName}</TableCell>
-                          <TableCell>{row.JobDescription}</TableCell>
+                          <TableCell >{row.JobDescription}</TableCell>
                           <TableCell>{row.MatCode}</TableCell>
-                          <TableCell>{row.MatDesc}</TableCell>
+                          <TableCell className='min-w-[300px]'>{row.MatDesc}</TableCell>
                           <TableCell>{row.Height}</TableCell>
                           <TableCell>{row.Width}</TableCell>
                           <TableCell>{row.Unit}</TableCell>

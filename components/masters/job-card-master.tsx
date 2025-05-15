@@ -28,6 +28,8 @@ import {
 import FileUpload from '../ui/file-upload';
 import { FaFilePdf, FaFileExcel } from 'react-icons/fa';
 import { set } from 'date-fns';
+import { getWindingImagePath } from '@/utills/new/getWindingImagePath';
+
 
 interface CustomerData {
   SrNo: number;
@@ -361,7 +363,7 @@ const JobControlMaster: React.FC = () => {
     setUploadedFiles(files);
   };
 
-  console.log(isDialogOpen)
+  // console.log(isDialogOpen)
 
   useEffect(() => {
     const subscription = watch((value, { name, type }) => {
@@ -489,6 +491,7 @@ const JobControlMaster: React.FC = () => {
       formDataObj.append('OldProductCode', formData.oldProductCode || oldProductCodeValue || "");
       formDataObj.append('ThermalPrintingRequired', formData.thermalPrintingRequired || "");
       formDataObj.append('RibbonType', formData.ribbontype || "");
+      formDataObj.append('ArtworkNo', formData.artWorkNo || "");
       if (uploadedFiles.length > 0) {
         uploadedFiles.forEach(file => {
           formDataObj.append('files', file);
@@ -529,6 +532,8 @@ const JobControlMaster: React.FC = () => {
       });
     }
   };
+
+  const windingImagePath = getWindingImagePath(formData?.windingDirection);
 
   const handleReset = () => {
     reset();
@@ -809,14 +814,24 @@ const JobControlMaster: React.FC = () => {
               background-color: #f5f5f5;
               font-weight: bold;
             }
+            .header-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              background-color: #f0f0f0;
+              padding: 10px;
+             
+              margin-bottom: 10px;
+            }
             .header {
               text-align: center;
               font-weight: bold;
               font-size: 20px;
-              background-color: #f0f0f0;
-              padding: 10px;
-              border-bottom: 2px solid #000;
-              margin-bottom: 10px;
+              flex-grow: 1;
+            }
+            .qr-code {
+              width: 80px; /* Smaller size for better fit */
+              height: 80px;
             }
             .jc-number {
               color: #E53E3E;
@@ -829,10 +844,21 @@ const JobControlMaster: React.FC = () => {
             .value-cell {
               font-weight: 600;
             }
+            .winding-image {
+              max-height: 40px;
+              width: auto;
+              display: block;
+              
+              margin-bottom: 2px;
+            }
             @media print {
               body { zoom: 100%; }
               table { border: 2px solid #000 !important; }
               th, td { border: 2px solid #000 !important; }
+              .qr-code { width: 80px !important; height: 80px !important; }
+              .winding-image {
+            max-height: 40px !important;
+          }
             }
           </style>
         `;
@@ -845,8 +871,10 @@ const JobControlMaster: React.FC = () => {
             ${printStyles}
           </head>
           <body>
-            <div class="print-container">
+            <div class="header-container">
               <div class="header">JOB CONTROL MASTER</div>
+              <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${jobNumber}" alt="QR Code">
+            </div>
               ${printContent.innerHTML}
             </div>
             <script>
@@ -984,7 +1012,11 @@ const JobControlMaster: React.FC = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Winding Direction</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">{formData.windingDirection || "-"}</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold"> <img
+                     className="winding-image"
+                     src={windingImagePath}
+                     alt="Winding Image"
+                   /></td>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Gap Across</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{formData.gapAcross || "1"}</td>
                 </tr>
@@ -1102,7 +1134,7 @@ const JobControlMaster: React.FC = () => {
     );
   };
 
-  
+  console.log(formData?.windingDirection);
 
   return (
     <>
@@ -2003,6 +2035,7 @@ const JobControlMaster: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <JobCardPreviewDialog />
       </Dialog>
+
     </>
   );
 };

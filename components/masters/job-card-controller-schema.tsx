@@ -44,6 +44,8 @@ export const jobCardControlSchema = z.object({
   thermalPrintingRequired: z.string().optional(),
   ribbontype: z.string().optional(),
   plateFolderNumber: z.string().optional(),
+  soNO: z.string().optional(),
+  
 
   // New fields
   jobDate: z.date().optional(),
@@ -52,10 +54,6 @@ export const jobCardControlSchema = z.object({
   Quantity: z.string().optional(),
   MetersOfRuns: z.string().optional(),
   Operator: z.string().optional(),
-  settingStartTime: z.date().optional(),
-  settingEndTime: z.date().optional(),
-  productionStartTime: z.date().optional(),
-  productionEndTime: z.date().optional(),
 
   // Punching fields
   settingStartTimeOne: z.date().optional(),

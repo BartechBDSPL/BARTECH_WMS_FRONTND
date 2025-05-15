@@ -105,13 +105,32 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/job-card-master",
               value: "2_7",
             },
+            // edit-job-control-master
+            {
+              href: "/edit-job-control-master",
+              label: "Edit Job Control Master",
+              active: pathname === "/edit-job-control-master",
+              value: "2_8",
+            },
             // job-card
             {
               href: "/job-card",
               label: "Job Card",
               active: pathname === "/job-card",
-              value: "2_7",
-            }
+              value: "2_9",
+            },
+            // {
+            //   href: "/hardware-tracking",
+            //   label: "Hardware Tracking",
+            //   active: pathname === "/hardware-tracking",
+            //   value: "2_10",
+            // },
+            // {
+            //   href: "/software-tracking",
+            //   label: "Software Tracking",
+            //   active: pathname === "/software-tracking",
+            //   value: "2_11",
+            // }
            
           
           ],

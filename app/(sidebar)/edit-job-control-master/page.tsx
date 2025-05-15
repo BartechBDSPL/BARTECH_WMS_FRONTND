@@ -6,13 +6,10 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import Softwaretracking from "@/components/masters/software-tracking";
-
-
-
+import JobControlMasterEdit from "@/components/masters/control-master-edit/control-master-edit";
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Software Tracking">
+    <ContentLayout title="Job Control Master">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
@@ -22,7 +19,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Softwaretracking  /> 
+     <JobControlMasterEdit/>
     </ContentLayout>
   );
 }

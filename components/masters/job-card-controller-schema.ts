@@ -42,6 +42,9 @@ export const jobCardControlSchema = z.object({
   thermalPrintingRequired: z.string().optional(),
   ribbontype: z.string().optional(),
   plateFolderNumber: z.string().optional(),
+  soNO: z.string().optional(),
+  soDT: z.date().optional(),
+  
 
   // New fields
   jobDate: z.date().optional(),
@@ -50,16 +53,14 @@ export const jobCardControlSchema = z.object({
   Quantity: z.string().optional(),
   MetersOfRuns: z.string().optional(),
   Operator: z.string().optional(),
-  settingStartTime: z.date().optional(),
-  settingEndTime: z.date().optional(),
-  productionStartTime: z.date().optional(),
-  productionEndTime: z.date().optional(),
   jobbcardDatePunching: z.date().optional(),
   shiftPunching: z.string().optional(),
+  operatorOne: z.string().optional(),
 
   // Punching fields
   settingStartTimeOne: z.date().optional(),
   settingEndTimeOne: z.date().optional(),
+  OperatorOne: z.string().optional(),
   productionStartTimeOne: z.date().optional(),
   productionEndTimeOne: z.date().optional(),
   machinePunching: z.string().optional(),

@@ -1,4 +1,6 @@
 import Link from "next/link";
+
+// import Dashboard from "@/components/tab/dashboard-final";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -6,13 +8,11 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import Softwaretracking from "@/components/masters/software-tracking";
-
-
+import HardwareTracking from "@/components/masters/hardware-tracking";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Software Tracking">
+    <ContentLayout title="Hardware Tracking">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
@@ -22,7 +22,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Softwaretracking  /> 
+      <HardwareTracking />
     </ContentLayout>
   );
 }

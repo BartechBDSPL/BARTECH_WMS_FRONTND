@@ -43,13 +43,16 @@ const webAccessOptions = [
   { label: "6) - Die Master", value: "2_5" },
   { label: "7) - Cylinder Master", value: "2_6" },
   { label: "8) - Job Control Master", value: "2_7" },
-  { label: "9) - Job Control", value: "2_8" },
-  { label: "9) - Approve Job Control", value: "3_1" },
-  { label: "10) - Report", value: "5_1" },
-  { label: "11) - User Master", value: "6_1" },
-  { label: "12) - User Role Master", value: "6_2" },
-  { label: "13) - Change Password", value: "6_3" },
-  { label: "14) - Material Stock Take", value: "6_4" },
+  { label: "9) - Edit Job Control Master", value: "2_8" },
+  { label: "10) - Job Card", value: "2_9" },
+  // { label: "11) - Hardware Tracking", value: "2_10"},
+  // { label: "12) - Software Tracking", value: "2_11"},
+  { label: "13) - Approve Job Control", value: "3_1" },
+  { label: "14) - Report", value: "5_1" },
+  { label: "15) - User Master", value: "6_1" },
+  { label: "16) - User Role Master", value: "6_2" },
+  { label: "17) - Change Password", value: "6_3" },
+  { label: "18) - Material Stock Take", value: "6_4" },
 ];
 
 const hhtAccessOptions = [
