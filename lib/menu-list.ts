@@ -119,18 +119,18 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/job-card",
               value: "2_9",
             },
-            // {
-            //   href: "/hardware-tracking",
-            //   label: "Hardware Tracking",
-            //   active: pathname === "/hardware-tracking",
-            //   value: "2_10",
-            // },
-            // {
-            //   href: "/software-tracking",
-            //   label: "Software Tracking",
-            //   active: pathname === "/software-tracking",
-            //   value: "2_11",
-            // }
+            {
+              href: "/hardware-tracking",
+              label: "Hardware Tracking",
+              active: pathname === "/hardware-tracking",
+              value: "2_10",
+            },
+            {
+              href: "/software-tracking",
+              label: "Software Tracking",
+              active: pathname === "/software-tracking",
+              value: "2_11",
+            }
            
           
           ],

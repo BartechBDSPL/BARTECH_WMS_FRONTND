@@ -1,11 +1,16 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo,useEffect,useCallback  } from "react";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import CustomDropdown from "../CustomDropdown";
+import { MultiSelect } from "../multi-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Oval } from 'react-loader-spinner';
+import TableSearch from '@/utills/tableSearch';
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -33,12 +38,46 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { BACKEND_URL } from "@/lib/constants";
+import getUserID,{ BACKEND_URL } from "@/lib/constants";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { MultiSelect2 } from "../ui/multi-select-2";
+
+interface SoftwareData {
+  ID: number;
+  CustomerName: string;
+  CustomerAddress: string;
+  ContactPerson: string;
+  ContactNo: string;
+  EmailID: string;
+  Invoice_PONo: string;
+  SoftwareType: string;
+  ProjectTitle: string;
+  ProjectDesc: string;
+  ProjectVersion: string;
+  AdditionalDetails: string;
+  DateOfWarrentyStart: string;  
+  WarrentyDays: number;
+  DateOfWarrentyExp: string;    
+  Qty: number;
+  SerialNo: string;
+  UniqueSerialNo: string;
+  TransBy: string;
+  TransDate: string;            
+  WarrentyStatus: string;
+}
 
 const Softwaretracking: React.FC = () => {
   const {
@@ -99,12 +138,27 @@ const Softwaretracking: React.FC = () => {
   const [selectedContactNo, setSelectedContactNo] = useState("");
   const [selectedEmail, setSelectedEmail] = useState("");
 
-  const [selectedSoftwareType, setSelectedSoftwareType] = useState("");
+  // const [selectedSoftwareType, setSelectedSoftwareType] = useState("");
+  const [selectedSoftwareType, setSelectedSoftwareType] = useState<string[]>([]);
   const [selectedMake, setSelectedMake] = useState("");
   const [selectedModel, setSelectedModel] = useState("");
   const [selectedWarrentyStatus, setSelectedWarrentyStatus] = useState("");
 
   const isStepCompleted = (step: number) => completedSteps.includes(step);
+
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+  
+
+   const [loading, setLoading] = useState(true);
+
+  const [data, setData] = useState<SoftwareData[]>([]);
+
+  
+     const [isEditMode, setIsEditMode] = useState(false);
+  
+    const [oldData, setOldData] = useState<SoftwareData | null>(null);
 
   const token = Cookies.get("token");
   const [isLoading, setIsLoading] = useState(true);
@@ -137,12 +191,124 @@ const Softwaretracking: React.FC = () => {
   };
 
   useEffect(() => {
-    setUsername("admin");
+    //setUsername("admin");
 
     Promise.all([fetchCustomers(), fetchSoftware()]).finally(() =>
       setIsLoading(false)
     );
+    fetchData();
   }, []);
+
+ const handleSoftwareTypeChange = (newValues: string[]) => {
+  setSelectedSoftwareType(newValues);
+  setValue("softwareType", newValues.join(", "), {
+    shouldValidate: true
+  });
+};
+
+
+  // Fixed handleRowSelect function for proper software type handling
+
+const handleRowSelect = (id: number) => {
+  setIsEditMode(true);
+  const selectedData = data.find(item => item.ID === id);
+  
+  if (selectedData) {
+    // Set the current step to 1 to ensure the first card is open
+    setActiveStep(1);
+    
+    // Reset completed steps to enable editing
+    setCompletedSteps([]);
+    
+    // Populate form values using setValue
+    setValue("customerName", selectedData.CustomerName);
+    setValue("customerAddress", selectedData.CustomerAddress);
+    setValue("contactPerson", selectedData.ContactPerson);
+    setValue("contactNo", selectedData.ContactNo);
+    setValue("emailID", selectedData.EmailID);
+    setValue("invoicePONo", selectedData.Invoice_PONo);
+    
+   
+    setValue("ProjectTitle", selectedData.ProjectTitle);
+    setValue("ProjectDesc", selectedData.ProjectDesc);
+    setValue("additionalDetails", selectedData.AdditionalDetails);
+     setValue("ProjectVersion", selectedData.ProjectVersion);
+    // Date handling
+    if (selectedData.DateOfWarrentyStart) {
+      setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
+    }
+    setValue("warrentyDays", selectedData.WarrentyDays);
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("qty", selectedData.Qty);
+    setValue("serialNo", selectedData.SerialNo);
+    
+    // Set state for dropdowns to ensure they display the correct values
+    setSelectedCustomer(selectedData.CustomerName);
+    
+    // Populate dependent dropdowns
+    fetchCustomerAddresses(selectedData.CustomerName);
+    
+    // After a short delay to ensure addresses are fetched
+    setTimeout(() => {
+      setSelectedAddress(selectedData.CustomerAddress);
+      fetchContactPersons(selectedData.CustomerName, selectedData.CustomerAddress);
+      
+      // After another delay to ensure contact persons are fetched
+      setTimeout(() => {
+        setSelectedContactPerson(selectedData.ContactPerson);
+        fetchContactDetails(
+          selectedData.CustomerName, 
+          selectedData.CustomerAddress, 
+          selectedData.ContactPerson
+        );
+        
+        const softwareTypes = selectedData.SoftwareType ? 
+          selectedData.SoftwareType.split(',').map(item => item.trim()) : 
+          [];
+        
+        // Set the software type in state
+        setSelectedSoftwareType(softwareTypes);
+        
+        // Set the form value
+        setValue("softwareType", selectedData.SoftwareType);
+        
+        // Fetch any dependencies related to software type if needed
+        setTimeout(() => {
+          setSelectedWarrentyStatus(selectedData.WarrentyStatus);
+        }, 300);
+      }, 300);
+    }, 300);
+    
+    // Store the original data for potential comparison or rollback
+    setOldData(selectedData);
+    setIsEditMode(true);
+  } else {
+    console.error("Could not find data with ID:", id);
+  }
+};
+  
+      const fetchData = () => {
+      setLoading(true);
+      axios.get(`${BACKEND_URL}/api/master/get-all-software-details`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+        .then((response: any) => {
+          setData(response.data);
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error fetching data:', error);
+          setLoading(false);
+          toast({
+            variant: 'destructive',
+            title: "Failed to fetch details",
+            description: `Try again`,
+          });
+        });
+    };
+  
 
   const fetchCustomers = async () => {
     try {
@@ -322,6 +488,40 @@ const Softwaretracking: React.FC = () => {
     }
   };
 
+  const filteredData = useMemo(() => {
+        return data.filter(item => {
+      const searchableFields: (keyof SoftwareData)[] = ['CustomerName','CustomerAddress','ContactPerson','ContactNo','EmailID','Invoice_PONo','SoftwareType','ProjectTitle','ProjectDesc','ProjectVersion','AdditionalDetails','DateOfWarrentyStart','WarrentyDays','DateOfWarrentyExp','Qty','SerialNo','UniqueSerialNo','TransBy','TransDate','WarrentyStatus'];
+
+          return searchableFields.some(key => {
+            const value = item[key];
+            return value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+          });
+        });
+      }, [data, searchTerm]);
+    
+      const paginatedData = useMemo(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        return filteredData.slice(startIndex, startIndex + itemsPerPage);
+      }, [filteredData, currentPage, itemsPerPage]);
+    
+      const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage]);
+    
+      const handleSearch = useCallback((term: string) => {
+        setSearchTerm(term.trim());
+        setCurrentPage(1); 
+      }, []);
+      
+    
+        const handlePageChange = useCallback((newPage: number) => {
+          setCurrentPage(newPage);
+        }, []);
+    
+        const handleItemsPerPageChange = useCallback((value: string) => {
+        setItemsPerPage(Number(value));
+        setCurrentPage(1);
+         }, []);
+    
+
   const fetchHardwareTrackingMake = async (selectedHardwareType: string) => {
     try {
       const response = await axios.post(
@@ -388,13 +588,16 @@ const Softwaretracking: React.FC = () => {
     fetchContactDetails(selectedCustomer, selectedAddress, value);
   };
 
-  const handleHardwareTypeChange = (value: string) => {
-    setSelectedSoftwareType(value);
-    setValue("softwareType", value);
-    setSelectedMake("");
-    setmakes([]);
-    fetchHardwareTrackingMake(value);
-  };
+const handleHardwareTypeChange = (values: string[]) => {
+  setSelectedSoftwareType(values); // update selection state
+  const latestValue = values[values.length - 1]; // get the most recently selected value (if needed)
+
+  setValue("softwareType", latestValue); // if you're using react-hook-form
+  setSelectedMake("");
+  setmakes([]);
+  fetchHardwareTrackingMake(latestValue);
+};
+
 
 //   const handleMakeChange = (value: string) => {
 //     setSelectedMake(value);
@@ -433,9 +636,15 @@ const Softwaretracking: React.FC = () => {
         case "emailID":
           setSelectedEmail(value);
           break;
-        case "softwareType":
-          setSelectedSoftwareType(value);
-          break;
+      case "softwareType":
+        // For software type, we need to add the new value to the array
+        // without losing existing values
+        const updatedValues = [...selectedSoftwareType, value];
+        setSelectedSoftwareType(updatedValues);
+        
+        // Update the form value with all selected types joined by comma
+        setValue(field, updatedValues.join(", "), { shouldValidate: true });
+        break;
       }
     };
 
@@ -446,7 +655,8 @@ const Softwaretracking: React.FC = () => {
     setSelectedContactPerson("");
     setSelectedContactNo("");
     setSelectedEmail("");
-    setSelectedSoftwareType("");
+  setSelectedSoftwareType([]);
+
     setSelectedMake("");
     setSelectedModel("");
     setSelectedWarrentyStatus("");
@@ -513,7 +723,7 @@ const Softwaretracking: React.FC = () => {
         WarrentyStatus: formData.warrentyStatus,
         Qty: formData.qty,
         SerialNo: formData.serialNo,
-        User: username,
+        User: getUserID(),
       };
   
   
@@ -546,6 +756,7 @@ const Softwaretracking: React.FC = () => {
   
           handleReset();
           setIsDialogOpen(false);
+          fetchData();
           return true;
         } else {
 
@@ -577,6 +788,109 @@ const Softwaretracking: React.FC = () => {
       return false;
     }
   };
+
+
+  const updateSoftwareDetails = async (payload: any) => {
+  const response = await axios.post(
+    `${BACKEND_URL}/api/master/update-software-tracking-details`, // ✅ corrected endpoint
+    payload,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data;
+};
+
+
+  const handleUpdateClick = async () => {
+  try {
+    setIsProcessing(true);
+
+    const isValid = await trigger([
+      "softwareType",
+      "ProjectTitle",
+      "ProjectDesc",
+      "ProjectVersion",
+      "dateOfWarrentyStart",
+      "warrentyDays",
+      "warrentyStatus",
+      "qty",
+      "serialNo"
+    ]);
+
+    if (!isValid) {
+      setIsProcessing(false);
+      return;
+    }
+
+    const currentData = getValues();
+
+    // Calculate expiry date
+    const expiryDate =
+      currentData.dateOfWarrentyStart && currentData.warrentyDays
+        ? new Date(
+            new Date(currentData.dateOfWarrentyStart).getTime() +
+              currentData.warrentyDays * 24 * 60 * 60 * 1000
+          )
+        : null;
+
+    const payload = {
+      ID: oldData?.ID, // ✅ ensure correct casing
+      CustomerName: currentData.customerName,
+      CustomerAddress: currentData.customerAddress,
+      ContactPerson: currentData.contactPerson,
+      ContactNo: currentData.contactNo,
+      EmailID: currentData.emailID,
+      Invoice_PONo: currentData.invoicePONo,
+      SoftwareType: currentData.softwareType,
+      ProjectTitle: currentData.ProjectTitle,
+      ProjectDesc: currentData.ProjectDesc,
+      ProjectVersion: currentData.ProjectVersion,
+      AdditionalDetails: currentData.additionalDetails,
+      DateOfWarrentyStart: currentData.dateOfWarrentyStart,
+      WarrentyDays: currentData.warrentyDays,
+      Qty: currentData.qty,
+      SerialNo: currentData.serialNo,
+      UniqueSerialNo: currentData.uniqueSerialNo,
+      User: getUserID(),
+      WarrentyStatus: currentData.warrentyStatus,
+      DateOfWarrentyExp: expiryDate?.toISOString().split("T")[0] || null
+    };
+
+    const result = await updateSoftwareDetails(payload);
+
+    if (result[0]?.Status === "T") {
+      toast({
+        title: "Update Successful",
+        description: result[0].Message
+      });
+      fetchData();
+      handleReset();
+      setIsEditMode(false);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: result[0]?.Message || "Unknown error."
+      });
+    }
+  } catch (error: any) {
+    console.error("Software update error:", error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: error.message || "Something went wrong."
+    });
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+
+  
   // Preview dialog for form submission
   const HardwareTrackingPreviewDialog = () => {
     if (!formData) return null;
@@ -643,7 +957,7 @@ const Softwaretracking: React.FC = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
-                    Hardware Type
+                    Software Type
                   </td>
                   <td className="border border-gray-800 px-2 py-1">
                     {formData.softwareType}
@@ -744,6 +1058,7 @@ const Softwaretracking: React.FC = () => {
           >
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSubmitting ? "Saving..." : "Confirm & Save"}
+            
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -1099,7 +1414,7 @@ const Softwaretracking: React.FC = () => {
                     >
                       <CardContent className="space-y-4 pt-0">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
+                <div className="space-y-2">
                             <Label
                               className={
                                 errors.softwareType ? "text-destructive" : ""
@@ -1107,23 +1422,18 @@ const Softwaretracking: React.FC = () => {
                             >
                               Software Type*
                             </Label>
-                            <CustomDropdown
-                              options={(Array.isArray(softwareTypes)
-                                ? softwareTypes
-                                : []
-                              ).map((item) => ({
+                          <MultiSelect2
+                              options={(Array.isArray(softwareTypes) ? softwareTypes : []).map((item) => ({
                                 value: item.SoftwareType,
                                 label: item.SoftwareType,
                               }))}
-                              value={selectedSoftwareType}
-                              onValueChange={handleHardwareTypeChange}
+                              values={selectedSoftwareType} // Now correctly passing string[]
+                              onValuesChange={handleSoftwareTypeChange} // This function expects string[]
                               placeholder="Select Software Type"
-                              searchPlaceholder="Search hardware type..."
+                              searchPlaceholder="Search software type..."
                               emptyText="No Software types found"
                               allowCustomValue
-                              onCustomValueChange={handleCustomValueChange(
-                                "softwareType"
-                              )}
+                              onCustomValueChange={handleCustomValueChange("softwareType")}
                             />
                             {errors.softwareType && (
                               <motion.p
@@ -1135,7 +1445,7 @@ const Softwaretracking: React.FC = () => {
                               </motion.p>
                             )}
                           </div>
-                           
+
                           <div className="space-y-2">
                             <Label
                               className={
@@ -1362,9 +1672,18 @@ const Softwaretracking: React.FC = () => {
                             >
                               Reset
                             </Button>
+                             <Button
+                                  type="button"
+                                  variant="outline"
+                                  disabled={!isEditMode}
+                                  onClick={handleUpdateClick}
+                                  >
+                              {(isSubmitting || isProcessing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                              {isSubmitting || isProcessing ? "Updating..." : "Update"}
+                            </Button>
                             <Button
                               type="button"
-                              disabled={isSubmitting || isProcessing}
+                              disabled={isSubmitting || isProcessing || isEditMode}
                               onClick={async () => {
                                 try {
                                   // First set loading state
@@ -1442,6 +1761,190 @@ const Softwaretracking: React.FC = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <HardwareTrackingPreviewDialog />
       </Dialog>
+
+    <Card className="w-full mt-5 mx-auto">
+      <CardContent>
+        <div className="mt-8">
+          {/* Table Header Controls */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center space-x-2">
+              <span>Show</span>
+              <Select
+                defaultValue="10"
+                value={itemsPerPage.toString()}
+                onValueChange={handleItemsPerPageChange}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue placeholder={itemsPerPage.toString()} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                </SelectContent>
+              </Select>
+              <span>entries</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                placeholder="Search"
+                onChange={(e) => handleSearch(e.target.value)}
+                className="border p-1 rounded"
+              />
+            </div>
+          </div>
+
+          {/* Table Content */}
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Action</TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Customer Address</TableHead>
+                <TableHead>Contact Person</TableHead>
+                <TableHead>Contact No</TableHead>
+                <TableHead>Email ID</TableHead>
+                <TableHead>Invoice / PO No</TableHead>
+                <TableHead>Software Type</TableHead>
+                <TableHead>Project Title</TableHead>
+                <TableHead>Project Description</TableHead>
+                <TableHead>Project Version</TableHead>
+                <TableHead>Additional Details</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>Serial No</TableHead>
+                <TableHead>Unique Serial No</TableHead>
+                <TableHead>Warranty Start</TableHead>
+                <TableHead>Warranty Days</TableHead>
+                <TableHead>Warranty Expiry</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Trans By</TableHead>
+                <TableHead>Trans Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={20} className="text-center">
+                    <div className="flex justify-center items-center h-64">
+                      <Oval
+                        height={40}
+                        width={40}
+                        color="#4fa94d"
+                        visible={true}
+                        ariaLabel="oval-loading"
+                        secondaryColor="#4fa94d"
+                        strokeWidth={2}
+                        strokeWidthSecondary={2}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedData.map((row: SoftwareData) => (
+                  <TableRow key={row.ID}>
+                    <TableCell>
+                      <Button variant="ghost" onClick={() => handleRowSelect(row.ID)}>
+                        Edit
+                      </Button>
+                    </TableCell>
+                    <TableCell>{row.CustomerName}</TableCell>
+                    <TableCell>{row.CustomerAddress}</TableCell>
+                    <TableCell>{row.ContactPerson}</TableCell>
+                    <TableCell>{row.ContactNo}</TableCell>
+                    <TableCell>{row.EmailID}</TableCell>
+                    <TableCell>{row.Invoice_PONo}</TableCell>
+                    <TableCell>{row.SoftwareType}</TableCell>
+                    <TableCell>{row.ProjectTitle}</TableCell>
+                    <TableCell>{row.ProjectDesc}</TableCell>
+                    <TableCell>{row.ProjectVersion}</TableCell>
+                    <TableCell>{row.AdditionalDetails}</TableCell>
+                    <TableCell>{row.Qty}</TableCell>
+                    <TableCell>{row.SerialNo}</TableCell>
+                    <TableCell>{row.UniqueSerialNo}</TableCell>
+                    <TableCell>
+                      {row.DateOfWarrentyStart
+                        ? new Date(row.DateOfWarrentyStart).toLocaleDateString("en-GB")
+                        : ""}
+                    </TableCell>
+                    <TableCell>{row.WarrentyDays}</TableCell>
+                    <TableCell>
+                      {row.DateOfWarrentyExp
+                        ? new Date(row.DateOfWarrentyExp).toLocaleDateString("en-GB")
+                        : ""}
+                    </TableCell>
+                    <TableCell>{row.WarrentyStatus}</TableCell>
+                    <TableCell>{row.TransBy}</TableCell>
+                    <TableCell>
+                      {row.TransDate ? new Date(row.TransDate).toLocaleDateString("en-GB") : ""}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Pagination Footer */}
+          <div className="flex justify-between items-center text-sm md:text-md mt-4">
+            <div>
+              {filteredData.length > 0
+                ? `Showing ${(currentPage - 1) * itemsPerPage + 1} to ${Math.min(
+                    currentPage * itemsPerPage,
+                    filteredData.length
+                  )} of ${filteredData.length} entries`
+                : "No entries to show"}
+            </div>
+
+            {filteredData.length > 0 && (
+              <Pagination>
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+
+                  {[...Array(totalPages)].map((_, index) => {
+                    const pageNumber = index + 1;
+                    if (
+                      pageNumber === 1 ||
+                      pageNumber === totalPages ||
+                      (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                    ) {
+                      return (
+                        <PaginationItem key={pageNumber}>
+                          <PaginationLink
+                            isActive={pageNumber === currentPage}
+                            onClick={() => handlePageChange(pageNumber)}
+                          >
+                            {pageNumber}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    } else if (
+                      pageNumber === currentPage - 2 ||
+                      pageNumber === currentPage + 2
+                    ) {
+                      return <PaginationEllipsis key={pageNumber} />;
+                    }
+                    return null;
+                  })}
+
+                  <PaginationItem>
+                    <PaginationNext
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
     </>
   );
 };

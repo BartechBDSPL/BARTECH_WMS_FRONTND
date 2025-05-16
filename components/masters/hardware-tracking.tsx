@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo,useEffect,useCallback, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,10 @@ import { Button } from "@/components/ui/button";
 import CustomDropdown from "../CustomDropdown";
 import { useToast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Oval } from 'react-loader-spinner';
+import TableSearch from '@/utills/tableSearch';
 import {
   hardwareTrackingSchema,
   type HardwareTrackingSchema,
@@ -19,7 +23,18 @@ import {
   ChevronUp,
   CheckCircle,
   CalendarIcon,
+  Printer,
 } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+
 import {
   Dialog,
   DialogContent,
@@ -36,9 +51,39 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { BACKEND_URL } from "@/lib/constants";
+import getUserID,{ BACKEND_URL } from "@/lib/constants";
 import axios from "axios";
 import Cookies from "js-cookie";
+
+interface HardwareData {
+  Id: number;
+  CustomerName: string;
+  CustomerAddress: string;
+  ContactPerson: string;
+  ContactNo: string;
+  EmailID: string;
+  Invoice_PONo: string;
+  HardwareType: string;
+  Make: string;
+  Model: string;
+  AdditionalDetails: string;
+  DateOfWarrentyStart: string; 
+  WarrentyDays: number;
+  DateOfWarrentyExp: string; 
+  Qty: number;
+  SerialNo: string;  
+  UniqueSerialNo: string;  
+  TransBy: string;
+  TransDate: string;  
+  WarrentyStatus: string;
+}
+
+interface SerialEntry {
+  id: number;
+  serialNo: string;
+}
+
+
 
 const HardwareTracking: React.FC = () => {
   const {
@@ -49,6 +94,8 @@ const HardwareTracking: React.FC = () => {
     getValues,
     reset,
     trigger,
+    setError,
+  clearErrors,
     formState: { errors, isSubmitting },
   } = useForm<HardwareTrackingSchema>({
     resolver: zodResolver(hardwareTrackingSchema),
@@ -84,7 +131,10 @@ const HardwareTracking: React.FC = () => {
   >([]);
   const [makes, setmakes] = useState<string[]>([]);
   const [models, setModels] = useState<string[]>([]);
-
+  const [serialEntries, setSerialEntries] = useState<SerialEntry[]>([]);
+  const [serialInput, setSerialInput] = useState('');
+  const [nextId, setNextId] = useState(1);
+  const serialInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
@@ -106,9 +156,25 @@ const HardwareTracking: React.FC = () => {
 
   const isStepCompleted = (step: number) => completedSteps.includes(step);
 
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const token = Cookies.get("token");
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState<string>("");
+
+  const [loading, setLoading] = useState(true);
+
+  const [data, setData] = useState<HardwareData[]>([]);
+
+   const [isEditMode, setIsEditMode] = useState(false);
+   
+
+  const [oldData, setOldData] = useState<HardwareData | null>(null);
+  const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
+  
+  
 
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
@@ -136,13 +202,192 @@ const HardwareTracking: React.FC = () => {
     }
   };
 
+  const quantity = watch("qty");
+
+const handleSerialKeyPress = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+
+    const serial = getValues("serialNo").trim();
+
+    if (!serial) {
+      setError("serialNo", { type: "manual", message: "Serial number is required." });
+      return;
+    }
+
+    clearErrors("serialNo");
+
+    // Check length against quantity
+    if (serialNumbers.length >= quantity) {
+      setError("serialNo", {
+        type: "manual",
+        message: `You can add only ${quantity} serial numbers.`,
+      });
+      return;
+    }
+
+    // Check for local duplicates
+    if (serialNumbers.includes(serial)) {
+      setError("serialNo", {
+        type: "manual",
+        message: "This serial number is already added.",
+      });
+      return;
+    }
+
+    // ✅ Check with backend for duplicate in DB
+    try {
+      const response = await checkDuplicateSerialNo(serial);
+      if (
+        response &&
+        response.length > 0 &&
+        response[0].Status === "F" &&
+        response[0].Message.includes("Already Exist")
+      ) {
+        setError("serialNo", {
+          type: "manual",
+          message: `Serial number already exists.`,
+        });
+        return;
+      }
+    } catch (err) {
+      console.error("Error checking serial number:", err);
+      setError("serialNo", {
+        type: "manual",
+        message: "Error checking serial number. Please try again.",
+      });
+      return;
+    }
+
+    // ✅ Add to list
+    setSerialNumbers((prev) => [...prev, serial]);
+    setValue("serialNo", ""); // Clear input
+  }
+};
+
+
+useEffect(() => {
+  // Clear serial numbers if quantity is 0, null, or empty
+  if (!quantity || quantity === 0) {
+    setSerialNumbers([]);  // Clear the serial numbers table data
+  }
+}, [quantity]);
+  const handleRemoveSerial = (index: number) => {
+    setSerialNumbers((prev) => prev.filter((_, i) => i !== index));
+  };
   useEffect(() => {
-    setUsername("admin");
+    //setUsername("admin");
 
     Promise.all([fetchCustomers(), fetchHardware()]).finally(() =>
       setIsLoading(false)
     );
+    fetchData();
   }, []);
+
+ const handleRowSelect = (id: number) => {
+   setIsEditMode(true);
+  const selectedData = data.find(item => item.Id === id);
+  if (selectedData) {
+    // Set the current step to 1 to ensure the first card is open
+    setActiveStep(1);
+
+    // Reset completed steps to enable editing
+    setCompletedSteps([]);
+
+    // Populate form values using setValue
+    setValue("customerName", selectedData.CustomerName);
+    setValue("customerAddress", selectedData.CustomerAddress);
+    setValue("contactPerson", selectedData.ContactPerson);
+    setValue("contactNo", selectedData.ContactNo);
+    setValue("emailID", selectedData.EmailID);
+    setValue("invoicePONo", selectedData.Invoice_PONo);
+
+    // Hardware details
+    setValue("hardwareType", selectedData.HardwareType);
+    setValue("make", selectedData.Make);
+    setValue("model", selectedData.Model);
+    setValue("additionalDetails", selectedData.AdditionalDetails);
+    
+    // Date handling
+    if (selectedData.DateOfWarrentyStart) {
+      setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
+    }
+    setValue("warrentyDays", selectedData.WarrentyDays);
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("qty", selectedData.Qty);
+    setValue("serialNo", selectedData.SerialNo);
+
+    // Set state for dropdowns to ensure they display the correct values
+    setSelectedCustomer(selectedData.CustomerName);
+    
+    // Populate dependent dropdowns
+    fetchCustomerAddresses(selectedData.CustomerName);
+    
+    // After a short delay to ensure addresses are fetched
+    setTimeout(() => {
+      setSelectedAddress(selectedData.CustomerAddress);
+      fetchContactPersons(selectedData.CustomerName, selectedData.CustomerAddress);
+      
+      // After another delay to ensure contact persons are fetched
+      setTimeout(() => {
+        setSelectedContactPerson(selectedData.ContactPerson);
+        fetchContactDetails(
+          selectedData.CustomerName, 
+          selectedData.CustomerAddress, 
+          selectedData.ContactPerson
+        );
+        
+        // Hardware type and make dependencies
+        fetchHardwareTrackingMake(selectedData.HardwareType);
+        
+        // After another delay to ensure makes are fetched
+        setTimeout(() => {
+          setSelectedHardwareType(selectedData.HardwareType);
+          setSelectedMake(selectedData.Make);
+          fetchHardwareTrackingModel(selectedData.HardwareType, selectedData.Make);
+          
+          // Set other states
+          setSelectedModel(selectedData.Model);
+          setSelectedWarrentyStatus(selectedData.WarrentyStatus);
+        }, 300);
+      }, 300);
+    }, 300);
+
+    // Store the original data for potential comparison or rollback
+    setOldData(selectedData);
+    setIsEditMode(true);
+  } else {
+    console.error("Could not find data with ID:", id);
+  }
+};
+
+ 
+
+
+    const fetchData = () => {
+    setLoading(true);
+    axios.get(`${BACKEND_URL}/api/master/get-all-hardware-details`, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+      .then((response: any) => {
+        setData(response.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+        setLoading(false);
+        toast({
+          variant: 'destructive',
+          title: "Failed to fetch details",
+          description: `Try again`,
+        });
+      });
+  };
+
+  
+  
 
   const fetchCustomers = async () => {
     try {
@@ -351,6 +596,42 @@ const HardwareTracking: React.FC = () => {
       setmakes([]);
     }
   };
+
+   const filteredData = useMemo(() => {
+    console.log(data);
+      return data.filter(item => {
+      const searchableFields: (keyof HardwareData)[] = ['CustomerName','CustomerAddress','ContactPerson','ContactNo','EmailID','Invoice_PONo','HardwareType','Make','Model','AdditionalDetails','DateOfWarrentyStart','WarrentyDays','DateOfWarrentyExp','Qty','SerialNo','UniqueSerialNo','TransBy','TransDate','WarrentyStatus'];
+
+        return searchableFields.some(key => {
+          const value = item[key];
+          return value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+        });
+      });
+    }, [data, searchTerm]);
+  
+    const paginatedData = useMemo(() => {
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      return filteredData.slice(startIndex, startIndex + itemsPerPage);
+    }, [filteredData, currentPage, itemsPerPage]);
+  
+    const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage]);
+  
+    const handleSearch = useCallback((term: string) => {
+      setSearchTerm(term.trim());
+      setCurrentPage(1); 
+    }, []);
+    
+  
+      const handlePageChange = useCallback((newPage: number) => {
+        setCurrentPage(newPage);
+      }, []);
+  
+      const handleItemsPerPageChange = useCallback((value: string) => {
+      setItemsPerPage(Number(value));
+      setCurrentPage(1);
+       }, []);
+  
+  
 
   const fetchHardwareTrackingModel = async (
     hardwareType: string,
@@ -590,8 +871,8 @@ const handleReset = () => {
         WarrentyDays: formData.warrentyDays,
         WarrentyStatus: formData.warrentyStatus,
         Qty: formData.qty,
-        SerialNo: formData.serialNo,
-        User: username,
+        SerialNo: serialNumbers.join('&#!'),
+        User: getUserID(),
       };
 
 
@@ -623,9 +904,10 @@ const handleReset = () => {
         if (response.data[0].SerialNo) {
           console.log("📎 QR Code Serial No:", response.data[0].SerialNo);
         }
-
+       setSerialNumbers([]);
         handleReset();
         setIsDialogOpen(false);
+        fetchData();
         return true;
       } else {
         console.error("❌ Invalid response from server:", response.data);
@@ -643,6 +925,182 @@ const handleReset = () => {
       return false;
     }
   };
+
+
+   
+
+const updateHardwareDetails = async (payload: any) => {
+  const response = await axios.post(
+    `${BACKEND_URL}/api/master/update-hardware-tracking-details`,
+    payload, // send payload directly as JSON
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  return response.data; // axios automatically parses JSON
+};
+
+
+const handleUpdateClick = async () => {
+  try {
+    setIsProcessing(true);
+
+    const isValid = await trigger([
+      "hardwareType", "make", "model", "dateOfWarrentyStart",
+      "warrentyDays", "warrentyStatus", "qty", "serialNo"
+    ]);
+
+    if (!isValid) {
+      setIsProcessing(false);
+      return;
+    }
+
+    const currentData = getValues();
+
+    // Calculate expiry date
+    const expiryDate = currentData.dateOfWarrentyStart && currentData.warrentyDays
+      ? new Date(new Date(currentData.dateOfWarrentyStart).getTime() + currentData.warrentyDays * 24 * 60 * 60 * 1000)
+      : null;
+
+    const payload = {
+      ID: oldData?.Id,
+      CustomerName: currentData.customerName,
+      CustomerAddress: currentData.customerAddress,
+      ContactPerson: currentData.contactPerson,
+      ContactNo: currentData.contactNo,
+      EmailID: currentData.emailID,
+      Invoice_PONo: currentData.invoicePONo,
+      HardwareType: currentData.hardwareType,
+      Make: currentData.make,
+      Model: currentData.model,
+      AdditionalDetails: currentData.additionalDetails,
+      DateOfWarrentyStart: currentData.dateOfWarrentyStart,
+      WarrentyDays: currentData.warrentyDays,
+      Qty: currentData.qty,
+      SerialNo: serialNumbers.join(','),
+      User: getUserID(),
+      WarrentyStatus: currentData.warrentyStatus,
+      DateOfWarrentyExp: expiryDate?.toISOString().split("T")[0] || null
+    };
+
+    const result = await updateHardwareDetails(payload);
+
+    if (result[0]?.Status === "T") {
+      toast({ title: "Update Successful", description: result[0].Message });
+      fetchData();
+      handleReset();
+      setIsEditMode(false);
+    } else {
+      toast({ variant: "destructive", title: "Update Failed", description: result[0]?.Message });
+    }
+  } catch (error) {
+    toast({ variant: "destructive", title: "Error", description: "Something went wrong." });
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+const handlePrintLabel = async (row: HardwareData) => {
+  try {
+    // Show loading toast
+    const loadingToastId = toast({
+      title: "Processing",
+      description: "Sending print job...",
+      duration: 60000, // Long duration as we'll dismiss it manually
+    }).id;
+
+    // Format dates
+    const warrantyStartDate = row.DateOfWarrentyStart
+      ? new Date(row.DateOfWarrentyStart).toISOString().split("T")[0]
+      : "";
+    const warrantyExpDate = row.DateOfWarrentyExp
+      ? new Date(row.DateOfWarrentyExp).toISOString().split("T")[0]
+      : "";
+
+    const fullUrl = row.UniqueSerialNo || "";
+    const prefix = "SerialNo=";
+    const prefixIndex = fullUrl.indexOf(prefix);
+
+    if (prefixIndex === -1) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid UniqueSerialNo format: 'SerialNo=' not found.",
+      });
+      return;
+    }
+
+    const baseUrl = fullUrl.substring(0, prefixIndex + prefix.length);
+    const serialsStr = fullUrl.substring(prefixIndex + prefix.length);
+
+    const serialNumbers = serialsStr
+      .split(",")
+      .map((sn) => sn.trim())
+      .filter(Boolean);
+
+    if (serialNumbers.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No serial numbers found in UniqueSerialNo.",
+      });
+      return;
+    }
+
+    const qty = Number(row.Qty) || 1;
+
+    // Repeat serial numbers if qty > serialNumbers.length
+    const serialsToPrint = Array.from({ length: qty }, (_, i) => serialNumbers[i % serialNumbers.length]);
+
+    const joinedSerials = serialsToPrint.join("$");
+    const joinedBarcodes = serialsToPrint.map(sn => `${baseUrl}${sn}`).join("$");
+
+    const printData = {
+      CustomerName: row.CustomerName || "",
+      CustomerAddress: row.CustomerAddress || "",
+      ContactPerson: row.ContactPerson || "",
+      ContactNo: row.ContactNo || "",
+      EmailID: row.EmailID || "",
+      InvoicePONo: row.Invoice_PONo || "",
+      HardwareType: row.HardwareType || "",
+      Make: row.Make || "",
+      Model: row.Model || "",
+      AdditionalDetails: row.AdditionalDetails || "",
+      WarrantyStartDate: warrantyStartDate,
+      WarrantyDays: row.WarrentyDays || "",
+      WarrantyExpDate: warrantyExpDate,
+      Quantity: qty,
+      SerialNumber: joinedSerials,
+    };
+
+    const res = await axios.post(`${BACKEND_URL}/api/master/print-hardware-label`, printData);
+
+    if (res.data && res.data.Status === "T") {
+      toast({
+        title: "Success",
+        description: `Successfully printed ${qty} label(s) for ${row.HardwareType} ${row.Make} ${row.Model}`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to print label. Please check printer connection.",
+      });
+    }
+  } catch (error) {
+    console.error("Error printing label:", error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Failed to print label.",
+    });
+  }
+};
+
+
 
   // Preview dialog for form submission
   const HardwareTrackingPreviewDialog = () => {
@@ -772,14 +1230,17 @@ const handleReset = () => {
                     {formData.qty}
                   </td>
                 </tr>
-                <tr>
+               <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
-                    Serial Number
+                    Serial Numbers
                   </td>
                   <td className="border border-gray-800 px-2 py-1">
-                    {formData.serialNo}
+                    {serialNumbers && serialNumbers.length > 0
+                      ? serialNumbers.join(", ")
+                      : "-"}
                   </td>
                 </tr>
+
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Warranty Expiry Date
@@ -813,6 +1274,8 @@ const handleReset = () => {
       </DialogContent>
     );
   };
+
+
 
   return (
     <>
@@ -1400,29 +1863,22 @@ const handleReset = () => {
                               </motion.p>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.serialNo ? "text-destructive" : ""
-                              }
-                            >
-                              Serial Number*
-                            </Label>
-                            <Input
-                              {...register("serialNo")}
-                              placeholder="Enter serial number"
-                            />
-                            {errors.serialNo && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.serialNo.message}
-                              </motion.p>
-                            )}
+                          <div>
+                              {/* Existing serial number input and list */}
+                              <div>
+                                <label className="block font-medium">Serial Number</label>
+                                <input
+                                  type="text"
+                                  {...register("serialNo")}
+                                  onKeyDown={handleSerialKeyPress}
+                                  placeholder="Press Enter to add"
+                                  className="border p-2 rounded w-full"
+                                />
+                                {errors.serialNo && <p className="text-red-500">{errors.serialNo.message}</p>}
+                              </div>
                           </div>
-                        </div>
+                         </div>
+
 
                         <div className="flex justify-between pt-4">
                           <Button
@@ -1442,101 +1898,89 @@ const handleReset = () => {
                               Reset
                             </Button>
                             <Button
-                              type="button"
-                              disabled={isSubmitting || isProcessing}
-                              onClick={async () => {
-                                try {
-                                  // First set loading state
-                                  setIsProcessing(true);
-                                  
-                                  // Trigger validation for all required hardware details fields
-                                  const isValid = await trigger([
-                                    "hardwareType",
-                                    "make",
-                                    "model",
-                                    "dateOfWarrentyStart",
-                                    "warrentyDays",
-                                    "warrentyStatus",
-                                    "qty",
-                                    "serialNo"
-                                  ]);
-                                  
-                                  if (isValid) {
-                                    const currentData = getValues();
-                                    
-                                    // Check for duplicate serial number
-                                    const serialNo = currentData.serialNo;
-                                    if (serialNo && serialNo.trim() !== '') {
-                                      try {
-                                        const response = await checkDuplicateSerialNo(serialNo);
-                                        console.log("Serial check response:", response);
-                                        
-                                        // Check if the response indicates a duplicate
-                                        // Based on your console output: [{ Status: 'F', Message: 'Serial No Already Exist...!' }]
-                                        if (response && 
-                                            response.length > 0 && 
-                                            response[0].Status === 'F' && 
-                                            response[0].Message.includes('Already Exist')) {
-                                          
-                                          toast({
-                                            variant: "destructive",
-                                            title: "Duplicate Serial Number",
-                                            description: response[0].Message || "This serial number already exists in the system.",
-                                          });
-                                          setIsProcessing(false);
-                                          return; // Stop and don't open dialog
-                                        }
-                                      } catch (err) {
-                                        console.error("Serial number check failed:", err);
-                                        toast({
-                                          variant: "destructive",
-                                          title: "Validation Error",
-                                          description: "Failed to verify serial number uniqueness. Please try again.",
-                                        });
-                                        setIsProcessing(false);
-                                        return;
-                                      }
-                                    }
-                                    
-                                   
-                                    
-                                    let expiryDate = undefined;
-                                    if (currentData.dateOfWarrentyStart && currentData.warrentyDays) {
-                                      expiryDate = new Date(currentData.dateOfWarrentyStart);
-                                      expiryDate.setDate(expiryDate.getDate() + currentData.warrentyDays);
-                                    }
-                                    
-                                    // Process data for preview
-                                    const processedData = {
-                                      ...currentData,
-                                      dateOfWarrentyExp: expiryDate
-                                    };
+                                type="button"
+                                variant="outline"
+                              disabled={!isEditMode}
+                                onClick={handleUpdateClick}
+                               
+                              >
+                                {(isSubmitting || isProcessing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSubmitting || isProcessing ? "Updating..." : "Update"}
+                              </Button>
 
-                                    // Set form data for preview and open dialog
-                                    setFormData(processedData);
-                                    setIsDialogOpen(true);
-                                    
-                                    // Mark the step as completed
-                                    setCompletedSteps((prev) => [...prev.filter(step => step !== 2), 2]);
-                                  }
-                                } catch (error) {
-                                  console.error("Error during validation:", error);
+                            <Button
+                            type="button"
+                            disabled={isSubmitting || isProcessing || isEditMode}
+                            onClick={async () => {
+                              try {
+                                setIsProcessing(true);
+
+                                // Trigger form validations
+                                const isValid = await trigger([
+                                  "hardwareType",
+                                  "make",
+                                  "model",
+                                  "dateOfWarrentyStart",
+                                  "warrentyDays",
+                                  "warrentyStatus",
+                                  "qty",
+                                ]);
+
+                                if (!isValid) {
+                                  setIsProcessing(false);
+                                  return;
+                                }
+
+                                const currentData = getValues();
+                                const quantity = Number(currentData.qty);
+
+                                // Check quantity vs serialNumbers length
+                                if (serialNumbers.length !== quantity) {
                                   toast({
                                     variant: "destructive",
-                                    title: "Validation Error",
-                                    description: error instanceof Error ? error.message : "An error occurred during validation",
+                                    title: "Mismatch",
+                                    description: `Quantity is ${quantity}, but ${serialNumbers.length} serial numbers entered.`,
                                   });
-                                } finally {
                                   setIsProcessing(false);
+                                  return;
                                 }
-                              }}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              {(isSubmitting || isProcessing) && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              )}
-                              {isSubmitting || isProcessing ? "Saving..." : "Save Hardware Details"}
-                            </Button>
+
+                                // Calculate warranty expiry
+                                let expiryDate = undefined;
+                                if (currentData.dateOfWarrentyStart && currentData.warrentyDays) {
+                                  expiryDate = new Date(currentData.dateOfWarrentyStart);
+                                  expiryDate.setDate(expiryDate.getDate() + Number(currentData.warrentyDays));
+                                }
+
+                                const processedData = {
+                                  ...currentData,
+                                  dateOfWarrentyExp: expiryDate,
+                                  serialNumbers,
+                                };
+
+                                setFormData(processedData);
+                                setIsDialogOpen(true);
+                                setCompletedSteps((prev) => [...prev.filter((step) => step !== 2), 2]);
+
+                              } catch (error) {
+                                console.error("Validation error:", error);
+                                toast({
+                                  variant: "destructive",
+                                  title: "Validation Error",
+                                  description: error instanceof Error ? error.message : "An error occurred",
+                                });
+                              } finally {
+                                setIsProcessing(false);
+                              }
+                            }}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            {(isSubmitting || isProcessing) && (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            )}
+                            {isSubmitting || isProcessing ? "Saving..." : "Save Hardware Details"}
+                          </Button>
+
                           </div>
                         </div>
                       </CardContent>
@@ -1552,6 +1996,221 @@ const handleReset = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <HardwareTrackingPreviewDialog />
       </Dialog>
+{serialNumbers.length > 0 && quantity > 0 && (
+  <div className="mt-8 border rounded-lg shadow-md p-4 bg-white">
+    <h3 className="text-lg font-bold mb-4">Serial Numbers Table</h3>
+    <div className="overflow-x-auto">
+      <table className="min-w-full table-auto border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border border-gray-300 px-4 py-2 text-left">ID</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Serial No</th>
+            <th className="border border-gray-300 px-4 py-2 text-left">Action</th> {/* New header */}
+          </tr>
+        </thead>
+        <tbody>
+          {serialNumbers.map((serial, index) => (
+            <tr key={index} className="hover:bg-gray-50">
+              <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
+              <td className="border border-gray-300 px-4 py-2">{serial}</td>
+              <td className="border border-gray-300 px-4 py-2">
+                <button
+                  className="text-red-600 hover:text-red-800 font-semibold"
+                  onClick={() => {
+                    // Remove serial number at this index
+                    const newSerials = [...serialNumbers];
+                    newSerials.splice(index, 1);
+                    setSerialNumbers(newSerials);
+                  }}
+                >
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
+
+
+   <Card className="w-full mt-5 mx-auto">
+  <CardContent>
+    <div className="mt-8">
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <span>Show</span>
+          <Select
+            defaultValue="10"
+            value={itemsPerPage.toString()}
+            onValueChange={handleItemsPerPageChange}
+          >
+            <SelectTrigger className="w-[70px]">
+              <SelectValue placeholder={itemsPerPage.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+          <span>entries</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <TableSearch onSearch={handleSearch} />
+        </div>
+      </div>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Action</TableHead>
+            <TableHead>Print</TableHead>
+            <TableHead>Customer Name</TableHead>
+            <TableHead>Customer Address</TableHead>
+            <TableHead>Contact Person</TableHead>
+            <TableHead>Contact No</TableHead>
+            <TableHead>Email ID</TableHead>
+            <TableHead>Invoice/PO No</TableHead>
+            <TableHead>Hardware Type</TableHead>
+            <TableHead>Make</TableHead>
+            <TableHead>Model</TableHead>
+            <TableHead>Additional Details</TableHead>
+            <TableHead>Qty</TableHead>
+            <TableHead>Serial No</TableHead>
+            <TableHead>Unique Serial No</TableHead>
+            <TableHead>Warranty Start</TableHead>
+            <TableHead>Warranty Expiry</TableHead>
+            <TableHead>Warranty Days</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Trans By</TableHead>
+            <TableHead>Trans Date</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {loading ? (
+            <TableRow>
+              <TableCell colSpan={21} className="text-center">
+                <div className="flex justify-center items-center h-64">
+                  <Oval
+                    height={40}
+                    width={40}
+                    color="#4fa94d"
+                    visible={true}
+                    ariaLabel="oval-loading"
+                    secondaryColor="#4fa94d"
+                    strokeWidth={2}
+                    strokeWidthSecondary={2}
+                  />
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            paginatedData.map((row: HardwareData) => (
+              <TableRow key={row.Id}>
+                <TableCell>
+                  <Button variant="ghost" onClick={() => handleRowSelect(row.Id)}>
+                    Edit
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handlePrintLabel(row)}
+                    className="flex items-center gap-1"
+                  >
+                    <Printer className="h-4 w-4" />
+                    <span>Print</span>
+                  </Button>
+                </TableCell>
+                <TableCell>{row.CustomerName}</TableCell>
+                <TableCell>{row.CustomerAddress}</TableCell>
+                <TableCell>{row.ContactPerson}</TableCell>
+                <TableCell>{row.ContactNo}</TableCell>
+                <TableCell>{row.EmailID}</TableCell>
+                <TableCell>{row.Invoice_PONo}</TableCell>
+                <TableCell>{row.HardwareType}</TableCell>
+                <TableCell>{row.Make}</TableCell>
+                <TableCell>{row.Model}</TableCell>
+                <TableCell>{row.AdditionalDetails}</TableCell>
+                <TableCell>{row.Qty}</TableCell>
+                <TableCell>{row.SerialNo}</TableCell>
+                <TableCell>{row.UniqueSerialNo}</TableCell>
+                <TableCell>
+                  {row.DateOfWarrentyStart ? new Date(row.DateOfWarrentyStart).toLocaleDateString('en-GB') : ''}
+                </TableCell>
+                <TableCell>
+                  {row.DateOfWarrentyExp ? new Date(row.DateOfWarrentyExp).toLocaleDateString('en-GB') : ''}
+                </TableCell>
+                <TableCell>{row.WarrentyDays}</TableCell>
+                <TableCell>{row.WarrentyStatus}</TableCell>
+                <TableCell>{row.TransBy}</TableCell>
+                <TableCell>
+                  {row.TransDate ? new Date(row.TransDate).toLocaleDateString('en-GB') : ''}
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center text-sm md:text-md mt-4">
+        <div>
+          {filteredData.length > 0
+            ? `Showing ${(currentPage - 1) * itemsPerPage + 1} to ${Math.min(currentPage * itemsPerPage, filteredData.length)} of ${filteredData.length} entries`
+            : 'No entries to show'}
+        </div>
+        {filteredData.length > 0 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+              {[...Array(totalPages)].map((_, index) => {
+                const pageNumber = index + 1;
+                if (
+                  pageNumber === 1 ||
+                  pageNumber === totalPages ||
+                  (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                ) {
+                  return (
+                    <PaginationItem key={pageNumber}>
+                      <PaginationLink
+                        isActive={pageNumber === currentPage}
+                        onClick={() => handlePageChange(pageNumber)}
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                } else if (
+                  pageNumber === currentPage - 2 ||
+                  pageNumber === currentPage + 2
+                ) {
+                  return <PaginationEllipsis key={pageNumber} />;
+                }
+                return null;
+              })}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
+      </div>
+    </div>
+  </CardContent>
+</Card>
+
     </>
   );
 };
