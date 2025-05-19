@@ -119,17 +119,23 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/job-card",
               value: "2_9",
             },
+             {
+              href: "/printer-master",
+              label: "Printer Master",
+              active: pathname === "/printer-master",
+              value: "2_10",
+            },
             {
               href: "/hardware-tracking",
               label: "Hardware Tracking",
               active: pathname === "/hardware-tracking",
-              value: "2_10",
+              value: "2_11",
             },
             {
               href: "/software-tracking",
               label: "Software Tracking",
               active: pathname === "/software-tracking",
-              value: "2_11",
+              value: "2_12",
             }
            
           

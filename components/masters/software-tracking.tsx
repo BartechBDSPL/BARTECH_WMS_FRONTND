@@ -1260,7 +1260,7 @@ const handleHardwareTypeChange = (values: string[]) => {
                               placeholder="Select Contact No"
                               searchPlaceholder="Search number..."
                               emptyText="No contact numbers found"
-                              // disabled={!selectedContactPerson}
+                              disabled={!selectedContactPerson}
                               allowCustomValue
                               onCustomValueChange={handleCustomValueChange(
                                 "contactNo"
@@ -1299,6 +1299,7 @@ const handleHardwareTypeChange = (values: string[]) => {
                               searchPlaceholder="Search email..."
                               emptyText="No email IDs found"
                               allowCustomValue
+                              disabled={!selectedContactPerson}
                               onCustomValueChange={handleCustomValueChange(
                                 "emailID"
                               )}

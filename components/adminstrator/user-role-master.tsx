@@ -45,14 +45,15 @@ const webAccessOptions = [
   { label: "8) - Job Control Master", value: "2_7" },
   { label: "9) - Edit Job Control Master", value: "2_8" },
   { label: "10) - Job Card", value: "2_9" },
-  { label: "11) - Hardware Tracking", value: "2_10"},
-  { label: "12) - Software Tracking", value: "2_11"},
-  { label: "13) - Approve Job Control", value: "3_1" },
-  { label: "14) - Report", value: "5_1" },
-  { label: "15) - User Master", value: "6_1" },
-  { label: "16) - User Role Master", value: "6_2" },
-  { label: "17) - Change Password", value: "6_3" },
-  { label: "18) - Material Stock Take", value: "6_4" },
+  { label: "11) - Printer Master", value: "2_10" },
+  { label: "12) - Hardware Tracking", value: "2_11"},
+  { label: "13) - Software Tracking", value: "2_12"},
+  { label: "14) - Approve Job Control", value: "3_1" },
+  { label: "15) - Report", value: "5_1" },
+  { label: "16) - User Master", value: "6_1" },
+  { label: "17) - User Role Master", value: "6_2" },
+  { label: "18) - Change Password", value: "6_3" },
+  { label: "19) - Material Stock Take", value: "6_4" },
 ];
 
 const hhtAccessOptions = [
