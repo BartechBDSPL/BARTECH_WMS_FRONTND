@@ -22,7 +22,7 @@
 
 *.jpg
 *.png
-
+*.xlsx
 # debug
 npm-debug.log*
 yarn-debug.log*

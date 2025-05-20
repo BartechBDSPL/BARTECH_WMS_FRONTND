@@ -153,6 +153,18 @@ export function getMenuList(pathname: string): Group[] {
             active: pathname === "/job-card-approval",
             value: "3_1",
           },
+            {
+              href: "/grn-excel-upload",
+              label: "Excel Upload",
+              active: pathname === "/grn-excel-upload",
+              value: "3_2",
+            },
+            {
+              href: "/rm-label-printing",
+              label: "RM Label Printing",
+              active: pathname === "/rm-label-printing",
+              value: "3_3",
+            },
            // software-tracking
           //  {
           //   href: "/software-tracking",
@@ -212,8 +224,7 @@ export function getMenuList(pathname: string): Group[] {
           },
          
         ],
-        },
-        {
+        },        {
           href: "/tags",
           label: "Administrator",
           active: pathname.includes("/tags"),
@@ -244,6 +255,7 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/android-access",
               value: "6_4",
             },
+
           ],
         },
       ],

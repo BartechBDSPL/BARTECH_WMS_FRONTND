@@ -49,11 +49,13 @@ const webAccessOptions = [
   { label: "12) - Hardware Tracking", value: "2_11"},
   { label: "13) - Software Tracking", value: "2_12"},
   { label: "14) - Approve Job Control", value: "3_1" },
+  { label: "14) - RM Label Printing", value: "3_3" },
   { label: "15) - Report", value: "5_1" },
   { label: "16) - User Master", value: "6_1" },
   { label: "17) - User Role Master", value: "6_2" },
   { label: "18) - Change Password", value: "6_3" },
   { label: "19) - Material Stock Take", value: "6_4" },
+  { label: "20) - GRN Excel Upload", value: "3_2" },
 ];
 
 const hhtAccessOptions = [

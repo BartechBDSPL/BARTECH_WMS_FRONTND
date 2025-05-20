@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-// import Dashboard from "@/components/tab/dashboard-final";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -8,13 +7,13 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import HardwareTracking from "@/components/masters/hardware-tracking";
+import GRNExcelUpload from "@/components/transaction/grn-excel-upload";
 
-export default function DashboardPage() {
+export default function GRNExcelUploadPage() {
   return (
-    <ContentLayout title="Hardware Tracking">
+    <ContentLayout title="GRN Excel Upload">
       <Breadcrumb>
-        <BreadcrumbList>  
+        <BreadcrumbList>
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
               <Link href="/dashboard">Home</Link>
@@ -22,7 +21,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <HardwareTracking />
+      <GRNExcelUpload />
     </ContentLayout>
   );
 }

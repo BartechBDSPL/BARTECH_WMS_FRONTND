@@ -1,6 +1,5 @@
 import Link from "next/link";
-
-// import Dashboard from "@/components/tab/dashboard-final";
+import JobCardReport from "@/components/reports/rep-jc-master";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -8,13 +7,13 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import HardwareTracking from "@/components/masters/hardware-tracking";
+import RMLabelPrinting from "@/components/transaction/rm-label-printing";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Hardware Tracking">
+    <ContentLayout title="RM Label Printing">
       <Breadcrumb>
-        <BreadcrumbList>  
+        <BreadcrumbList>
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
               <Link href="/dashboard">Home</Link>
@@ -22,7 +21,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <HardwareTracking />
+      < RMLabelPrinting/> 
     </ContentLayout>
   );
 }
