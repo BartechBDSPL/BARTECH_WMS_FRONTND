@@ -136,7 +136,27 @@ export function getMenuList(pathname: string): Group[] {
               label: "Software Tracking",
               active: pathname === "/software-tracking",
               value: "2_12",
+            },
+             {
+              href: "/warehouse-category-master",
+              label: "WH Category Master",
+              active: pathname === "/warehouse-category-master",
+              value: "2_13",
+            },
+            {
+              href: "/warehouse-master",
+              label: "Warehouse Master",
+              active: pathname === "/warehouse-master",
+              value: "2_14",
+            },
+            {
+              href: "/warehouse-location-master",
+              label: "WH Location Master",
+              active: pathname === "/warehouse-location-master",
+              value: "2_15",
             }
+
+
            
           
           ],
