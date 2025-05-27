@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/pagination";
 import TableSearch from '@/utills/tableSearch';
 interface WarehouseCode {
-  wh_code: string;
+  wh_category_code: string;
 }
 
 
@@ -43,7 +43,7 @@ interface WarehouseLocation {
   ID: number;
 //   CompanyCode: string;
 //   PlantCode: string;
-  wh_code: string;
+  wh_category_code: string;
   location: string;
   rack: string;
   bin: string;
@@ -218,7 +218,7 @@ const uniqueCodeRef = useRef<HTMLInputElement>(null);
   
     const filteredData = useMemo(() => {
       return locations.filter(item => {
-       const searchableFields: (keyof WarehouseLocation)[] = ['wh_code','location','rack','bin','unique_code','status','created_by','updated_by'];
+       const searchableFields: (keyof WarehouseLocation)[] = ['wh_category_code','location','rack','bin','unique_code','status','created_by','updated_by'];
 
         return searchableFields.some(key => {
           const value = item[key];
@@ -283,7 +283,7 @@ const uniqueCodeRef = useRef<HTMLInputElement>(null);
 
   // Align keys with backend's expected input
   const newLocationData = {
-    Warehouse_Code: warehouseValue.trim(),
+    wh_category_code: warehouseValue.trim(),
     Location: location.trim(),
     Rack: rack.trim(),
     Bin: bin.trim(),
@@ -382,7 +382,7 @@ const uniqueCodeRef = useRef<HTMLInputElement>(null);
   }
 
   const updatedLocationData = {
-    Warehouse_Code: warehouseValue.trim(),
+    wh_category_code: warehouseValue.trim(),
     Location: location.trim(),
     Rack: rack.trim(),
     Bin: bin.trim(),
@@ -464,7 +464,7 @@ const uniqueCodeRef = useRef<HTMLInputElement>(null);
   const handleRowClick = (location: WarehouseLocation) => {
     setSelectedLocation(location);
     setOldData(location);
-    setWarehouseValue(location.wh_code);
+    setWarehouseValue(location.wh_category_code);
     setLocation(location.location);
     setRack(location.rack);
     setBin(location.bin || "");
@@ -494,8 +494,8 @@ const uniqueCodeRef = useRef<HTMLInputElement>(null);
 
 const warehouseOptions = Array.isArray(warehouseCodes)
   ? warehouseCodes.map(code => ({
-      value: code.wh_code,
-      label: code.wh_code,
+      value: code.wh_category_code,
+      label: code.wh_category_code,
     }))
   : [];
 
@@ -509,7 +509,7 @@ const warehouseOptions = Array.isArray(warehouseCodes)
           <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="warehouse">Warehouse Code *</Label>
+                <Label htmlFor="warehouse">Warehouse Category Code *</Label>
                 <CustomDropdown
                   options={warehouseOptions}
                   value={warehouseValue}
@@ -659,7 +659,7 @@ const warehouseOptions = Array.isArray(warehouseCodes)
                     <TableHead>Select</TableHead>
                     {/* <TableHead>Company Code</TableHead>
                     <TableHead>Plant Code</TableHead> */}
-                    <TableHead>Warehouse Code</TableHead>
+                    <TableHead>Warehouse Category Code</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead>Rack</TableHead>
                     <TableHead>Unique Code</TableHead>
@@ -680,7 +680,7 @@ const warehouseOptions = Array.isArray(warehouseCodes)
                         </TableCell>
                         {/* <TableCell>{location.CompanyCode }</TableCell>
                         <TableCell>{location.PlantCode}</TableCell> */}
-                        <TableCell>{location.wh_code}</TableCell>
+                        <TableCell>{location.wh_category_code}</TableCell>
                         <TableCell>{location.location}</TableCell>
                         <TableCell>{location.rack}</TableCell>
                         <TableCell>{location.unique_code}</TableCell>
