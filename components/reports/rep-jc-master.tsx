@@ -12,6 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "@/components/ui/use-toast";
 import { BACKEND_URL } from '@/lib/constants';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
 import Cookies from 'js-cookie';
 import ExportToExcel from '@/utills/reports/ExportToExcel';
@@ -239,7 +240,6 @@ console.log("Report " , reportData)
   }, []);
 
   const toggleRow = async (jobCardNumber: string, labelType: string) => {
-    // Only allow expanding for PP label type
     if (labelType !== 'PP') {
       return;
     }
@@ -302,7 +302,6 @@ console.log("Report " , reportData)
   const handlePreviewClick = async ({ jobCard }: PreviewJobCardParams): Promise<void> => {
     setSelectedJobCard(jobCard);
     
-    // If job card is PP type and we don't have color data yet, fetch it
     if (jobCard.LabelType === 'PP' && !colorSequenceData[jobCard.JobCardNumber]) {
       await fetchColorSequence({ jobCardNumber: jobCard.JobCardNumber });
     }
@@ -322,64 +321,113 @@ console.log("Report " , reportData)
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
-    const doc = new jsPDF('l', 'mm', 'a4');
-    const columns = [
-      { header: 'Job Card No', dataKey: 'JobCardNumber' },
-      { header: 'Label Type', dataKey: 'LabelType' },
-      { header: 'Company Name', dataKey: 'CompanyName' },
-      { header: 'Job Description', dataKey: 'JobDescription' },
-      { header: 'Material Code', dataKey: 'MatCode' },
-      { header: 'Material Desc', dataKey: 'MatDesc' },
-      { header: 'Height', dataKey: 'Height' },
-      { header: 'Width', dataKey: 'Width' },
-      { header: 'Unit', dataKey: 'Unit' },
-      { header: 'Creation Date', dataKey: 'CreatedDate' },
-      { header: 'Created By', dataKey: 'CreatedBy' },
-    ];
-  
-    const formattedData = data.map(row => ({
-      ...row,
-      CreatedDate: row.CreatedDate ? format(new Date(row.CreatedDate), 'yyyy-MM-dd') : '',
-    }));
-  
-    doc.setFontSize(18);
-    doc.text(`Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`, 14, 22);
-  
-    (doc as any).autoTable({
-      columns: columns,
-      body: formattedData,
-      startY: 30,
-      styles: { fontSize: 8, cellPadding: 1.5 },
-      columnStyles: {
-        0: { cellWidth: 20 },
-        1: { cellWidth: 15 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 30 },
-        6: { cellWidth: 15 },
-        7: { cellWidth: 15 },
-        8: { cellWidth: 15 },
-        9: { cellWidth: 20 },
-        10: { cellWidth: 20 },
-      },
-      headStyles: { fillColor: [66, 66, 66] },
-      didDrawPage: (data: any) => {
-        doc.setFontSize(8);
-        doc.text(
-          `Page ${data.pageNumber} of ${doc.getNumberOfPages()}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: 'center' }
-        );
-      }
-    });
-  
-    doc.save(`${fileName}.pdf`);
+    try {
+      const doc = new jsPDF('l', 'mm', 'a4');
+      
+      const columns = [
+        { header: 'Job Card No', dataKey: 'JobCardNumber' },
+        { header: 'Label Type', dataKey: 'LabelType' },
+        { header: 'Company Name', dataKey: 'CompanyName' },
+        { header: 'Job Description', dataKey: 'JobDescription' },
+        { header: 'Material Code', dataKey: 'MatCode' },
+        { header: 'Material Desc', dataKey: 'MatDesc' },
+        { header: 'Height', dataKey: 'Height' },
+        { header: 'Width', dataKey: 'Width' },
+        { header: 'Unit', dataKey: 'Unit' },
+        { header: 'Creation Date', dataKey: 'CreatedDate' },
+        { header: 'Created By', dataKey: 'CreatedBy' }
+      ];
+
+      const formattedData = data.map(row => ({
+        ...row,
+        CreatedDate: row.CreatedDate ? format(new Date(row.CreatedDate), 'yyyy-MM-dd') : '',
+        JobCardNumber: row.JobCardNumber || '',
+        LabelType: row.LabelType || '',
+        CompanyName: row.CompanyName || '',
+        JobDescription: row.JobDescription || '',
+        MatCode: row.MatCode || '',
+        MatDesc: row.MatDesc || '',
+        Height: row.Height || '',
+        Width: row.Width || '',
+        Unit: row.Unit || '',
+        CreatedBy: row.CreatedBy || ''
+      }));
+
+      doc.setFontSize(18);
+      doc.text(`Job Card Master Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+
+      (doc as any).autoTable({
+        columns: columns,
+        body: formattedData,
+        startY: 30,
+        styles: { 
+          fontSize: 8, 
+          cellPadding: 1.5,
+          overflow: 'linebreak',
+          halign: 'left'
+        },
+        columnStyles: {
+          0: { cellWidth: 25 }, 
+          1: { cellWidth: 20 }, 
+          2: { cellWidth: 35 }, 
+          3: { cellWidth: 40 }, 
+          4: { cellWidth: 25 }, 
+          5: { cellWidth: 40 }, 
+          6: { cellWidth: 15 }, 
+          7: { cellWidth: 15 }, 
+          8: { cellWidth: 15 },
+          9: { cellWidth: 25 }, 
+          10: { cellWidth: 25 }
+        },
+        headStyles: { 
+          fillColor: [66, 66, 66],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        didDrawPage: (data: any) => {
+          const pageCount = doc.getNumberOfPages();
+          doc.setFontSize(8);
+          doc.text(
+            `Page ${data.pageNumber} of ${pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: 'center' }
+          );
+        }
+      });
+
+      doc.save(`${fileName}.pdf`);
+      
+      toast({
+        title: "Success",
+        description: "PDF exported successfully",
+        variant: "default",
+      });
+    } catch (error) {
+      console.error('PDF Export Error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to export PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleExportToPDF = () => {
-    exportToPdf(reportData, `Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`);
+    if (reportData.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No data available to export",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const fileName = `Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+    exportToPdf(reportData, fileName);
   };
 
   const NoDataCard = () => (
@@ -519,7 +567,6 @@ console.log("Report " , reportData)
       }
     };
 
-    // Function to get appropriate icon based on file extension
     const getFileIcon = (fileName: string) => {
       const extension = fileName.split('.').pop()?.toLowerCase();
       switch (extension) {
@@ -538,13 +585,11 @@ console.log("Report " , reportData)
       }
     };
 
-    // Function to handle file download
     const handleFileDownload = (filePath: string) => {
       const fullUrl = `${BACKEND_URL}/${filePath}`;
       window.open(fullUrl, '_blank');
     };
 
-    // Split the image paths
     const documentPaths = jobCard.Image ? jobCard.Image.split(',') : [];
 
     return (

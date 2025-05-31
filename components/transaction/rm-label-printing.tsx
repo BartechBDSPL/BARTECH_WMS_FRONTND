@@ -39,7 +39,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import CustomDropdown from '@/components/CustomDropdown';
-import { BACKEND_URL } from '@/lib/constants';
+import getUserID, { BACKEND_URL } from '@/lib/constants';
 import { X } from 'lucide-react';
 
 interface GRNOption {
@@ -88,7 +88,6 @@ interface ErrorResponse {
 }
 
 const RMLabelPrinting: React.FC = () => {
-  // State variables
   const [grnNumbers, setGRNNumbers] = useState<GRNOption[]>([]);
   const [selectedGrn, setSelectedGrn] = useState<string>('');
   const [grnDetails, setGrnDetails] = useState<GRNDetails[] | null>(null);
@@ -99,11 +98,9 @@ const RMLabelPrinting: React.FC = () => {
   const [generatedSerialNumbers, setGeneratedSerialNumbers] = useState<SerialNumber[]>([]);
   const [isPrinting, setIsPrinting] = useState<boolean>(false);
   
-  // Pagination state for Serial Numbers
   const [serialNumbersPage, setSerialNumbersPage] = useState<number>(1);
   const [serialNumbersPerPage, setSerialNumbersPerPage] = useState<number>(5);
   
-  // Recent label printing data and pagination
   const [recentLabelPrinting, setRecentLabelPrinting] = useState<RecentLabelPrinting[]>([]);
   const [recentPrintingPage, setRecentPrintingPage] = useState<number>(1);
   const [recentPrintingsPerPage, setRecentPrintingsPerPage] = useState<number>(10);
@@ -113,20 +110,17 @@ const RMLabelPrinting: React.FC = () => {
   const token = Cookies.get('token');
   const grnInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch GRN numbers when component mounts
   useEffect(() => {
     fetchGRNNumbers();
     fetchRecentLabelPrinting();
   }, [token]);
 
-  // Focus on GRN input field when component mounts
   useEffect(() => {
     if (grnInputRef.current) {
       grnInputRef.current.focus();
     }
   }, []);
 
-  // Fetch all unique GRN numbers
   const fetchGRNNumbers = async () => {
     if (!token) {
       toast({
@@ -166,7 +160,6 @@ const RMLabelPrinting: React.FC = () => {
     }
   };
   
-  // Fetch recent label printing data
   const fetchRecentLabelPrinting = async () => {
     if (!token) return;
     
@@ -196,12 +189,10 @@ const RMLabelPrinting: React.FC = () => {
     }
   };
 
-  // Handle GRN number selection from dropdown
   const handleGRNChange = (value: string) => {
     setSelectedGrn(value);
   };
 
-  // Get details for the selected GRN number
   const handleGetDetails = async () => {
     if (!selectedGrn) {
       toast({
@@ -233,7 +224,6 @@ const RMLabelPrinting: React.FC = () => {
       const data = await response.json();
       
       if (data[0]?.Status === 'F') {
-        // Error response
         toast({
           variant: "destructive",
           title: "Error",
@@ -241,13 +231,12 @@ const RMLabelPrinting: React.FC = () => {
         });
         setGrnDetails(null);
       } else {
-        // Success response
         setGrnDetails(data);
         
-        // Initialize print quantity for each item
         const initialPrintQty: {[key: string]: string} = {};
-        data.forEach((item: GRNDetails) => {
-          initialPrintQty[item.product_code] = '';
+        data.forEach((item: GRNDetails, index: number) => {
+          const uniqueKey = `${item.product_code}_${index}_${item.qty}`;
+          initialPrintQty[uniqueKey] = '';
         });
         setPrintQty(initialPrintQty);
       }
@@ -263,15 +252,13 @@ const RMLabelPrinting: React.FC = () => {
     }
   };
 
-  // Handle print quantity change for each item
-  const handlePrintQtyChange = (productCode: string, value: string) => {
+  const handlePrintQtyChange = (uniqueKey: string, value: string) => {
     setPrintQty(prev => ({
       ...prev,
-      [productCode]: value
+      [uniqueKey]: value
     }));
   };
 
-  // Reset form
   const handleReset = () => {
     setSelectedGrn('');
     setGrnDetails(null);
@@ -281,10 +268,10 @@ const RMLabelPrinting: React.FC = () => {
     setGeneratedSerialNumbers([]);
   };
 
-  // Handle print action
   const handlePrint = async () => {
     const productDetails = activeProductCode ? grnDetails?.find(item => item.product_code === activeProductCode) : null;
     const totalSerialQty = generatedSerialNumbers.reduce((sum, sn) => sum + sn.qty, 0);
+    
     if (productDetails && totalSerialQty !== productDetails.qty) {
       toast({
         variant: "destructive",
@@ -293,36 +280,101 @@ const RMLabelPrinting: React.FC = () => {
       });
       return;
     }
-    setIsPrinting(true);
-    try {
-      // Logic for printing will be added later
+    
+    if (!productDetails || !token) {
       toast({
-        title: "Print Requested",
-        description: "Print functionality will be implemented soon."
+        variant: "destructive",
+        title: "Error",
+        description: "Missing required data for printing."
       });
+      return;
+    }
+
+    setIsPrinting(true);
+    
+    try {
+      const printQtyString = generatedSerialNumbers.map(sn => sn.qty.toString()).join('$');
+      const serialNoString = generatedSerialNumbers.map(sn => sn.serialNo).join('$');
       
-      // Close the serial number modal after printing
-      setShowSerialNumbers(false);
-      setActiveProductCode(null);
-      setGeneratedSerialNumbers([]);
+      const requestBody = {
+        trans_serialno: productDetails.trans_serialno || "",
+        voucher_no: productDetails.voucher_no || "",
+        party_name: productDetails.party_name || "",
+        product_code: productDetails.product_code || "",
+        product_name: productDetails.product_name || "",
+        qty: productDetails.qty || 0,
+        invoice_no: productDetails.invoice_no || "",
+        pur_order_no: productDetails.pur_order_no || "",
+        narration: productDetails.narration || "",
+        print_qty: printQtyString,
+        serial_no: serialNoString,
+        print_by: getUserID() 
+      };
+
+      const response = await fetch(`${BACKEND_URL}/api/transaction/insert-rm-label-printing`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to insert label printing data');
+      }
+
+      const result = await response.json();
       
-      // Refresh recent label printing data
-      fetchRecentLabelPrinting();
+      if (result.Status === 'F') {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: result.Message || "Failed to print labels."
+        });
+        return;
+      }
+      
+      if (result.Status === 'T') {
+        toast({
+          title: "Success",
+          description: result.Message || "Labels printed and data saved successfully."
+        });
+        
+        setShowSerialNumbers(false);
+        setActiveProductCode(null);
+        setGeneratedSerialNumbers([]);
+        setSelectedGrn('');
+        setGrnDetails(null);
+        setPrintQty({});
+        setSerialNumbersPage(1);
+        setRecentPrintingPage(1);
+        
+        await fetchRecentLabelPrinting();
+        
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Unexpected Response",
+          description: "Received unexpected response from server."
+        });
+      }
       
     } catch (error) {
       console.error('Error printing labels:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to print labels."
+        description: "Failed to print labels and save data."
       });
     } finally {
       setIsPrinting(false);
     }
   };
 
-  const handleGenerateSerialNumbers = async (productCode: string, productName: string) => {
-    const printQtyValue = printQty[productCode];
+  const handleGenerateSerialNumbers = async (productCode: string, productName: string, rowIndex: number, qty: number) => {
+    const uniqueKey = `${productCode}_${rowIndex}_${qty}`;
+    const printQtyValue = printQty[uniqueKey];
     
     if (!printQtyValue || parseInt(printQtyValue) <= 0) {
       toast({
@@ -333,27 +385,17 @@ const RMLabelPrinting: React.FC = () => {
       return;
     }
     
-    const productDetails = grnDetails?.find(item => item.product_code === productCode);
+    const productDetails = grnDetails?.find((item, index) => index === rowIndex && item.product_code === productCode);
     if (!productDetails) return;
     
     const totalQty = productDetails.qty;
     const requestedLabels = parseInt(printQtyValue);
     const remainingLabels = productDetails.remaining_label;
     
-    // if (requestedLabels > remainingLabels) {
-    //   toast({
-    //     variant: "destructive",
-    //     title: "Error",
-    //     description: `Cannot print more than remaining labels (${remainingLabels}).`
-    //   });
-    //   return;
-    // }
-    
     setIsLoading(true);
     setActiveProductCode(productCode);
     
     try {
-      // Get the next serial number from API
       const response = await fetch(`${BACKEND_URL}/api/transaction/get-label-serial-number`, {
         method: 'POST',
         headers: {
@@ -373,11 +415,9 @@ const RMLabelPrinting: React.FC = () => {
       const data = await response.json();
       let startSerialNo = data.SrNo + 1;
       
-      // Calculate quantity per label
       const qtyPerLabel = Math.floor(totalQty / requestedLabels);
       const remainder = totalQty % requestedLabels;
       
-      // Generate serial numbers
       const serialNumbers: SerialNumber[] = [];
       let totalAssigned = 0;
       
@@ -385,7 +425,6 @@ const RMLabelPrinting: React.FC = () => {
         const serialNo = `${productCode}|${selectedGrn}|${startSerialNo + i}`;
         let labelQty = qtyPerLabel;
         
-        // Distribute the remainder across the first labels
         if (i < remainder) {
           labelQty += 1;
         }
@@ -394,7 +433,6 @@ const RMLabelPrinting: React.FC = () => {
         serialNumbers.push({ serialNo, qty: labelQty, editable: true });
       }
       
-      // Set the generated serial numbers and reset pagination to first page
       setGeneratedSerialNumbers(serialNumbers);
       setSerialNumbersPage(1);
       setShowSerialNumbers(true);
@@ -414,13 +452,11 @@ const RMLabelPrinting: React.FC = () => {
   const handleSerialQtyChange = (index: number, newQty: number) => {
     const updatedSerialNumbers = [...generatedSerialNumbers];
     
-    // Update the quantity for the specified serial number
     updatedSerialNumbers[index] = {
       ...updatedSerialNumbers[index],
       qty: newQty
     };
     
-    // Check if the total sum matches the original total
     const productDetails = grnDetails?.find(item => item.product_code === activeProductCode);
     if (!productDetails) return;
     
@@ -439,7 +475,6 @@ const RMLabelPrinting: React.FC = () => {
     setGeneratedSerialNumbers(updatedSerialNumbers);
   };
 
-  // Calculate paginated serial numbers
   const totalSerialQty = generatedSerialNumbers.reduce((sum, sn) => sum + sn.qty, 0);
   const productDetails = activeProductCode ? grnDetails?.find(item => item.product_code === activeProductCode) : null;
   const isValidQtySum = productDetails && totalSerialQty <= productDetails.qty;
@@ -449,15 +484,12 @@ const RMLabelPrinting: React.FC = () => {
     (serialNumbersPage - 1) * serialNumbersPerPage,
     serialNumbersPage * serialNumbersPerPage
   );
-  
-  // Calculate paginated recent label printing
   const totalRecentPrintingPages = Math.ceil(recentLabelPrinting.length / recentPrintingsPerPage);
   const paginatedRecentPrinting = recentLabelPrinting.slice(
     (recentPrintingPage - 1) * recentPrintingsPerPage,
     recentPrintingPage * recentPrintingsPerPage
   );
 
-  // Handle page changes
   const handleSerialNumbersPageChange = (page: number) => {
     setSerialNumbersPage(page);
   };
@@ -466,7 +498,6 @@ const RMLabelPrinting: React.FC = () => {
     setRecentPrintingPage(page);
   };
   
-  // Handle items per page changes
   const handleSerialNumbersPerPageChange = (value: string) => {
     setSerialNumbersPerPage(Number(value));
     setSerialNumbersPage(1);
@@ -583,33 +614,36 @@ const RMLabelPrinting: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {grnDetails.map((item, index) => (
-                        <TableRow key={index}>
-                          <TableCell className="font-medium">{item.product_code}</TableCell>
-                          <TableCell className="max-w-[200px] truncate">{item.product_name}</TableCell>
-                          <TableCell>{item.qty}</TableCell>
-                          <TableCell>
-                            <Input 
-                              type="number"
-                              min="0"
-                              value={printQty[item.product_code] || ''}
-                              onChange={(e) => handlePrintQtyChange(item.product_code, e.target.value)}
-                              className="w-20"
-                            />
-                          </TableCell>
-                          <TableCell>{item.printed_label}</TableCell>
-                          <TableCell>{item.remaining_label}</TableCell>
-                          <TableCell>
-                            <Button 
-                              size="sm"
-                              onClick={() => handleGenerateSerialNumbers(item.product_code, item.product_name)}
-                              disabled={isLoading || !printQty[item.product_code] || parseInt(printQty[item.product_code]) <= 0}
-                            >
-                              Generate S/N
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {grnDetails.map((item, index) => {
+                        const uniqueKey = `${item.product_code}_${index}_${item.qty}`;
+                        return (
+                          <TableRow key={uniqueKey}>
+                            <TableCell className="font-medium">{item.product_code}</TableCell>
+                            <TableCell className="max-w-[200px] truncate">{item.product_name}</TableCell>
+                            <TableCell>{item.qty}</TableCell>
+                            <TableCell>
+                              <Input 
+                                type="number"
+                                min="0"
+                                value={printQty[uniqueKey] || ''}
+                                onChange={(e) => handlePrintQtyChange(uniqueKey, e.target.value)}
+                                className="w-20"
+                              />
+                            </TableCell>
+                            <TableCell>{item.printed_label}</TableCell>
+                            <TableCell>{item.remaining_label}</TableCell>
+                            <TableCell>
+                              <Button 
+                                size="sm"
+                                onClick={() => handleGenerateSerialNumbers(item.product_code, item.product_name, index, item.qty)}
+                                disabled={isLoading || !printQty[uniqueKey] || parseInt(printQty[uniqueKey]) <= 0}
+                              >
+                                Generate S/N
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
