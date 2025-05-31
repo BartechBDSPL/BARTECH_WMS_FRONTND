@@ -1,30 +1,26 @@
 import Link from "next/link";
-
-// import Dashboard from "@/components/tab/dashboard-final";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator
 } from "@/components/ui/breadcrumb";
-import Dashboard from "@/components/dashboard/dashboard";
+import QcReport from "@/components/reports/qc-report";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Dashboard">
+    <ContentLayout title="QC Report">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Home</Link>
+              <Link href="/">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <Dashboard/>
+      <QcReport /> 
     </ContentLayout>
   );
 }

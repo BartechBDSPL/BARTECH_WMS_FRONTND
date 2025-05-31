@@ -242,6 +242,31 @@ export function getMenuList(pathname: string): Group[] {
             active: pathname === "/rep-jc-master",
             value: "5_1",
           },
+          {
+            href: "/qc-report",
+            label: "QC Report",
+            active: pathname === "/qc-report",
+            value: "5_1",
+          },
+          {
+            href: "/inward-report",
+            label: "Inward Report",
+            active: pathname === "/inward-report",
+            value: "5_1",
+          },
+          {
+            href: "/put-away-report",
+            label: "Put Away Report",
+            active: pathname === "/put-away-report",
+            value: "5_1",
+          },
+          {
+            href: "/internal-movement",
+            label: "Internal Movement Report",
+            active: pathname === "/internal-movement",
+            value: "5_1",
+          },
+          
          
         ],
         },        {

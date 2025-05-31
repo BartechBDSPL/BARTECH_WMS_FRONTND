@@ -47,30 +47,7 @@ interface MenuProps {
   isOpen: boolean | undefined;
 }
 
-export function getFilteredMenuList() {
-  const token = Cookies.get('token');
-  const fullMenuList = getMenuList('/');
 
-  if (!token) {
-    return fullMenuList; // Return all menus if no token
-  }
-
-  const decodedToken: any = jwtDecode(token);
-  const userPermissions = decodedToken.user.Web_MenuAccess.split(',');
-  
-  return fullMenuList.map(group => ({
-    ...group,
-    menus: group.menus.filter(menu => {
-      if (userPermissions.includes(menu.value)) {
-        return true;
-      }
-      return menu.submenus.some(submenu => userPermissions.includes(submenu.value));
-    }).map(menu => ({
-      ...menu,
-      submenus: menu.submenus.filter(submenu => userPermissions.includes(submenu.value))
-    }))
-  })).filter(group => group.menus.length > 0);
-}
 
 export function Menu({ isOpen }: MenuProps) {
   const router = useRouter();
@@ -79,8 +56,27 @@ export function Menu({ isOpen }: MenuProps) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const filteredMenus = getFilteredMenuList();
-    setFilteredMenuList(filteredMenus);
+    const token = Cookies.get('token');
+    if (token) {
+      const decodedToken: any = jwtDecode(token);
+      const userPermissions = decodedToken.user.Web_MenuAccess.split(',');
+      const fullMenuList = getMenuList(pathname ?? '/');
+
+      const filteredMenus = fullMenuList.map(group => ({
+        ...group,
+        menus: group.menus.filter(menu => {
+          if (userPermissions.includes(menu.value)) {
+            return true;
+          }
+          return menu.submenus.some(submenu => userPermissions.includes(submenu.value));
+        }).map(menu => ({
+          ...menu,
+          submenus: menu.submenus.filter(submenu => userPermissions.includes(submenu.value))
+        }))
+      })).filter(group => group.menus.length > 0);
+
+      setFilteredMenuList(filteredMenus);
+    }
   }, [pathname]);
 
   const handleLogout = async () => {
@@ -212,4 +208,27 @@ export function Menu({ isOpen }: MenuProps) {
       </nav>
     </ScrollArea>
   );
+}
+
+
+export function getFilteredMenuList() {
+  const token = Cookies.get('token');
+  if (!token) return [];
+
+  const decodedToken: any = jwtDecode(token);
+  const userPermissions = decodedToken.user.Web_MenuAccess.split(',');
+  const fullMenuList = getMenuList('/');
+
+  return fullMenuList.map(group => ({
+    ...group,
+    menus: group.menus.filter(menu => {
+      if (userPermissions.includes(menu.value)) {
+        return true;
+      }
+      return menu.submenus.some(submenu => userPermissions.includes(submenu.value));
+    }).map(menu => ({
+      ...menu,
+      submenus: menu.submenus.filter(submenu => userPermissions.includes(submenu.value))
+    }))
+  })).filter(group => group.menus.length > 0);
 }

@@ -15,7 +15,7 @@ export default function DashboardPage() {
         <BreadcrumbList>
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/rep-jc-">Home</Link>
+              <Link href="/">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
