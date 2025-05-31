@@ -388,7 +388,7 @@ console.log("Report " , reportData)
           fillColor: [245, 245, 245]
         },
         didDrawPage: (data: any) => {
-          const pageCount = doc.getNumberOfPages();
+          const pageCount = doc.internal.getNumberOfPages();
           doc.setFontSize(8);
           doc.text(
             `Page ${data.pageNumber} of ${pageCount}`,
