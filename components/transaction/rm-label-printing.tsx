@@ -608,8 +608,6 @@ const RMLabelPrinting: React.FC = () => {
                         <TableHead className="whitespace-nowrap">Product Name</TableHead>
                         <TableHead className="whitespace-nowrap">Quantity</TableHead>
                         <TableHead className="whitespace-nowrap">Print Qty</TableHead>
-                        <TableHead className="whitespace-nowrap">Printed Labels</TableHead>
-                        <TableHead className="whitespace-nowrap">Remaining Labels</TableHead>
                         <TableHead className="whitespace-nowrap">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -630,8 +628,6 @@ const RMLabelPrinting: React.FC = () => {
                                 className="w-20"
                               />
                             </TableCell>
-                            <TableCell>{item.printed_label}</TableCell>
-                            <TableCell>{item.remaining_label}</TableCell>
                             <TableCell>
                               <Button 
                                 size="sm"

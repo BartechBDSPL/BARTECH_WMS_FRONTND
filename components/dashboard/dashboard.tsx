@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts'
 import { Package, Truck, TrendingUp, Archive, Activity, Calendar, Users, Target } from 'lucide-react'
+import { BACKEND_URL } from '@/lib/constants'
 
 // TypeScript interfaces for API responses
 interface DashboardStats {
@@ -37,14 +38,14 @@ const Dashboard: React.FC = () => {
         setError(null)
 
         // Fetch dashboard stats
-        const statsResponse = await fetch('http://localhost:4251/api/dashboard/stats')
+        const statsResponse = await fetch(`${BACKEND_URL}/api/dashboard/stats`)
         if (!statsResponse.ok) {
           throw new Error(`Stats API error: ${statsResponse.status}`)
         }
         const statsData: DashboardStats[] = await statsResponse.json()
         
         // Fetch put vs pick data
-        const putPickResponse = await fetch('http://localhost:4251/api/dashboard/put-vs-pick')
+        const putPickResponse = await fetch(`${BACKEND_URL}/api/dashboard/put-vs-pick`)
         if (!putPickResponse.ok) {
           throw new Error(`Put vs Pick API error: ${putPickResponse.status}`)
         }
