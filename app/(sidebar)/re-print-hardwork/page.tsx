@@ -10,7 +10,7 @@ import RePrintHardWareTraking from "@/components/masters/re-printhard-ware";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Re-Print Hardwork Traking">
+    <ContentLayout title="Re-Print Hardware Traking">
       <Breadcrumb>
         <BreadcrumbList>  
           <BreadcrumbItem>  
