@@ -125,24 +125,7 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/printer-master",
               value: "2_10",
             },
-            {
-              href: "/hardware-tracking",
-              label: "Hardware Tracking",
-              active: pathname === "/hardware-tracking",
-              value: "2_11",
-            },
-            {
-              href: "/re-print-hardwork",
-              label: "Re-Print Hardwork Traking",
-              active: pathname === "/re-print-hardwork",
-              value: "2_11"
-            },
-            {
-              href: "/software-tracking",
-              label: "Software Tracking",
-              active: pathname === "/software-tracking",
-              value: "2_12",
-            },
+           
              {
               href: "/warehouse-category-master",
               label: "WH Category Master",
@@ -167,6 +150,7 @@ export function getMenuList(pathname: string): Group[] {
           
           ],
         },
+       
         {
           href: "",
           label: "Transaction",
@@ -235,6 +219,34 @@ export function getMenuList(pathname: string): Group[] {
         //     },
         //   ],
         // },
+
+         {
+          href: "",
+          label: "Tracking",
+          active: pathname.includes("/heloj"),
+          icon: SquarePen,
+          value: "4",
+          submenus: [
+             {
+              href: "/hardware-tracking",
+              label: "Hardware Tracking",
+              active: pathname === "/hardware-tracking",
+              value: "4_1",
+            },
+            {
+              href: "/re-print-hardwork",
+              label: "Re-Print Hardwork Traking",
+              active: pathname === "/re-print-hardwork",
+              value: "4_2"
+            },
+            {
+              href: "/software-tracking",
+              label: "Software Tracking",
+              active: pathname === "/software-tracking",
+              value: "4_3",
+            },
+          ],
+        },
         {
           href: "/categories",
           label: "Reports",

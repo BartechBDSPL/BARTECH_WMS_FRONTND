@@ -1009,7 +1009,7 @@ const handlePrintLabel = async (row: HardwareData) => {
     const loadingToastId = toast({
       title: "Processing",
       description: "Sending print job...",
-      duration: 60000, // Long duration as we'll dismiss it manually
+      duration: 60000,
     }).id;
 
     // Format dates
@@ -1020,43 +1020,17 @@ const handlePrintLabel = async (row: HardwareData) => {
       ? new Date(row.DateOfWarrentyExp).toISOString().split("T")[0]
       : "";
 
-    const fullUrl = row.UniqueSerialNo || "";
-    const prefix = "SerialNo=";
-    const prefixIndex = fullUrl.indexOf(prefix);
-
-    if (prefixIndex === -1) {
+    const serialNumber = row.SerialNo?.trim();
+    if (!serialNumber) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Invalid UniqueSerialNo format: 'SerialNo=' not found.",
-      });
-      return;
-    }
-
-    const baseUrl = fullUrl.substring(0, prefixIndex + prefix.length);
-    const serialsStr = fullUrl.substring(prefixIndex + prefix.length);
-
-    const serialNumbers = serialsStr
-      .split(",")
-      .map((sn) => sn.trim())
-      .filter(Boolean);
-
-    if (serialNumbers.length === 0) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No serial numbers found in UniqueSerialNo.",
+        description: "Serial number is missing.",
       });
       return;
     }
 
     const qty = Number(row.Qty) || 1;
-
-    // Repeat serial numbers if qty > serialNumbers.length
-    const serialsToPrint = Array.from({ length: qty }, (_, i) => serialNumbers[i % serialNumbers.length]);
-
-    const joinedSerials = serialsToPrint.join("$");
-    const joinedBarcodes = serialsToPrint.map(sn => `${baseUrl}${sn}`).join("$");
 
     const printData = {
       CustomerName: row.CustomerName || "",
@@ -1073,7 +1047,7 @@ const handlePrintLabel = async (row: HardwareData) => {
       WarrantyDays: row.WarrentyDays || "",
       WarrantyExpDate: warrantyExpDate,
       Quantity: qty,
-      SerialNumber: joinedSerials,
+      SerialNumber: serialNumber, // Single serial number
     };
 
     const res = await axios.post(`${BACKEND_URL}/api/master/print-hardware-label`, printData);

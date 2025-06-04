@@ -480,7 +480,7 @@ console.log("Report " , reportData)
       {showTable && (
         reportData.length > 0 ? (
           <Card className="mt-5">
-            <CardHeader className="underline underline-offset-4 text-center">Inward Report</CardHeader>
+            <CardHeader className="underline underline-offset-4 text-center">Hardware Report</CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">

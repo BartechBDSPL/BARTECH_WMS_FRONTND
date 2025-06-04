@@ -493,7 +493,7 @@ const SoftwareTrackingReport = () => {
         (reportData.length > 0 ? (
           <Card className="mt-5">
             <CardHeader className="underline underline-offset-4 text-center">
-              Inward Report
+              Software Report
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
