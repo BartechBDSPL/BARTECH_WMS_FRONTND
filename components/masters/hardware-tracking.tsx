@@ -41,6 +41,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/Textarea";
 import {
@@ -84,6 +85,10 @@ interface SerialEntry {
 }
 
 
+interface dropdownsOptions {
+  value: string;
+  label: string;
+}
 
 const HardwareTracking: React.FC = () => {
   const {
@@ -173,6 +178,10 @@ const HardwareTracking: React.FC = () => {
 
   const [oldData, setOldData] = useState<HardwareData | null>(null);
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
+    const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+    const [selectedPrinter, setSelectedPrinter] = useState("");
+    
+  
   
   
 
@@ -278,11 +287,34 @@ useEffect(() => {
   useEffect(() => {
     //setUsername("admin");
 
-    Promise.all([fetchCustomers(), fetchHardware()]).finally(() =>
+    Promise.all([fetchCustomers(), fetchHardware(), getPrinterDetails()]).finally(() =>
       setIsLoading(false)
     );
     fetchData();
   }, []);
+
+   const getPrinterDetails = async () => {
+      try {
+        const response = await axios.get(
+          `${BACKEND_URL}/api/master/get-printer-name`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        const printers = response.data.Data.map((printer: any) => ({
+          label: printer.Printer_Name,
+          value: `${printer.Printer_ip}:${printer.Printer_port}`, // <-- value to send
+        }));
+  
+        setPrinterOptions(printers);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
  const handleRowSelect = (id: number) => {
    setIsEditMode(true);
@@ -315,7 +347,8 @@ useEffect(() => {
     setValue("warrentyDays", selectedData.WarrentyDays);
     setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
     setValue("qty", selectedData.Qty);
-    setValue("serialNo", selectedData.SerialNo);
+    setValue("serialNo", '');
+    setSerialNumbers(selectedData.SerialNo.split(','))
 
     // Set state for dropdowns to ensure they display the correct values
     setSelectedCustomer(selectedData.CustomerName);
@@ -598,7 +631,7 @@ useEffect(() => {
   };
 
    const filteredData = useMemo(() => {
-    console.log(data);
+    // console.log(data);
       return data.filter(item => {
       const searchableFields: (keyof HardwareData)[] = ['CustomerName','CustomerAddress','ContactPerson','ContactNo','EmailID','Invoice_PONo','HardwareType','Make','Model','AdditionalDetails','DateOfWarrentyStart','WarrentyDays','DateOfWarrentyExp','Qty','SerialNo','UniqueSerialNo','TransBy','TransDate','WarrentyStatus'];
 
@@ -807,11 +840,15 @@ const handleReset = () => {
   setModels([]);
   setActiveStep(1);
   setCompletedSteps([]);
+
+  setSerialNumbers([]);
   
   // Set default values again
   setValue("warrentyDays", 0);
   setValue("qty", 1);
   setValue("dateOfWarrentyStart", new Date());
+
+
 };
   const onSubmitForm = async (data: HardwareTrackingSchema) => {
     try {
@@ -850,6 +887,7 @@ const handleReset = () => {
       return false;
     }
     
+    
 
     try {
       const formattedDate = formData.dateOfWarrentyStart
@@ -871,7 +909,7 @@ const handleReset = () => {
         WarrentyDays: formData.warrentyDays,
         WarrentyStatus: formData.warrentyStatus,
         Qty: formData.qty,
-        SerialNo: serialNumbers.join('&#!'),
+        SerialNo: serialNumbers.join(','),
         User: getUserID(),
       };
 
@@ -1002,9 +1040,18 @@ const handleUpdateClick = async () => {
     setIsProcessing(false);
   }
 };
-
+console.log(selectedPrinter)
 const handlePrintLabel = async (row: HardwareData) => {
   try {
+    if (selectedPrinter === "" || !selectedPrinter ){
+      toast({
+        title: "Plz Select Printer !!!",
+        description: "Select Printer in a table Top !!",
+         variant: "destructive"
+      })
+      return
+    
+    }
     // Show loading toast
     const loadingToastId = toast({
       title: "Processing",
@@ -1030,6 +1077,8 @@ const handlePrintLabel = async (row: HardwareData) => {
       return;
     }
 
+    
+
     const qty = Number(row.Qty) || 1;
 
     const printData = {
@@ -1048,9 +1097,11 @@ const handlePrintLabel = async (row: HardwareData) => {
       WarrantyExpDate: warrantyExpDate,
       Quantity: qty,
       SerialNumber: serialNumber, // Single serial number
+      PrinterIpPort : selectedPrinter,
     };
 
     const res = await axios.post(`${BACKEND_URL}/api/master/print-hardware-label`, printData);
+    // const res = await axios.post(`${BACKEND_URL}/api/master/print-h`, printData);
 
     if (res.data && res.data.Status === "T") {
       toast({
@@ -2030,7 +2081,23 @@ const handlePrintLabel = async (row: HardwareData) => {
             </SelectContent>
           </Select>
           <span>entries</span>
+          <Select
+                          value={selectedPrinter}
+                          onValueChange={setSelectedPrinter}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select Printer" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {printerOptions.map((printer) => (
+                              <SelectItem key={printer.value} value={printer.value}>
+                                {printer.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
         </div>
+        
         <div className="flex items-center space-x-2">
           <TableSearch onSearch={handleSearch} />
         </div>
