@@ -173,10 +173,10 @@ const RePrintSoftwareTraking: React.FC = () => {
   const fetchCustomerAddresses = async () => {
     try {
       var data = {
-        CustomerName: searchFilters.CustomerName,
-        SoftwareType: searchFilters.SoftwareType,
-        ProjectTitle: searchFilters.ProjectTitle,
-        ProjectVersion: searchFilters.ProjectVersion,
+        CustomerName: searchFilters.CustomerName.trim(),
+        SoftwareType: searchFilters.SoftwareType.trim(),
+        ProjectTitle: searchFilters.ProjectTitle.trim(),
+        ProjectVersion: searchFilters.ProjectVersion.trim(),
         FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
       };
@@ -418,7 +418,7 @@ const handlePrint = async () => {
       <Card className="w-full mx-auto mt-5">
         <CardHeader>
           <CardTitle>
-            Re-Print HardWare Tracking{" "}
+            Re-Print Software Tracking{" "}
             <span className="font-normal text-sm text-muted-foreground">
               (* Fields Are Mandatory)
             </span>
@@ -444,14 +444,14 @@ const handlePrint = async () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="HardwareType">Hardware Type</Label>
+                <Label htmlFor="SoftwareType">Software Type</Label>
                 <Input
-                  id="HardwareType"
+                  id="SoftwareType"
                   value={searchFilters.SoftwareType}
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      HardwareType: e.target.value,
+                      SoftwareType: e.target.value,
                     }))
                   }
                   placeholder="Enter Hardware Type"
@@ -466,7 +466,7 @@ const handlePrint = async () => {
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      Make: e.target.value,
+                      ProjectTitle: e.target.value,
                     }))
                   }
                   placeholder="Enter Project Title"
@@ -481,7 +481,7 @@ const handlePrint = async () => {
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      Model: e.target.value,
+                      ProjectVersion: e.target.value,
                     }))
                   }
                   placeholder="Enter Project Version"
@@ -672,9 +672,9 @@ const handlePrint = async () => {
                       </TableHead>
                       <TableHead>Customer Name</TableHead>
                       <TableHead>Customer Address</TableHead>
-                      <TableHead>Hardware Type</TableHead>
-                      <TableHead>Make</TableHead>
-                      <TableHead>Model</TableHead>
+                      <TableHead>Software Type</TableHead>
+                      <TableHead>Project Title</TableHead>
+                      <TableHead>Project Version</TableHead>
                       <TableHead>Serial No</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Warranty Status</TableHead>

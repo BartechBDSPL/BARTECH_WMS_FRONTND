@@ -171,10 +171,10 @@ const RePrintHardWareTraking: React.FC = () => {
   const fetchCustomerAddresses = async () => {
     try {
       var data = {
-        CustomerName: searchFilters.CustomerName,
-        HardwareType: searchFilters.HardwareType,
-        Make: searchFilters.Make,
-        Model: searchFilters.Model,
+        CustomerName: searchFilters.CustomerName.trim(),
+        HardwareType: searchFilters.HardwareType.trim(),
+        Make: searchFilters.Make.trim(),
+        Model: searchFilters.Model.trim(),
         FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
       };
@@ -418,7 +418,7 @@ const handlePrint = async () => {
       <Card className="w-full mx-auto mt-5">
         <CardHeader>
           <CardTitle>
-            Re-Print HardWare Tracking{" "}
+            Re-Print Hardware Tracking{" "}
             <span className="font-normal text-sm text-muted-foreground">
               (* Fields Are Mandatory)
             </span>

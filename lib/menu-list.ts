@@ -222,7 +222,7 @@ export function getMenuList(pathname: string): Group[] {
 
          {
           href: "",
-          label: "Tracking",
+          label: "Hardware Tracking",
           active: pathname.includes("/heloj"),
           icon: SquarePen,
           value: "4",
@@ -239,6 +239,17 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/re-print-hardwork",
               value: "4_2"
             },
+            
+          ],
+        },
+        {
+          href: "",
+          label: "Software Tracking",
+          active: pathname.includes("/heloj"),
+          icon: SquarePen,
+          value: "4",
+          submenus: [
+           
             {
               href: "/software-tracking",
               label: "Software Tracking",
