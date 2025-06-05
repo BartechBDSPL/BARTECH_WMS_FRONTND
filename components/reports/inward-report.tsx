@@ -34,10 +34,25 @@ import {
 } from "@/components/ui/pagination";
 import TableSearch from '@/utills/tableSearch';
 import { Label } from '../ui/label';
+import { Skeleton } from '../ui/skeleton';
 
 
-
+/**
+|--------------------------------------------------
+| {
+        "serial_no": "APP(1601)167MM|ICG000009|1",
+        "trans_serialno": "ICG000009",
+        "voucher_no": "91110018216",
+        "party_name": "Avery Dennison (India) Pvt.Ltd.-Pune",
+        "product_code": "APP(1601)167MM",
+        "product_name": "FASSON FASFILM PLUS WHITE/PERMANENT (AMF1601) SIZE- 167MM",
+        "inward_status": "Y",
+        "inward_by": "admin"
+    },
+|--------------------------------------------------
+*/
 interface JobCardReportData {
+  serial_no : string;
   trans_serialno: string;
   product_code: string;
   party_name: string;
@@ -46,6 +61,7 @@ interface JobCardReportData {
   pur_order_no: string | null;
   inward_status: string;
   inward_by: string;
+  product_name: string;
 
 }
 
@@ -55,8 +71,10 @@ interface JobCardReportData {
 
 const InwordReport = () => {
   const [transSerialNo, setTransSerialNo] = useState('');
-  const [invoiceNo, setInvoiceNo] = useState('');
-  const [inwardStatus, setInwardStatus] = useState('');
+  const [partyName, setPartyName] = useState('');
+  const [productCode, setProductCode] = useState('');
+  const [productName, setProductName] = useState('');
+  const [purOrderNo, setPurOrderNo] = useState('');
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
@@ -64,7 +82,8 @@ const InwordReport = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedRows, setExpandedRows] = useState<{ [key: string]: boolean }>({});
+  const [loading, setLoading] = useState(false);
+
 
   const token = Cookies.get('token');
  
@@ -101,7 +120,7 @@ const InwordReport = () => {
 
 
 
-console.log("Report " , reportData)
+
   const handleSubmitSearch = async () => {
     if (fromDate > toDate) {
       toast({
@@ -114,15 +133,18 @@ console.log("Report " , reportData)
     // const {CompanyName, Height, Width, JobCardNumber, LabelType, FrmDate, ToDate } = req.body;
     const requestBody = {
         Trans_SerialNo : transSerialNo.trim(),
-        Invoice_No : invoiceNo.trim(),
-        Inward_Status : inwardStatus === "All" ? "" : inwardStatus,
-        FrmDate: format(fromDate, "yyyy-MM-dd"),
+        Party_Name : partyName.trim(),
+        Product_Code: productCode.trim(),
+        Pur_Order_No : purOrderNo.trim(),
+        
+        FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
 
 
     };
   
     try {
+      setLoading(true);
       const response = await fetch(`${BACKEND_URL}/api/reports/inward-report`, {
         method: "POST",
         headers: {
@@ -136,17 +158,24 @@ console.log("Report " , reportData)
       if (data.length === 0) {
         setReportData([]);
         setShowTable(true);
+        setTimeout(() => {
+        setLoading(false);
+        }, 2000);
         return;
       }
   
       setReportData(data);
       setShowTable(true);
+      setTimeout(() => {
+        setLoading(false);
+        }, 2000);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to get data",
         variant: "destructive",
       });
+      setLoading(false);
     }
   };
 
@@ -158,43 +187,53 @@ console.log("Report " , reportData)
     setToDate(new Date());
     setShowTable(false);
     setTransSerialNo('');
-    setInvoiceNo('');
-    setInwardStatus('');
+
+    setPartyName('');
+    setProductCode('');
+    setProductName('');
+    setPurOrderNo('');
+
+
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
       const doc = new jsPDF('l', 'mm', 'a4');
-      
+      /**
+      |--------------------------------------------------
+      | "serial_no": "APP(1601)167MM|ICG000009|1",
+        "trans_serialno": "ICG000009",
+        "voucher_no": "91110018216",
+        "party_name": "Avery Dennison (India) Pvt.Ltd.-Pune",
+        "product_code": "APP(1601)167MM",
+        "product_name": "FASSON FASFILM PLUS WHITE/PERMANENT (AMF1601) SIZE- 167MM",
+        "inward_status": "Y",
+        "inward_by": "admin"
+      |--------------------------------------------------
+      */
       const columns = [
+        { header: 'Serial No', dataKey: 'serial_no' },
         { header: 'Trans Serial No', dataKey: 'trans_serialno' },
-        { header: 'Product Code', dataKey: 'product_code' },
-        { header: 'Party Name', dataKey: 'party_name' },
         { header: 'Voucher No', dataKey: 'voucher_no' },
-        { header: 'Invoice No', dataKey: 'invoice_no' },
-        { header: 'Pur Order No', dataKey: 'pur_order_no' },
+        { header: 'Party Name', dataKey: 'party_name' },
+        { header: 'Product Code', dataKey: 'product_code' },
+        { header: 'Product Name', dataKey: 'product_name' },
         { header: 'Inward Status', dataKey: 'inward_status' },
-        { header: 'Inward By', dataKey: 'inward_by' },
+        { header: 'Inward By', dataKey: 'inward_by' }
+        
         
       ];
 
       const formattedData = data.map(row => ({
         ...row,
         TransSerialNo: row.trans_serialno,
-        ProductCode : row.product_code,
-        PartyName : row.party_name,
-        VoucherNo: row.voucher_no,
-        InvoiceNo: row.invoice_no,
-        PurOrderNo: row.pur_order_no,
-        InwardStatus: row.inward_status,
-        InwardBy: row.inward_by,
        
         
        
       }));
 
       doc.setFontSize(18);
-      doc.text(`QC Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+      doc.text(`Inward Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
 
       (doc as any).autoTable({
         columns: columns,
@@ -212,7 +251,7 @@ console.log("Report " , reportData)
           2: { cellWidth: 35 }, 
           3: { cellWidth: 20 }, 
           4: { cellWidth: 30 }, 
-          5: { cellWidth: 20 }, 
+          5: { cellWidth: 70 }, 
           6: { cellWidth: 15 }, 
           7: { cellWidth: 25 }, 
           8: { cellWidth: 15 },
@@ -264,7 +303,7 @@ console.log("Report " , reportData)
       return;
     }
     
-    const fileName = `QC_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+    const fileName = `Inward_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
     exportToPdf(reportData, fileName);
   };
 
@@ -295,24 +334,18 @@ console.log("Report " , reportData)
               <Input value={transSerialNo} onChange={(e) => setTransSerialNo(e.target.value)}  placeholder=' Enter Trans SerialNo'/>
             </div>
             <div className="space-y-2">
-              <Label htmlFor='customerName'>Invoice No</Label>
-              <Input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)}  placeholder=' Enter Invoice No'/>
+              <Label htmlFor='PartyName'>Party Name</Label>
+              <Input value={partyName} onChange={(e) => setPartyName(e.target.value)}  placeholder=' Enter Party Name'/>
             </div>
-             <div className="space-y-2">
-               <Label htmlFor="status">
-                 Status
-               </Label>
-               <Select value={inwardStatus} onValueChange={setInwardStatus}>
-                 <SelectTrigger>
-                   <SelectValue placeholder="Select status" />
-                 </SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="All">All</SelectItem>
-                   <SelectItem value="Done">Done</SelectItem>
-                   <SelectItem value="Pending">Pending</SelectItem>
-                 </SelectContent>
-               </Select>
-             </div>
+            <div className="space-y-2">
+              <Label htmlFor='ProductCode'>Product Code</Label>
+              <Input value={productCode} onChange={(e) => setProductCode(e.target.value)}  placeholder=' Enter Product Code'/>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor='purOrderNo'>Pur Order No</Label>
+              <Input value={purOrderNo} onChange={(e) => setPurOrderNo(e.target.value)}  placeholder=' Enter Pur Order No'/>
+            </div>
+            
             <div className="space-y-2">
               <Label>From Date</Label>
               <Popover>
@@ -382,6 +415,24 @@ console.log("Report " , reportData)
       </Card>
 
       {showTable && (
+        (loading ? (
+                  <Card className="mt-5 p-6 space-y-4">
+                    <Skeleton className="h-6 w-40 mx-auto" />
+                    <Skeleton className="h-8 w-full" />
+                    <div className="flex justify-between">
+                      <Skeleton className="h-8 w-1/4" />
+                      <Skeleton className="h-8 w-1/4" />
+                    </div>
+                    {[...Array(5)].map((_, idx) => (
+                      <Skeleton key={idx} className="h-10 w-full" />
+                    ))}
+                    <div className="flex justify-end space-x-2">
+                      <Skeleton className="h-8 w-8" />
+                      <Skeleton className="h-8 w-8" />
+                      <Skeleton className="h-8 w-8" />
+                    </div>
+                  </Card>
+                ) :
         reportData.length > 0 ? (
           <Card className="mt-5">
             <CardHeader className="underline underline-offset-4 text-center">Inward Report</CardHeader>
@@ -415,12 +466,14 @@ console.log("Report " , reportData)
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>No</TableHead>
+                    <TableHead>Serial No</TableHead>
                     <TableHead>Trans Serial No</TableHead>
                     <TableHead>Product Code</TableHead>
                     <TableHead>Party Name</TableHead>
                     <TableHead>Voucher No</TableHead>
-                    <TableHead>Invoice No</TableHead>
-                    <TableHead>Pur Order No</TableHead>
+                    
+                    <TableCell>Product Name</TableCell>
                     <TableHead>Inward Status</TableHead>
                     <TableHead>Inward By</TableHead>
                   </TableRow>
@@ -430,12 +483,14 @@ console.log("Report " , reportData)
                     paginatedData.map((row, index) => (
                       <React.Fragment key={index}>
                         <TableRow>
+                          <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}.</TableCell>
+                          <TableCell>{row.serial_no}</TableCell>
                           <TableCell>{row.trans_serialno}</TableCell>
                           <TableCell>{row.product_code}</TableCell>
                           <TableCell>{row.party_name}</TableCell>
                           <TableCell>{row.voucher_no}</TableCell>
-                          <TableCell>{row.invoice_no}</TableCell>
-                          <TableCell>{row.pur_order_no}</TableCell>
+                          
+                          <TableCell>{row.product_name}</TableCell>
                           <TableCell>{row.inward_status}</TableCell>
                           <TableCell>{row.inward_by}</TableCell>
                          
@@ -507,7 +562,7 @@ console.log("Report " , reportData)
         ) : (
           <NoDataCard />
         )
-      )}
+      ))}
       
     </div>
   );

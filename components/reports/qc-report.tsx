@@ -1,21 +1,38 @@
-"use client"
-import React, { useEffect, useCallback, useMemo, useState } from 'react';
+"use client";
+import React, { useEffect, useCallback, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, CalendarIcon, ChevronDown, Eye, Printer } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertCircle,
+  CalendarIcon,
+  ChevronDown,
+  Eye,
+  Printer,
+} from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
-import { BACKEND_URL } from '@/lib/constants';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { FaFileExcel, FaFilePdf } from 'react-icons/fa';
-import Cookies from 'js-cookie';
-import ExportToExcel from '@/utills/reports/ExportToExcel';
+import { BACKEND_URL } from "@/lib/constants";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { FaFileExcel, FaFilePdf } from "react-icons/fa";
+import Cookies from "js-cookie";
+import ExportToExcel from "@/utills/reports/ExportToExcel";
 import {
   Select,
   SelectContent,
@@ -32,15 +49,30 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import TableSearch from '@/utills/tableSearch';
-import CustomDropdown from '../CustomDropdown';
-import { Label } from '../ui/label';
-import axios from 'axios';
-import { Dialog, DialogHeader,DialogTitle ,DialogContent} from '../ui/dialog';
-import { getWindingImagePath } from '@/utills/new/getWindingImagePath';
+import TableSearch from "@/utills/tableSearch";
+import CustomDropdown from "../CustomDropdown";
+import { Label } from "../ui/label";
+import axios from "axios";
+import { Dialog, DialogHeader, DialogTitle, DialogContent } from "../ui/dialog";
+import { getWindingImagePath } from "@/utills/new/getWindingImagePath";
+import { Skeleton } from "../ui/skeleton";
 
+/**
+|--------------------------------------------------
+|  {
+        "trans_serialno": "ICG000029",
+        "voucher_no": "7001",
+        "party_name": "Master Bartech Mfg.  Co.",
+        "product_code": "R80X300FONW1MBUS310.",
+        "product_name": "Thermal Transfer Ribbon Size:80mm x 300mtrs Resin 1\"Core Face/Out.",
+        "qc_status": "Approve",
+        "qc_by": "admin"
+    },
+|--------------------------------------------------
+*/
 
 interface JobCardReportData {
+  serial_no: string;
   trans_serialno: string;
   product_code: string;
   party_name: string;
@@ -50,7 +82,7 @@ interface JobCardReportData {
   qc_status: string;
   qc_by: string;
   qty: number;
-
+  product_name: string;
 }
 interface PreviewJobCardParams {
   jobCard: JobCardReportData;
@@ -72,39 +104,42 @@ interface ColorSequenceData {
   ColorSequence: string;
 }
 
-
 const QcReport = () => {
-  const [transSerialNo, setTransSerialNo] = useState('');
-  const [invoiceNo, setInvoiceNo] = useState('');
-  const [quantityStatus, setQuantityStatus] = useState('');
+  const [transSerialNo, setTransSerialNo] = useState("");
+  const [invoiceNo, setInvoiceNo] = useState("");
+  const [quantityStatus, setQuantityStatus] = useState("");
+  const [partyName, setPartyName] = useState("");
+  const [productCode, setProductCode] = useState("");
+  const [purOrderNo, setPurOrderNo] = useState("");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
   const [reportData, setReportData] = useState<JobCardReportData[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [selectedJobCard, setSelectedJobCard] = useState<JobCardReportData | null>(null);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedRows, setExpandedRows] = useState<{ [key: string]: boolean }>({});
-  const [colorSequenceData, setColorSequenceData] = useState<{ [key: string]: ColorSequenceData[] }>({});
-  const token = Cookies.get('token');
- 
+  const token = Cookies.get("token");
+  const [loading, setLoading] = useState(false);
 
   const filteredData = useMemo(() => {
-    return reportData.filter(item => {
+    return reportData.filter((item) => {
       const searchableFields = [
-        'trans_serialno', 
-        'product_code', 
-        'party_name', 
-        'voucher_no', 
-        'invoice_no', 
-        'qc_status',
-        'qty'
+        "trans_serialno",
+        "product_code",
+        "party_name",
+        "voucher_no",
+        "invoice_no",
+        "qc_status",
+        "qty",
+        "product_name",
+        "serial_no",
       ];
-      return searchableFields.some(key => {
+      return searchableFields.some((key) => {
         const value = (item as any)[key];
-        return value != null && value.toString().toLowerCase().includes(searchTerm.toLowerCase());
+        return (
+          value != null &&
+          value.toString().toLowerCase().includes(searchTerm.toLowerCase())
+        );
       });
     });
   }, [reportData, searchTerm]);
@@ -114,17 +149,25 @@ const QcReport = () => {
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredData, currentPage, itemsPerPage]);
 
-  const totalPages = useMemo(() => Math.ceil(filteredData.length / itemsPerPage), [filteredData, itemsPerPage]);
+  const totalPages = useMemo(
+    () => Math.ceil(filteredData.length / itemsPerPage),
+    [filteredData, itemsPerPage]
+  );
 
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term.trim());
     setCurrentPage(1);
   }, []);
 
-
-
-console.log("Report " , reportData)
   const handleSubmitSearch = async () => {
+    if (!quantityStatus) {
+      toast({
+        title: "Select Quantity Status",
+        description: "Please select a Quantity Status",
+        variant: "destructive",
+      });
+      return;
+    }
     if (fromDate > toDate) {
       toast({
         title: "Validation Error",
@@ -135,161 +178,122 @@ console.log("Report " , reportData)
     }
     // const {CompanyName, Height, Width, JobCardNumber, LabelType, FrmDate, ToDate } = req.body;
     const requestBody = {
-        Trans_SerialNo : transSerialNo.trim(),
-        Invoice_No : invoiceNo.trim(),
-      Quality_Status : quantityStatus === "All" ? "" : quantityStatus,
-      FrmDate: format(fromDate, "yyyy-MM-dd"),
+      Trans_SerialNo: transSerialNo.trim(),
+      Party_Name: partyName.trim(),
+      Product_Code: productCode.trim(),
+      Pur_Order_No: purOrderNo.trim(),
+      Quality_Status: quantityStatus,
+      FromDate: format(fromDate, "yyyy-MM-dd"),
       ToDate: format(toDate, "yyyy-MM-dd"),
-
     };
-  
+
     try {
-      const response = await fetch(`${BACKEND_URL}/api/reports/quality-report`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(requestBody),
-      });
-  
+      setLoading(true);
+      const response = await fetch(
+        `${BACKEND_URL}/api/reports/quality-report`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
       const data: JobCardReportData[] = await response.json();
       if (data.length === 0) {
         setReportData([]);
         setShowTable(true);
+        setTimeout(() => {
+        setLoading(false);
+        }, 2000);
         return;
       }
-  
+
       setReportData(data);
       setShowTable(true);
+      setTimeout(() => {
+      setLoading(false);
+      }, 2000);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to get data",
         variant: "destructive",
       });
+      setLoading(false);
     }
   };
-
-
-
-  const toggleRow = async (jobCardNumber: string, labelType: string) => {
-    if (labelType !== 'PP') {
-      return;
-    }
-    
-    setExpandedRows(prev => {
-      const isExpanded = !prev[jobCardNumber];
-      return { ...prev, [jobCardNumber]: isExpanded };
-    });
-
-    if (!colorSequenceData[jobCardNumber] && !expandedRows[jobCardNumber]) {
-      try {
-        const response = await fetch(`${BACKEND_URL}/api/reports/get-color-sequence`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ JobCardNumber: jobCardNumber }),
-        });
-
-        const data: ColorSequenceData[] = await response.json();
-        setColorSequenceData(prev => ({ ...prev, [jobCardNumber]: data }));
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "Failed to fetch color sequence data",
-          variant: "destructive",
-        });
-      }
-    }
-  };
-
-
-
-
-
-
 
   const handleClear = () => {
     setReportData([]);
     setFromDate(new Date());
     setToDate(new Date());
     setShowTable(false);
-    setTransSerialNo('');
-    setInvoiceNo('');
-    setQuantityStatus('');
+    setTransSerialNo("");
+    setInvoiceNo("");
+    setQuantityStatus("");
+    setPartyName("");
+    setProductCode("");
+    setPurOrderNo("");
     
-  
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
-      const doc = new jsPDF('l', 'mm', 'a4');
-      
+      const doc = new jsPDF("l", "mm", "a4");
       const columns = [
-        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
-        { header: 'Product Code', dataKey: 'product_code' },
-        { header: 'Party Name', dataKey: 'party_name' },
-        { header: 'Voucher No', dataKey: 'voucher_no' },
-        { header: 'Invoice No', dataKey: 'invoice_no' },
-        { header: 'Pur Order No', dataKey: 'pur_order_no' },
-        { header: 'Quality Status', dataKey: 'qc_status' },
-        { header: 'QC By', dataKey: 'qc_by' },
-        { header: 'Qty', dataKey: 'qty' },
-        
-        
+        { header: "Serial No", dataKey: "serial_no" },
+        { header: "Trans Serial No", dataKey: "TransSerialNo" },
+        { header: "Voucher No", dataKey: "voucher_no" },
+        { header: "Party Name", dataKey: "party_name" },
+        { header: "Product Code", dataKey: "product_code" },
+        { header: "Product Name", dataKey: "product_name" },
+        { header: "QC Status", dataKey: "qc_status" },
+        { header: "QC By", dataKey: "qc_by" },
       ];
 
-      const formattedData = data.map(row => ({
+      const formattedData = data.map((row) => ({
         ...row,
         TransSerialNo: row.trans_serialno,
-        ProductCode : row.product_code,
-        PartyName : row.party_name,
-        VoucherNo: row.voucher_no,
-        InvoiceNo: row.invoice_no,
-        PurOrderNo: row.pur_order_no,
-        QualityStatus: row.qc_status,
-        QcBy: row.qc_by,
-        Qty : row.qty,
-       
-        
-       
       }));
 
       doc.setFontSize(18);
-      doc.text(`QC Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+      doc.text(
+        `RM-QC Report - ${format(new Date(), "yyyy-MM-dd HH:mm")}`,
+        14,
+        22
+      );
 
       (doc as any).autoTable({
         columns: columns,
         body: formattedData,
         startY: 30,
-        styles: { 
-          fontSize: 8, 
+        styles: {
+          fontSize: 8,
           cellPadding: 1.5,
-          overflow: 'linebreak',
-          halign: 'left'
+          overflow: "linebreak",
+          halign: "left",
         },
         columnStyles: {
-          0: { cellWidth: 25 }, 
-          1: { cellWidth: 25 }, 
-          2: { cellWidth: 35 }, 
-          3: { cellWidth: 20 }, 
-          4: { cellWidth: 30 }, 
-          5: { cellWidth: 20 }, 
-          6: { cellWidth: 15 }, 
-          7: { cellWidth: 15 }, 
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 25 },
+          3: { cellWidth: 40 },
+          4: { cellWidth: 40 },
+          5: { cellWidth: 90 },
+          6: { cellWidth: 15 },
+          7: { cellWidth: 15 },
           8: { cellWidth: 15 },
-          9: { cellWidth: 25 }, 
         },
-        headStyles: { 
+        headStyles: {
           fillColor: [66, 66, 66],
           textColor: [255, 255, 255],
-          fontStyle: 'bold'
+          fontStyle: "bold",
         },
         alternateRowStyles: {
-          fillColor: [245, 245, 245]
+          fillColor: [245, 245, 245],
         },
         didDrawPage: (data: any) => {
           const pageCount = doc.internal.getNumberOfPages();
@@ -298,20 +302,20 @@ console.log("Report " , reportData)
             `Page ${data.pageNumber} of ${pageCount}`,
             doc.internal.pageSize.width / 2,
             doc.internal.pageSize.height - 10,
-            { align: 'center' }
+            { align: "center" }
           );
-        }
+        },
       });
 
       doc.save(`${fileName}.pdf`);
-      
+
       toast({
         title: "Success",
         description: "PDF exported successfully",
         variant: "default",
       });
     } catch (error) {
-      console.error('PDF Export Error:', error);
+      console.error("PDF Export Error:", error);
       toast({
         title: "Error",
         description: "Failed to export PDF. Please try again.",
@@ -329,8 +333,8 @@ console.log("Report " , reportData)
       });
       return;
     }
-    
-    const fileName = `QC_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+
+    const fileName = `RM_QC_Report_${format(new Date(), "yyyy-MM-dd_HH-mm")}`;
     exportToPdf(reportData, fileName);
   };
 
@@ -338,47 +342,71 @@ console.log("Report " , reportData)
     <Card className="mt-5">
       <CardContent className="flex flex-col items-center justify-center py-16">
         <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
-        <h3 className="text-xl font-semibold text-gray-600 mb-2">No Data Found</h3>
+        <h3 className="text-xl font-semibold text-gray-600 mb-2">
+          No Data Found
+        </h3>
         <p className="text-gray-500 text-center max-w-md">
-          No records found for the given search criteria. 
-          Try adjusting your filters or selecting a different date range.
+          No records found for the given search criteria. Try adjusting your
+          filters or selecting a different date range.
         </p>
       </CardContent>
     </Card>
   );
 
-  
   return (
     <div className="space-y-4">
-      <Card className='mt-5'>
+      <Card className="mt-5">
         <CardHeader>
           <CardTitle>Report: QC Master</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor='customerName'>Trans SerialNo</Label>
-              <Input value={transSerialNo} onChange={(e) => setTransSerialNo(e.target.value)}  placeholder=' Enter Trans SerialNo'/>
+              <Label htmlFor="customerName">Trans SerialNo</Label>
+              <Input
+                value={transSerialNo}
+                onChange={(e) => setTransSerialNo(e.target.value)}
+                placeholder=" Enter Trans SerialNo"
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor='customerName'>Invoice No</Label>
-              <Input value={invoiceNo} onChange={(e) => setInvoiceNo(e.target.value)}  placeholder=' Enter Invoice No'/>
+              <Label htmlFor="partyname">Party Name</Label>
+              <Input
+                value={partyName}
+                onChange={(e) => setPartyName(e.target.value)}
+                placeholder=" Enter Party Name"
+              />
             </div>
-             <div className="space-y-2">
-               <Label htmlFor="status">
-                 Status <span className="text-red-500">*</span>
-               </Label>
-               <Select value={quantityStatus} onValueChange={setQuantityStatus}>
-                 <SelectTrigger>
-                   <SelectValue placeholder="Select status" />
-                 </SelectTrigger>
-                 <SelectContent>
-                   <SelectItem value="All">All</SelectItem>
-                   <SelectItem value="Approve">Approve</SelectItem>
-                   <SelectItem value="Reject">Reject</SelectItem>
-                 </SelectContent>
-               </Select>
-             </div>
+            <div className="space-y-2">
+              <Label htmlFor="productCode">Product Code</Label>
+              <Input
+                value={productCode}
+                onChange={(e) => setProductCode(e.target.value)}
+                placeholder=" Enter Product Code"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="customerName">Pur Order No</Label>
+              <Input
+                value={purOrderNo}
+                onChange={(e) => setPurOrderNo(e.target.value)}
+                placeholder=" Enter Pur Order No"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">
+                Status <span className="text-red-500">*</span>
+              </Label>
+              <Select value={quantityStatus} onValueChange={setQuantityStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Approve">Approve</SelectItem>
+                  <SelectItem value="Reject">Reject</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div className="space-y-2">
               <Label>From Date</Label>
               <Popover>
@@ -391,7 +419,11 @@ console.log("Report " , reportData)
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+                    {fromDate ? (
+                      format(fromDate, "PPP")
+                    ) : (
+                      <span>Pick a date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
@@ -433,22 +465,54 @@ console.log("Report " , reportData)
           <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:space-x-2 mb-4 mt-5 md:mt-10">
             <div className="flex space-x-2">
               <Button onClick={handleSubmitSearch}>Search</Button>
-              <Button variant="outline" onClick={handleClear}>Clear</Button>
+              <Button variant="outline" onClick={handleClear}>
+                Clear
+              </Button>
             </div>
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
-              <ExportToExcel data={reportData} fileName={`Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} />
-              <Button variant="outline" onClick={handleExportToPDF} disabled={reportData.length === 0}>
-                Export To PDF  <FaFilePdf size={17} className='ml-2 text-red-500' />
+              <ExportToExcel
+                data={reportData}
+                fileName={`Job_Card_Master_Report_${format(
+                  new Date(),
+                  "yyyy-MM-dd_HH-mm"
+                )}`}
+              />
+              <Button
+                variant="outline"
+                onClick={handleExportToPDF}
+                disabled={reportData.length === 0}
+              >
+                Export To PDF{" "}
+                <FaFilePdf size={17} className="ml-2 text-red-500" />
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {showTable && (
-        reportData.length > 0 ? (
+      {showTable &&
+        (loading ? (
+          <Card className="mt-5 p-6 space-y-4">
+            <Skeleton className="h-6 w-40 mx-auto" />
+            <Skeleton className="h-8 w-full" />
+            <div className="flex justify-between">
+              <Skeleton className="h-8 w-1/4" />
+              <Skeleton className="h-8 w-1/4" />
+            </div>
+            {[...Array(5)].map((_, idx) => (
+              <Skeleton key={idx} className="h-10 w-full" />
+            ))}
+            <div className="flex justify-end space-x-2">
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-8 w-8" />
+            </div>
+          </Card>
+        ) : reportData.length > 0 ? (
           <Card className="mt-5">
-            <CardHeader className="underline underline-offset-4 text-center">QC Report</CardHeader>
+            <CardHeader className="underline underline-offset-4 text-center">
+              QC Report
+            </CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -479,15 +543,15 @@ console.log("Report " , reportData)
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>No.</TableHead>
+                    <TableCell>Serial No</TableCell>
                     <TableHead>Trans Serial No</TableHead>
-                    <TableHead>Product Code</TableHead>
-                    <TableHead>Party Name</TableHead>
                     <TableHead>Voucher No</TableHead>
-                    <TableHead>Invoice No</TableHead>
-                    <TableHead>Pur Order No</TableHead>
+                    <TableHead>Party Name</TableHead>
+                    <TableHead>Product Code</TableHead>
+                    <TableHead>Product Name</TableHead>
                     <TableHead>QC Status</TableHead>
                     <TableHead>QC By</TableHead>
-                    <TableHead>Qty</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -495,24 +559,25 @@ console.log("Report " , reportData)
                     paginatedData.map((row, index) => (
                       <React.Fragment key={index}>
                         <TableRow>
+                          <TableCell>
+                            {(currentPage - 1) * itemsPerPage + index + 1}.
+                          </TableCell>
+                          <TableCell>{row.serial_no}</TableCell>
                           <TableCell>{row.trans_serialno}</TableCell>
-                          <TableCell>{row.product_code}</TableCell>
-                          <TableCell>{row.party_name}</TableCell>
                           <TableCell>{row.voucher_no}</TableCell>
-                          <TableCell>{row.invoice_no}</TableCell>
-                          <TableCell>{row.pur_order_no}</TableCell>
+                          <TableCell>{row.party_name}</TableCell>
+                          <TableCell>{row.product_code}</TableCell>
+                          <TableCell>{row.product_name}</TableCell>
                           <TableCell>{row.qc_status}</TableCell>
                           <TableCell>{row.qc_by}</TableCell>
-                          <TableCell>{row.qty}</TableCell>
-                         
                         </TableRow>
-                        
-                        
                       </React.Fragment>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={12} className="text-center">No Data Found</TableCell>
+                      <TableCell colSpan={12} className="text-center">
+                        No Data Found
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -520,17 +585,26 @@ console.log("Report " , reportData)
 
               <div className="flex justify-between items-center text-sm md:text-md mt-4">
                 <div>
-                  {filteredData.length > 0 
-                    ? `Showing ${((currentPage - 1) * itemsPerPage) + 1} to ${Math.min(currentPage * itemsPerPage, filteredData.length)} of ${filteredData.length} entries`
-                    : 'No entries to show'}
+                  {filteredData.length > 0
+                    ? `Showing ${
+                        (currentPage - 1) * itemsPerPage + 1
+                      } to ${Math.min(
+                        currentPage * itemsPerPage,
+                        filteredData.length
+                      )} of ${filteredData.length} entries`
+                    : "No entries to show"}
                 </div>
                 {filteredData.length > 0 && (
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious 
+                        <PaginationPrevious
                           onClick={() => setCurrentPage(currentPage - 1)}
-                          className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            currentPage === 1
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                       {[...Array(totalPages)].map((_, index) => {
@@ -538,7 +612,8 @@ console.log("Report " , reportData)
                         if (
                           pageNumber === 1 ||
                           pageNumber === totalPages ||
-                          (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                          (pageNumber >= currentPage - 1 &&
+                            pageNumber <= currentPage + 1)
                         ) {
                           return (
                             <PaginationItem key={pageNumber}>
@@ -559,9 +634,13 @@ console.log("Report " , reportData)
                         return null;
                       })}
                       <PaginationItem>
-                        <PaginationNext 
+                        <PaginationNext
                           onClick={() => setCurrentPage(currentPage + 1)}
-                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                          className={
+                            currentPage === totalPages
+                              ? "pointer-events-none opacity-50"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -572,9 +651,7 @@ console.log("Report " , reportData)
           </Card>
         ) : (
           <NoDataCard />
-        )
-      )}
-      
+        ))}
     </div>
   );
 };

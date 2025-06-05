@@ -171,7 +171,7 @@ export function getMenuList(pathname: string): Group[] {
             },
             {
               href: "/rm-label-printing",
-              label: "RM Label Printing",
+              label: "RM-QC Label Printing",
               active: pathname === "/rm-label-printing",
               value: "3_3",
             },
@@ -262,7 +262,7 @@ export function getMenuList(pathname: string): Group[] {
           },
           {
             href: "/qc-report",
-            label: "QC Report",
+            label: "RM-QC Report",
             active: pathname === "/qc-report",
             value: "5_1",
           },
