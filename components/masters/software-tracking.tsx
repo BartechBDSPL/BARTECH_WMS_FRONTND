@@ -24,6 +24,7 @@ import {
   ChevronUp,
   CheckCircle,
   CalendarIcon,
+  Printer,
 } from "lucide-react";
 import {
   Dialog,
@@ -98,6 +99,11 @@ const Softwaretracking: React.FC = () => {
     },
   });
 
+  interface dropdownsOptions {
+  value: string;
+  label: string;
+}
+
   // Dummy data for dropdowns
   // const customerNames = ["ABC Company", "XYZ Corporation", "Tech Solutions Ltd", "Global Systems"];
   // const customerAddresses = ["123 Main St, City", "456 Business Park, Town", "789 Tech Lane, Metro"];
@@ -163,6 +169,8 @@ const Softwaretracking: React.FC = () => {
   const token = Cookies.get("token");
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState<string>("");
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState("");
 
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
@@ -193,7 +201,7 @@ const Softwaretracking: React.FC = () => {
   useEffect(() => {
     //setUsername("admin");
 
-    Promise.all([fetchCustomers(), fetchSoftware()]).finally(() =>
+    Promise.all([fetchCustomers(), fetchSoftware(),getPrinterDetails()]).finally(() =>
       setIsLoading(false)
     );
     fetchData();
@@ -307,6 +315,29 @@ const handleRowSelect = (id: number) => {
             description: `Try again`,
           });
         });
+    };
+
+    const getPrinterDetails = async () => {
+      try {
+        const response = await axios.get(
+          `${BACKEND_URL}/api/master/get-printer-name`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        const printers = response.data.Data.map((printer: any) => ({
+          label: printer.Printer_Name,
+          value: `${printer.Printer_ip}:${printer.Printer_port}`, // <-- value to send
+        }));
+  
+        setPrinterOptions(printers);
+      } catch (error) {
+        console.log(error);
+      }
     };
   
 
@@ -886,6 +917,88 @@ const handleHardwareTypeChange = (values: string[]) => {
     });
   } finally {
     setIsProcessing(false);
+  }
+};
+
+
+const handlePrintLabel = async (row: SoftwareData) => {
+  try {
+    if (!selectedPrinter || selectedPrinter.trim() === "") {
+      toast({
+        title: "Please Select Printer!",
+        description: "Select a printer from the table top before printing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const serialNumber = row.SerialNo?.trim();
+    if (!serialNumber) {
+      toast({
+        variant: "destructive",
+        title: "Missing Serial Number",
+        description: "Serial number is required to print the label.",
+      });
+      return;
+    }
+
+    const warrantyStartDate = row.DateOfWarrentyStart
+      ? new Date(row.DateOfWarrentyStart).toISOString().split("T")[0]
+      : "";
+
+    const warrantyExpDate = row.DateOfWarrentyExp
+      ? new Date(row.DateOfWarrentyExp).toISOString().split("T")[0]
+      : "";
+
+    const qty = Number(row.Qty) || 1;
+
+    const printData = {
+      CustomerName: row.CustomerName || "",
+      CustomerAddress: row.CustomerAddress || "",
+      ContactPerson: row.ContactPerson || "",
+      ContactNo: row.ContactNo || "",
+      EmailID: row.EmailID || "",
+      InvoicePONo: row.Invoice_PONo || "",
+      SoftwareType: row.SoftwareType || "",
+      ProjectTitle: row.ProjectTitle || "",
+      ProjectDesc: row.ProjectDesc || "",
+      ProjectVersion: row.ProjectVersion || "",
+      AdditionalDetails: row.AdditionalDetails || "",
+      WarrantyStartDate: warrantyStartDate,
+      WarrantyDays: row.WarrentyDays || "",
+      WarrantyExpDate: warrantyExpDate,
+      Quantity: qty,
+      SerialNumber: serialNumber, // comma-separated or single
+      PrinterIpPort: selectedPrinter,
+    };
+
+    const loadingToast = toast({
+      title: "Processing",
+      description: "Sending print job...",
+      duration: 60000,
+    });
+
+    const res = await axios.post(`${BACKEND_URL}/api/master/print-software-label`, printData);
+
+    if (res.data?.Status === "T") {
+      toast({
+        title: "Success",
+        description: res.data.Message || `Printed ${qty} software label(s) successfully.`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Print Failed",
+        description: res.data?.Message || "Failed to print label. Check printer connection.",
+      });
+    }
+  } catch (error) {
+    console.error("Error printing label:", error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "An unexpected error occurred while printing.",
+    });
   }
 };
 
@@ -1785,6 +1898,21 @@ const handleHardwareTypeChange = (values: string[]) => {
                 </SelectContent>
               </Select>
               <span>entries</span>
+              <Select
+                                        value={selectedPrinter}
+                                        onValueChange={setSelectedPrinter}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select Printer" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {printerOptions.map((printer) => (
+                                            <SelectItem key={printer.value} value={printer.value}>
+                                              {printer.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
@@ -1801,6 +1929,7 @@ const handleHardwareTypeChange = (values: string[]) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Action</TableHead>
+                <TableHead>Print</TableHead>
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Customer Address</TableHead>
                 <TableHead>Contact Person</TableHead>
@@ -1848,7 +1977,19 @@ const handleHardwareTypeChange = (values: string[]) => {
                       <Button variant="ghost" onClick={() => handleRowSelect(row.ID)}>
                         Edit
                       </Button>
+                      
                     </TableCell>
+                     <TableCell>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrintLabel(row)}
+                                        className="flex items-center gap-1"
+                                      >
+                                        <Printer className="h-4 w-4" />
+                                        <span>Print</span>
+                                      </Button>
+                                    </TableCell>
                     <TableCell>{row.CustomerName}</TableCell>
                     <TableCell>{row.CustomerAddress}</TableCell>
                     <TableCell>{row.ContactPerson}</TableCell>
