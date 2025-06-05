@@ -55,12 +55,13 @@ const webAccessOptions = [
    { label: "17) - Hardware Tracking", value: "4_1"},
    { label: "18) - Hardware Tracking Reprint", value: "4_2"},
   { label: "19) - Software Tracking", value: "4_3"},
-  { label: "20) - Report", value: "5_1" },
-  { label: "21) - User Master", value: "6_1" },
-  { label: "22) - User Role Master", value: "6_2" },
-  { label: "23) - Change Password", value: "6_3" },
-  { label: "24) - Material Stock Take", value: "6_4" },
-  { label: "25) - GRN Excel Upload", value: "3_2" },
+  { label: "20) - Software Tracking Reprint", value: "4_4"},
+  { label: "21) - Report", value: "5_1" },
+  { label: "22) - User Master", value: "6_1" },
+  { label: "23) - User Role Master", value: "6_2" },
+  { label: "24) - Change Password", value: "6_3" },
+  { label: "25) - Material Stock Take", value: "6_4" },
+  { label: "26) - GRN Excel Upload", value: "3_2" },
 ];
 
 const hhtAccessOptions = [
