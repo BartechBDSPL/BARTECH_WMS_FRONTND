@@ -385,7 +385,7 @@ useEffect(() => {
       setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
     }
     setValue("warrentyDays", selectedData.WarrentyDays);
-    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
     setValue("qty", selectedData.Qty);
     setValue("serialNo", '');
     setSerialNumbers(selectedData.SerialNo.split(','))
@@ -820,7 +820,7 @@ useEffect(() => {
 
   const handleWarrentyStatusChange = (value: string) => {
     setSelectedWarrentyStatus(value);
-    setValue("warrentyStatus", value as "AMC" | "Warranty");
+    setValue("warrentyStatus", value as "Standard-Warrenty"|"Extended-Warrenty"|"AMC");
   };
 
   
@@ -1899,11 +1899,12 @@ const handlePrintLabel = async (row: HardwareData) => {
                                 }
                               />
 
-                            {convertedDuration && (
-                              <p className="text-sm text-muted-foreground">
-                                ≈ {convertedDuration}
-                              </p>
-                            )}
+                          {convertedDuration && (
+                            <p className="whitespace-nowrap font-semibold text-sm">
+                              Approx Duration: <span className="text-blue-600 italic">≈ {convertedDuration}</span>
+                            </p>
+                          )}
+
                             {errors.warrentyDays && (
                               <motion.p
                                 initial={{ opacity: 0 }}

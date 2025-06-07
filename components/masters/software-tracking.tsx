@@ -114,7 +114,7 @@ const Softwaretracking: React.FC = () => {
   // const hardwareTypes = ["Printer", "Scanner", "Barcode Reader", "Tablet", "Mobile Computer"];
   // const makes = ["Zebra", "Honeywell", "Datalogic", "Motorola", "Epson"];
   // const models = ["ZT411", "PM43", "DS3608", "TC52", "TM-T88VI"];
-  const warrentyStatuses = ["AMC", "Warranty"];
+  const warrentyStatuses = ["Standard-Warrenty","Extended-Warrenty", "AMC"];
 
   const [customerNames, setCustomerNames] = useState<
     { CustomerName: string }[]
@@ -163,6 +163,7 @@ const Softwaretracking: React.FC = () => {
 
   
      const [isEditMode, setIsEditMode] = useState(false);
+
   
     const [oldData, setOldData] = useState<SoftwareData | null>(null);
 
@@ -171,6 +172,11 @@ const Softwaretracking: React.FC = () => {
   const [username, setUsername] = useState<string>("");
   const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
   const [selectedPrinter, setSelectedPrinter] = useState("");
+    const warrantyExpiryDate = watch("dateOfWarrentyExp");
+
+  const watchStartDate = watch("dateOfWarrentyStart");
+  const watchDays = watch("warrentyDays");
+  const convertedDuration = watchDays ? convertDaysToDuration(watchDays) : "";
 
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
@@ -213,6 +219,40 @@ const Softwaretracking: React.FC = () => {
     shouldValidate: true
   });
 };
+useEffect(() => {
+  if (watchStartDate && typeof watchDays === "number" && !isNaN(watchDays)) {
+    const expiry = new Date(watchStartDate);
+    expiry.setDate(expiry.getDate() + watchDays);
+    setValue("dateOfWarrentyExp", expiry); // store it in form state
+  }
+}, [watchStartDate, watchDays, setValue]);
+
+
+
+
+   useEffect(() => {
+    if (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC") {
+      setValue("warrentyDays", 365); // Set value programmatically
+    } else if (selectedWarrentyStatus === "Extended-Warrenty") {
+      setValue("warrentyDays", 0); // Clear value for manual input
+    }
+  }, [selectedWarrentyStatus, setValue]);
+
+    function convertDaysToDuration(days: number): string {
+  if (!days || days < 0) return "";
+
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const remainingDays = days % 365 % 30;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (remainingDays > 0) parts.push(`${remainingDays} day${remainingDays > 1 ? "s" : ""}`);
+
+  return parts.join(" ");
+}
+
 
 
   // Fixed handleRowSelect function for proper software type handling
@@ -246,7 +286,7 @@ const handleRowSelect = (id: number) => {
       setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
     }
     setValue("warrentyDays", selectedData.WarrentyDays);
-    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
     setValue("qty", selectedData.Qty);
     setValue("serialNo", selectedData.SerialNo);
     
@@ -645,7 +685,7 @@ const handleHardwareTypeChange = (values: string[]) => {
 
   const handleWarrentyStatusChange = (value: string) => {
     setSelectedWarrentyStatus(value);
-    setValue("warrentyStatus", value as "AMC" | "Warranty");
+    setValue("warrentyStatus", value as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
   };
 
   const handleCustomValueChange =
@@ -1636,6 +1676,35 @@ const handlePrintLabel = async (row: SoftwareData) => {
                               className="min-h-[80px]"
                             />
                           </div>
+                           <div className="space-y-2">
+                            <Label
+                              className={
+                                errors.warrentyStatus ? "text-destructive" : ""
+                              }
+                            >
+                              Warranty Status*
+                            </Label>
+                            <CustomDropdown
+                              options={warrentyStatuses.map((status) => ({
+                                value: status,
+                                label: status,
+                              }))}
+                              value={selectedWarrentyStatus}
+                              onValueChange={handleWarrentyStatusChange}
+                              placeholder="Select Warranty Status"
+                              searchPlaceholder="Search status..."
+                              emptyText="No statuses found"
+                            />
+                            {errors.warrentyStatus && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-sm text-destructive"
+                              >
+                                {errors.warrentyStatus.message}
+                              </motion.p>
+                            )}
+                          </div>
                           <div className="space-y-2">
                             <Label
                               className={
@@ -1691,60 +1760,60 @@ const handlePrintLabel = async (row: SoftwareData) => {
                               </motion.p>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyDays ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Days*
-                            </Label>
-                            <Input
-                              type="number"
-                              {...register("warrentyDays", {
+                        <div className="space-y-2">
+                             <Label className={errors.warrentyDays ? "text-destructive" : ""}>
+                                Warranty Days*
+                               </Label>
+                              <Input
+                                type="number"
+                                {...register("warrentyDays", {
                                 valueAsNumber: true,
-                              })}
-                              placeholder="Enter warranty period in days"
-                            />
-                            {errors.warrentyDays && (
-                              <motion.p
+                                 })}
+                                 placeholder="Enter warranty period in days"
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                className={
+                                (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                                  }
+                                  />
+                          
+                                  {convertedDuration && (
+                                  <p className="whitespace-nowrap font-semibold text-sm">
+                                  Approx Duration: <span className="text-blue-600 italic">≈ {convertedDuration}</span>
+                                  </p>
+                                  )}
+                          
+                                {errors.warrentyDays && (
+                                <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className="text-sm text-destructive"
-                              >
+                                >
                                 {errors.warrentyDays.message}
-                              </motion.p>
-                            )}
+                                </motion.p>
+                                  )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyStatus ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Status*
-                            </Label>
-                            <CustomDropdown
-                              options={warrentyStatuses.map((status) => ({
-                                value: status,
-                                label: status,
-                              }))}
-                              value={selectedWarrentyStatus}
-                              onValueChange={handleWarrentyStatusChange}
-                              placeholder="Select Warranty Status"
-                              searchPlaceholder="Search status..."
-                              emptyText="No statuses found"
-                            />
-                            {errors.warrentyStatus && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.warrentyStatus.message}
-                              </motion.p>
-                            )}
-                          </div>
+                           <div className="space-y-2">
+                          
+                                                      <Label>
+                                                        Warranty Expiry Date
+                                                      </Label>
+                                                      <Input
+                                                        type="text"
+                                                        value={
+                                                          warrantyExpiryDate instanceof Date
+                                                            ? format(warrantyExpiryDate, "PPP")
+                                                            : warrantyExpiryDate
+                                                            ? format(new Date(warrantyExpiryDate), "PPP")
+                                                            : ""
+                                                        }
+                                                        readOnly
+                                                        className="bg-gray-100 cursor-not-allowed"
+                                                      />
+                                                      </div>
+                          
+                         
                           <div className="space-y-2">
                             <Label
                               className={errors.qty ? "text-destructive" : ""}
