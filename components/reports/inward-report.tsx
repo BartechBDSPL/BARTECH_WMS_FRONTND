@@ -37,20 +37,6 @@ import { Label } from '../ui/label';
 import { Skeleton } from '../ui/skeleton';
 
 
-/**
-|--------------------------------------------------
-| {
-        "serial_no": "APP(1601)167MM|ICG000009|1",
-        "trans_serialno": "ICG000009",
-        "voucher_no": "91110018216",
-        "party_name": "Avery Dennison (India) Pvt.Ltd.-Pune",
-        "product_code": "APP(1601)167MM",
-        "product_name": "FASSON FASFILM PLUS WHITE/PERMANENT (AMF1601) SIZE- 167MM",
-        "inward_status": "Y",
-        "inward_by": "admin"
-    },
-|--------------------------------------------------
-*/
 interface JobCardReportData {
   serial_no : string;
   trans_serialno: string;
@@ -83,7 +69,12 @@ const InwordReport = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-
+  const [cardData, setCardData] = useState({
+      serial_no: 0,
+      trans_serialno: 0,
+      party_name: 0,
+      print_qty: 0,
+    });
 
   const token = Cookies.get('token');
  
@@ -153,10 +144,18 @@ const InwordReport = () => {
         },
         body: JSON.stringify(requestBody),
       });
-  
-      const data: JobCardReportData[] = await response.json();
+      
+
+      const mainData = await response.json();
+      const data: JobCardReportData[] = mainData.data;
       if (data.length === 0) {
         setReportData([]);
+        setCardData({
+          serial_no: 0,
+          trans_serialno: 0,
+          party_name: 0,
+          print_qty: 0,
+        })
         setShowTable(true);
         setTimeout(() => {
         setLoading(false);
@@ -165,6 +164,7 @@ const InwordReport = () => {
       }
   
       setReportData(data);
+      setCardData(mainData.counts);
       setShowTable(true);
       setTimeout(() => {
         setLoading(false);
@@ -193,24 +193,19 @@ const InwordReport = () => {
     setProductName('');
     setPurOrderNo('');
 
+    setCardData({
+          serial_no: 0,
+          trans_serialno: 0,
+          party_name: 0,
+          print_qty: 0,
+        })
 
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
       const doc = new jsPDF('l', 'mm', 'a4');
-      /**
-      |--------------------------------------------------
-      | "serial_no": "APP(1601)167MM|ICG000009|1",
-        "trans_serialno": "ICG000009",
-        "voucher_no": "91110018216",
-        "party_name": "Avery Dennison (India) Pvt.Ltd.-Pune",
-        "product_code": "APP(1601)167MM",
-        "product_name": "FASSON FASFILM PLUS WHITE/PERMANENT (AMF1601) SIZE- 167MM",
-        "inward_status": "Y",
-        "inward_by": "admin"
-      |--------------------------------------------------
-      */
+      
       const columns = [
         { header: 'Serial No', dataKey: 'serial_no' },
         { header: 'Trans Serial No', dataKey: 'trans_serialno' },
@@ -413,6 +408,63 @@ const InwordReport = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* --------------------- THis is to card-------------- */}
+            {showTable ? (
+              <div className="flex flex-wrap gap-7">
+                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-base text-muted-foreground underline">
+                      Serial No
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">
+                      {cardData.serial_no ?? 0}
+                    </p>
+                  </CardContent>
+                </Card>
+      
+                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-base text-muted-foreground underline">
+                      Unique Transaction Serial No
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">
+                      {cardData.trans_serialno ?? 0}
+                    </p>
+                  </CardContent>
+                </Card>
+      
+                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-base text-muted-foreground underline">
+                      Unique Pary name{" "}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">
+                      {cardData.party_name ?? 0}
+                    </p>
+                  </CardContent>
+                </Card>
+      
+                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+                  <CardHeader>
+                    <CardTitle className="text-base text-muted-foreground underline">
+                      Total Print Qty
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-3xl font-bold text-primary">
+                      {cardData.print_qty ?? 0}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : null}
 
       {showTable && (
         (loading ? (
