@@ -121,7 +121,7 @@ const HardwareTracking: React.FC = () => {
   // const hardwareTypes = ["Printer", "Scanner", "Barcode Reader", "Tablet", "Mobile Computer"];
   // const makes = ["Zebra", "Honeywell", "Datalogic", "Motorola", "Epson"];
   // const models = ["ZT411", "PM43", "DS3608", "TC52", "TM-T88VI"];
-  const warrentyStatuses = ["AMC", "Warranty"];
+  const warrentyStatuses = ["Standard-Warrenty","Extended-Warrenty", "AMC"];
 
   const [customerNames, setCustomerNames] = useState<
     { CustomerName: string }[]
@@ -178,16 +178,29 @@ const HardwareTracking: React.FC = () => {
 
   const [oldData, setOldData] = useState<HardwareData | null>(null);
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
-    const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
-    const [selectedPrinter, setSelectedPrinter] = useState("");
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState("");
 
-    const [scannedSerials, setScannedSerials] = React.useState<string[]>([]);
+  const [scannedSerials, setScannedSerials] = React.useState<string[]>([]);
 
-    
-  
-  
-  
 
+  const warrantyExpiryDate = watch("dateOfWarrentyExp");
+
+  const watchStartDate = watch("dateOfWarrentyStart");
+const watchDays = watch("warrentyDays");
+
+const convertedDuration = watchDays ? convertDaysToDuration(watchDays) : "";
+
+useEffect(() => {
+  if (watchStartDate && typeof watchDays === "number" && !isNaN(watchDays)) {
+    const expiry = new Date(watchStartDate);
+    expiry.setDate(expiry.getDate() + watchDays);
+    setValue("dateOfWarrentyExp", expiry); // store it in form state
+  }
+}, [watchStartDate, watchDays, setValue]);
+
+
+  
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
       const isValid = await trigger(fieldsToValidate as any[]);
@@ -295,6 +308,30 @@ useEffect(() => {
     );
     fetchData();
   }, []);
+
+   useEffect(() => {
+    if (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC") {
+      setValue("warrentyDays", 365); // Set value programmatically
+    } else if (selectedWarrentyStatus === "Extended-Warrenty") {
+      setValue("warrentyDays", 0); // Clear value for manual input
+    }
+  }, [selectedWarrentyStatus, setValue]);
+
+  function convertDaysToDuration(days: number): string {
+  if (!days || days < 0) return "";
+
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const remainingDays = days % 365 % 30;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (remainingDays > 0) parts.push(`${remainingDays} day${remainingDays > 1 ? "s" : ""}`);
+
+  return parts.join(" ");
+}
+
 
    const getPrinterDetails = async () => {
       try {
@@ -1760,6 +1797,35 @@ const handlePrintLabel = async (row: HardwareData) => {
                               className="min-h-[80px]"
                             />
                           </div>
+                           <div className="space-y-2">
+                            <Label
+                              className={
+                                errors.warrentyStatus ? "text-destructive" : ""
+                              }
+                            >
+                              Warranty Status*
+                            </Label>
+                            <CustomDropdown
+                              options={warrentyStatuses.map((status) => ({
+                                value: status,
+                                label: status,
+                              }))}
+                              value={selectedWarrentyStatus}
+                              onValueChange={handleWarrentyStatusChange}
+                              placeholder="Select Warranty Status"
+                              searchPlaceholder="Search status..."
+                              emptyText="No statuses found"
+                            />
+                            {errors.warrentyStatus && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-sm text-destructive"
+                              >
+                                {errors.warrentyStatus.message}
+                              </motion.p>
+                            )}
+                          </div>
                           <div className="space-y-2">
                             <Label
                               className={
@@ -1815,21 +1881,29 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </motion.p>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyDays ? "text-destructive" : ""
-                              }
-                            >
+                        <div className="space-y-2">
+                            <Label className={errors.warrentyDays ? "text-destructive" : ""}>
                               Warranty Days*
                             </Label>
                             <Input
-                              type="number"
-                              {...register("warrentyDays", {
-                                valueAsNumber: true,
-                              })}
-                              placeholder="Enter warranty period in days"
-                            />
+                                type="number"
+                                {...register("warrentyDays", {
+                                  valueAsNumber: true,
+                                })}
+                                placeholder="Enter warranty period in days"
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                className={
+                                  (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
+                                }
+                              />
+
+                            {convertedDuration && (
+                              <p className="text-sm text-muted-foreground">
+                                ≈ {convertedDuration}
+                              </p>
+                            )}
                             {errors.warrentyDays && (
                               <motion.p
                                 initial={{ opacity: 0 }}
@@ -1840,35 +1914,27 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </motion.p>
                             )}
                           </div>
+
                           <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyStatus ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Status*
+
+                            <Label>
+                              Warranty Expiry Date
                             </Label>
-                            <CustomDropdown
-                              options={warrentyStatuses.map((status) => ({
-                                value: status,
-                                label: status,
-                              }))}
-                              value={selectedWarrentyStatus}
-                              onValueChange={handleWarrentyStatusChange}
-                              placeholder="Select Warranty Status"
-                              searchPlaceholder="Search status..."
-                              emptyText="No statuses found"
+                            <Input
+                              type="text"
+                              value={
+                                warrantyExpiryDate instanceof Date
+                                  ? format(warrantyExpiryDate, "PPP")
+                                  : warrantyExpiryDate
+                                  ? format(new Date(warrantyExpiryDate), "PPP")
+                                  : ""
+                              }
+                              readOnly
+                              className="bg-gray-100 cursor-not-allowed"
                             />
-                            {errors.warrentyStatus && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.warrentyStatus.message}
-                              </motion.p>
-                            )}
-                          </div>
+                            </div>
+
+                                              
                           <div className="space-y-2">
                             <Label
                               className={errors.qty ? "text-destructive" : ""}
@@ -1891,31 +1957,31 @@ const handlePrintLabel = async (row: HardwareData) => {
                             )}
                           </div>
                          <div>
-  <label className="block font-medium mb-1">Serial Number</label>
-  <div className="flex items-center space-x-4">
-    <input
-      type="text"
-      {...register("serialNo")}
-      onKeyDown={handleSerialKeyPress}
-      placeholder="Press Enter to add"
-      className="border p-2 rounded w-full"
-    />
-    <p className="whitespace-nowrap font-semibold">
-      Total Serial Number: <span className="text-blue-600">{serialNumbers.length}</span>
-    </p>
-  </div>
+                            <label className="block font-medium mb-1">Serial Number</label>
+                            <div className="flex items-center space-x-4">
+                              <input
+                                type="text"
+                                {...register("serialNo")}
+                                onKeyDown={handleSerialKeyPress}
+                                placeholder="Press Enter to add"
+                                className="border p-2 rounded w-full"
+                              />
+                              <p className="whitespace-nowrap font-semibold">
+                                Total Serial Number: <span className="text-blue-600">{serialNumbers.length}</span>
+                              </p>
+                            </div>
 
-  {errors.serialNo && <p className="text-red-500 mt-1">{errors.serialNo.message}</p>}
+                            {errors.serialNo && <p className="text-red-500 mt-1">{errors.serialNo.message}</p>}
 
-  <div className="mt-2">
-    {scannedSerials.length > 0 && (
-      <ul className="list-disc ml-5 max-h-40 overflow-auto border p-2 rounded">
-        {scannedSerials.map((sn, idx) => (
-          <li key={idx}>{sn}</li>
-        ))}
-      </ul>
-    )}
-  </div>
+                            <div className="mt-2">
+                              {scannedSerials.length > 0 && (
+                                <ul className="list-disc ml-5 max-h-40 overflow-auto border p-2 rounded">
+                                  {scannedSerials.map((sn, idx) => (
+                                    <li key={idx}>{sn}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
 
 
 
