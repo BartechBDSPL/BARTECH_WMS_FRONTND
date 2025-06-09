@@ -10,7 +10,7 @@ function Dashboard() {
       <Tabs defaultValue="main" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="main">Main Dashboard</TabsTrigger>
-          <TabsTrigger value="kpi">KPI's Dashboard</TabsTrigger>
+          <TabsTrigger value="kpi">KPI&apos;s Dashboard</TabsTrigger>
         </TabsList>
         <TabsContent value="main" className="space-y-4">
           <MainDashboard />
