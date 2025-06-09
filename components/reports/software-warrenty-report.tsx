@@ -51,29 +51,61 @@ import {
 } from "@/components/ui/pagination";
 import TableSearch from "@/utills/tableSearch";
 import { Label } from "../ui/label";
-import { Skeleton } from "../ui/skeleton";
 
+/**
+|--------------------------------------------------
+|  {
+            "CustomerName": "AB MAURI INDIA PVT. LTD.",
+            "CustomerAddress": "Bangalore - Karnataka",
+            "ContactPerson": "Manoj C",
+            "ContactNo": "9999",
+            "EmailID": "test@gam",
+            "Invoice_PONo": "5555",
+            "SoftwareType": "Android, Web",
+            "ProjectTitle": "WMS ",
+            "ProjectDesc": "Warehouse Mangement System",
+            "ProjectVersion": "1.0.0",
+            "AdditionalDetails": "Testing",
+            "DateOfWarrentyStart": "2025-06-03T00:00:00.000Z",
+            "WarrentyDays": 365,
+            "DateOfWarrentyExp": "2026-06-03T00:00:00.000Z",
+            "Qty": 1,
+            "SerialNo": "Bartech|Software|020",
+            "UniqueSerialNo": "http://15.206.183.202:1000/CheckQR.aspx?SerialNo=Bartech|Software|020",
+            "TransBy": "admin",
+            "TransDate": "2025-06-02T17:01:25.360Z",
+            "WarrentyStatus": "AMC"
+        },
+|--------------------------------------------------
+*/
 
 interface JobCardReportData {
-  serial_no: string;
-  trans_serialno: string;
-  product_code: string;
-  party_name: string;
-  voucher_no: string;
-  invoice_no: string;
-  pur_order_no: string | null;
-  product_name: string;
-  bin: string;
-  put_qty: number;
-  put_status: string;
-  put_by: string;
+  CustomerName: string;
+  CustomerAddress: string;
+  ContactPerson: string;
+  ContactNo: string;
+  EmailID: string;
+  Invoice_PONo: string;
+  SoftwareType: string;
+  ProjectTitle: string;
+  ProjectDesc: string;
+  ProjectVersion: string;
+  AdditionalDetails: string;
+  DateOfWarrentyStart: string;
+  WarrentyDays: number;
+  DateOfWarrentyExp: string;
+  Qty: number;
+  SerialNo: string;
+  UniqueSerialNo: string;
+  TransBy: string;
+  TransDate: string;
 }
 
-const PutAwayReport = () => {
-  const [transSerialNo, setTransSerialNo] = useState("");
-  const [partyName, setPartyName] = useState("");
-  const [productCode, setProductCode] = useState("");
-  const [purOrderNo, setPurOrderNo] = useState("");
+const SoftwareTrackingReport = () => {
+  const [customerName, setCustomerName] = useState("");
+  const [softwareType, setSoftwareType] = useState("");
+  const [projectTitle, setProjectTitle] = useState("");
+  const [warrentyStatus, setWarrantyStatus] = useState("");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
@@ -81,30 +113,29 @@ const PutAwayReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [cardData, setCardData] = useState({
-      serial_no: 0,
-      product_code: 0,
-      bin: 0,
-      put_qty: 0,
-    });
 
   const token = Cookies.get("token");
 
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
       const searchableFields = [
-        "trans_serialno",
-        "product_code",
-        "voucher_no",
-        "invoice_no",
-        "old_bin",
-        "new_bin",
-        "serial_no",
-        "pallet_barcode",
-        "movement_by",
-        "put_status",
-        "product_name",
+        "CustomerName",
+        "CustomerAddress",
+        "ContactPerson",
+        "ContactNo",
+        "EmailID",
+        "Invoice_PONo",
+        "HardwareType",
+        "Make",
+        "Model",
+        "AdditionalDetails",
+        "DateOfWarrentyStart",
+        "WarrentyDays",
+        "DateOfWarrentyExp",
+        "Qty",
+        "SerialNo",
+        "UniqueSerialNo",
+        "TransBy",
       ];
       return searchableFields.some((key) => {
         const value = (item as any)[key];
@@ -131,7 +162,6 @@ const PutAwayReport = () => {
     setCurrentPage(1);
   }, []);
 
-  console.log("Report ", reportData);
   const handleSubmitSearch = async () => {
     if (fromDate > toDate) {
       toast({
@@ -141,19 +171,19 @@ const PutAwayReport = () => {
       });
       return;
     }
+    // const { CustomerName, SoftwareType, ProjectTitle, WarrentyStatus, FromDate, ToDate} = req.body;
     const requestBody = {
-      Trans_SerialNo: transSerialNo.trim(),
-      Party_Name: partyName.trim(),
-      Product_Code: productCode.trim(),
-      Pur_Order_No: purOrderNo.trim(),
+      CustomerName: customerName.trim(),
+      SoftwareType: softwareType.trim(),
+      ProjectTitle: projectTitle.trim(),
+      WarrentyStatus: warrentyStatus.trim(),
       FromDate: format(fromDate, "yyyy-MM-dd"),
       ToDate: format(toDate, "yyyy-MM-dd"),
     };
 
     try {
-      setLoading(true);
       const response = await fetch(
-        `${BACKEND_URL}/api/reports/putaway-report`,
+        `${BACKEND_URL}/api/reports/get-software-tracking-details`,
         {
           method: "POST",
           headers: {
@@ -163,32 +193,22 @@ const PutAwayReport = () => {
           body: JSON.stringify(requestBody),
         }
       );
-      
-      const mainData = await response.json();
-      const data: JobCardReportData[] = mainData.data;
+      const changedata = await response.json();
+      const data: JobCardReportData[] = changedata.Data;
       if (data.length === 0) {
         setReportData([]);
-        setCardData({ serial_no: 0, product_code: 0, bin: 0, put_qty: 0 });
         setShowTable(true);
-        setTimeout(() => {
-          setLoading(false);
-        }, 2000);
         return;
       }
 
       setReportData(data);
-      setCardData(mainData.counts);
       setShowTable(true);
-      setTimeout(() => {
-        setLoading(false);
-      }, 2000);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to get data",
         variant: "destructive",
       });
-      setLoading(false);
     }
   };
 
@@ -197,39 +217,49 @@ const PutAwayReport = () => {
     setFromDate(new Date());
     setToDate(new Date());
     setShowTable(false);
-    setTransSerialNo("");
-    setPartyName("");
-    setPurOrderNo("");
-    setProductCode("");
-    setCardData({ serial_no: 0, product_code: 0, bin: 0, put_qty: 0 });
+    setCustomerName("");
+    setWarrantyStatus("");
+    setSoftwareType("");
+    setProjectTitle("");
 
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
-      const doc = new jsPDF("l", "mm", "a4");
+      const doc = new jsPDF("l", "mm", "a3");
 
       const columns = [
-        { header: "Serial No", dataKey: "serial_no" },
-        { header: "Trans Serial No", dataKey: "trans_serialno" },
-        { header: "Product Code", dataKey: "product_code" },
-        { header: "Party Name", dataKey: "party_name" },
-        { header: "Voucher No", dataKey: "voucher_no" },
-
-        { header: "Product Name", dataKey: "product_name" },
-        { header: "Bin", dataKey: "bin" },
-        { header: "Put Status", dataKey: "put_status" },
-        { header: "Put By", dataKey: "put_by" },
+         { header: "Customer Name", dataKey: "CustomerName" },
+      { header: "Customer Address", dataKey: "CustomerAddress" },
+      { header: "Contact Person", dataKey: "ContactPerson" },
+      { header: "Contact No", dataKey: "ContactNo" },
+      { header: "Email ID", dataKey: "EmailID" },
+      { header: "Invoice/PO No", dataKey: "Invoice_PONo" },
+      { header: "Hardware Type", dataKey: "HardwareType" },
+      { header: "Make", dataKey: "Make" },
+      { header: "Model", dataKey: "Model" },
+      { header: "Additional Details", dataKey: "AdditionalDetails" },
+      { header: "Date of Warrenty Start", dataKey: "DateOfWarrentyStart" },
+      { header: "Warrenty Days", dataKey: "WarrentyDays" },
+      { header: "Date of Warrenty Exp", dataKey: "DateOfWarrentyExp" },
+      { header: "Qty", dataKey: "Qty" },
+      { header: "Serial No", dataKey: "SerialNo" },
+      { header: "Unique Serial No", dataKey: "UniqueSerialNo" },
+      { header: "Trans By", dataKey: "TransBy" },
+      { header: "Trans Date", dataKey: "TransDate" },
+      { header: "Warrenty Status", dataKey: "WarrentyStatus" },
       ];
 
       const formattedData = data.map((row) => ({
         ...row,
-        TransSerialNo: row.trans_serialno,
+        DateOfWarrentyStart: format(new Date(row.DateOfWarrentyStart), "yyyy-MM-dd"),
+      DateOfWarrentyExp: format(new Date(row.DateOfWarrentyExp), "yyyy-MM-dd"),
+      TransDate: format(new Date(row.TransDate), "yyyy-MM-dd"),
       }));
 
       doc.setFontSize(18);
       doc.text(
-        `RM Put Away Report - ${format(new Date(), "yyyy-MM-dd HH:mm")}`,
+        `SoftWareReport - ${format(new Date(), "yyyy-MM-dd HH:mm")}`,
         14,
         22
       );
@@ -239,21 +269,21 @@ const PutAwayReport = () => {
         body: formattedData,
         startY: 30,
         styles: {
-          fontSize: 8,
+          fontSize: 6,
           cellPadding: 1.5,
           overflow: "linebreak",
           halign: "left",
         },
         columnStyles: {
-          0: { cellWidth: 50 },
-          1: { cellWidth: 40 },
-          2: { cellWidth: 40 },
+          0: { cellWidth: 25 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 35 },
           3: { cellWidth: 20 },
           4: { cellWidth: 30 },
           5: { cellWidth: 20 },
           6: { cellWidth: 15 },
           7: { cellWidth: 25 },
-          8: { cellWidth: 20 },
+          8: { cellWidth: 15 },
         },
         headStyles: {
           fillColor: [66, 66, 66],
@@ -302,7 +332,7 @@ const PutAwayReport = () => {
       return;
     }
 
-    const fileName = `RM_Put_away_Report_${format(
+    const fileName = `SoftWareReport${format(
       new Date(),
       "yyyy-MM-dd_HH-mm"
     )}`;
@@ -328,42 +358,52 @@ const PutAwayReport = () => {
     <div className="space-y-4">
       <Card className="mt-5">
         <CardHeader>
-          <CardTitle>Report: RM Put Away Report</CardTitle>
+          <CardTitle>Report: Software Tracking</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Trans SerialNo</Label>
+              <Label htmlFor="customerName">Customer Name</Label>
               <Input
-                value={transSerialNo}
-                onChange={(e) => setTransSerialNo(e.target.value)}
-                placeholder=" Enter Trans SerialNo"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder=" Enter Customer Name..."
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="partyName">Party Name</Label>
+              <Label htmlFor="projectTite">Project Title</Label>
               <Input
-                value={partyName}
-                onChange={(e) => setPartyName(e.target.value)}
-                placeholder=" Enter Party Name"
+                value={projectTitle}
+                onChange={(e) => setProjectTitle(e.target.value)}
+                placeholder=" Enter Customer Name..."
               />
             </div>
-            {/* product code , pur order no */}
+
             <div className="space-y-2">
-              <Label htmlFor="productCode">Product Code</Label>
-              <Input
-                value={productCode}
-                onChange={(e) => setProductCode(e.target.value)}
-                placeholder=" Enter Product Code"
-              />
+              <Label htmlFor="warrantyStatus">Software Type</Label>
+              <Select value={softwareType} onValueChange={setSoftwareType}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Software Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Android">Android</SelectItem>
+                  <SelectItem value="Desktop">Desktop</SelectItem>
+                  <SelectItem value="Web">Web</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="purOrderNo">Pur Order No</Label>
-              <Input
-                value={purOrderNo}
-                onChange={(e) => setPurOrderNo(e.target.value)}
-                placeholder=" Enter Pur Order No"
-              />
+              <Label htmlFor="warrantyStatus">Warranty Status</Label>
+              <Select value={warrentyStatus} onValueChange={setWarrantyStatus}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Warranty Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Warranty">Warranty</SelectItem>
+                  <SelectItem value="AMC">AMC</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -449,85 +489,11 @@ const PutAwayReport = () => {
         </CardContent>
       </Card>
 
-      {/* --------------------- THis is to card-------------- */}
-            {showTable ? (
-              <div className="flex flex-wrap gap-7">
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Serial No
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.serial_no ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Unique Product Code Count
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.product_code ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Unique Bin Count{" "}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.bin ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Total Put Qantity
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.put_qty ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
-
       {showTable &&
-        (loading ? (
-          <Card className="mt-5 p-6 space-y-4">
-            <Skeleton className="h-6 w-40 mx-auto" />
-            <Skeleton className="h-8 w-full" />
-            <div className="flex justify-between">
-              <Skeleton className="h-8 w-1/4" />
-              <Skeleton className="h-8 w-1/4" />
-            </div>
-            {[...Array(5)].map((_, idx) => (
-              <Skeleton key={idx} className="h-10 w-full" />
-            ))}
-            <div className="flex justify-end space-x-2">
-              <Skeleton className="h-8 w-8" />
-              <Skeleton className="h-8 w-8" />
-              <Skeleton className="h-8 w-8" />
-            </div>
-          </Card>
-        ) : reportData.length > 0 ? (
+        (reportData.length > 0 ? (
           <Card className="mt-5">
             <CardHeader className="underline underline-offset-4 text-center">
-              RM Put Away Report
+              Software Report
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
@@ -560,42 +526,67 @@ const PutAwayReport = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>No.</TableHead>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead>Customer Address</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>Contact No</TableHead>
+                    <TableHead>Email ID</TableHead>
+                    <TableHead>Invoice/PO No</TableHead>
+                    <TableHead>Software Type</TableHead>
+                    <TableHead>Project Title</TableHead>
+                    <TableHead>Project Description</TableHead>
+                    <TableHead>Project Version</TableHead>
+                    <TableHead>Additional Details</TableHead>
+                    <TableHead>Warranty Start Date</TableHead>
+                    <TableHead>Warranty Days</TableHead>
+                    <TableHead>Warranty Expiry Date</TableHead>
+                    <TableHead>Quantity</TableHead>
                     <TableHead>Serial No</TableHead>
-                    <TableHead>Trans Serial No</TableHead>
-                    <TableHead>Product Code</TableHead>
-                    <TableHead>Party Name</TableHead>
-                    <TableHead>Voucher No</TableHead>
-                    <TableHead>Product Name</TableHead>
-                    <TableHead>Bin</TableHead>
-                    <TableHead>Put Status</TableHead>
-                    <TableHead>Put By</TableHead>
+                    <TableHead>Unique Serial No</TableHead>
+                    <TableHead>Transferred By</TableHead>
+                    <TableHead>Transfer Date</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {paginatedData.length > 0 ? (
                     paginatedData.map((row, index) => (
-                      <React.Fragment key={index}>
-                        <TableRow>
-                          <TableCell>
-                            {(currentPage - 1) * itemsPerPage + index + 1}
-                          </TableCell>
-                          <TableCell>{row.serial_no}</TableCell>
-                          <TableCell>{row.trans_serialno}</TableCell>
-                          <TableCell>{row.product_code}</TableCell>
-                          <TableCell>{row.party_name}</TableCell>
-                          <TableCell>{row.voucher_no}</TableCell>
-                          <TableCell>{row.product_name}</TableCell>
-                          <TableCell className="min-w-[50]">
-                            {row.bin}
-                          </TableCell>
-                          <TableCell>{row.put_status}</TableCell>
-                          <TableCell>{row.put_by}</TableCell>
-                        </TableRow>
-                      </React.Fragment>
+                      <TableRow key={index}>
+                        <TableCell>{index + 1}</TableCell>
+                        <TableCell className="min-w-[200px]">
+                          {row.CustomerName}
+                        </TableCell>
+                        <TableCell className="min-w-[200px]">
+                          {row.CustomerAddress}
+                        </TableCell>
+                        <TableCell>{row.ContactPerson}</TableCell>
+                        <TableCell>{row.ContactNo}</TableCell>
+                        <TableCell>{row.EmailID}</TableCell>
+                        <TableCell>{row.Invoice_PONo}</TableCell>
+                        <TableCell>{row.SoftwareType}</TableCell>
+                        <TableCell>{row.ProjectTitle}</TableCell>
+                        <TableCell>{row.ProjectDesc}</TableCell>
+                        <TableCell>{row.ProjectVersion}</TableCell>
+                        <TableCell>{row.AdditionalDetails}</TableCell>
+                        <TableCell>
+                          {format(row.DateOfWarrentyStart, "dd-MM-yyyy")}
+                        </TableCell>
+                        <TableCell>{row.WarrentyDays}</TableCell>
+                        <TableCell>
+                          {format(row.DateOfWarrentyExp, "dd-MM-yyyy")}
+                        </TableCell>
+                        <TableCell>{row.Qty}</TableCell>
+                        <TableCell>{row.SerialNo}</TableCell>
+                        <TableCell>{row.UniqueSerialNo}</TableCell>
+                        <TableCell>{row.TransBy}</TableCell>
+                        <TableCell className="min-w-[150px]">
+                          {format(row.TransDate, "dd-MM-yyyy")}
+                        </TableCell>
+                      </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={12} className="text-center">
+                      <TableCell colSpan={20} className="text-center">
                         No Data Found
                       </TableCell>
                     </TableRow>
@@ -676,4 +667,4 @@ const PutAwayReport = () => {
   );
 };
 
-export default PutAwayReport;
+export default SoftwareTrackingReport;

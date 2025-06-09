@@ -34,33 +34,65 @@ import {
 } from "@/components/ui/pagination";
 import TableSearch from '@/utills/tableSearch';
 import { Label } from '../ui/label';
-import { Skeleton } from '../ui/skeleton';
 
 
+/**
+|--------------------------------------------------
+|  {
+            "CustomerName": ".20 Microns Limited - Alwar",
+            "CustomerAddress": "Alwar - Rajasthan",
+            "ContactPerson": "Mr.PRAKASH PARMAR",
+            "ContactNo": "56",
+            "EmailID": "prakashparmar@20microns.com",
+            "Invoice_PONo": "123",
+            "HardwareType": "HHT Device",
+            "Make": "xyz",
+            "Model": "xy",
+            "AdditionalDetails": "test",
+            "DateOfWarrentyStart": "2025-06-03T00:00:00.000Z",
+            "WarrentyDays": 35,
+            "DateOfWarrentyExp": "2025-07-08T00:00:00.000Z",
+            "Qty": 1,
+            "SerialNo": "56",
+            "UniqueSerialNo": "http://192.168.29.221:3000/complaint?serialNo=56",
+            "TransBy": "admin",
+            "TransDate": "2025-06-03T11:36:49.833Z",
+            "WarrentyStatus": "AMC"
+        },
+|--------------------------------------------------
+*/
 interface JobCardReportData {
-  serial_no : string;
-  trans_serialno: string;
-  product_code: string;
-  party_name: string;
-  voucher_no: string;
-  invoice_no: string;
-  pur_order_no: string | null;
-  inward_status: string;
-  inward_by: string;
-  product_name: string;
+  CustomerName: string;
+  CustomerAddress: string;
+  ContactPerson: string;
+  ContactNo: string;
+  EmailID: string;
+  Invoice_PONo: string;
+  HardwareType: string;
+  Make: string;
+  Model: string;
+  AdditionalDetails: string;
+  DateOfWarrentyStart: string;
+  WarrentyDays: number;
+  DateOfWarrentyExp: string;
+  Qty: number;
+  SerialNo: string;
+  UniqueSerialNo: string;
+  TransBy: string;
+  TransDate: string;
+  WarrentyStatus: string;
 
 }
 
 
 
-
-
-const InwordReport = () => {
-  const [transSerialNo, setTransSerialNo] = useState('');
-  const [partyName, setPartyName] = useState('');
-  const [productCode, setProductCode] = useState('');
-  const [productName, setProductName] = useState('');
-  const [purOrderNo, setPurOrderNo] = useState('');
+const HardWareReport = () => {
+  const [customerName, setCustomerName] = useState('');
+  const [hardwareType, setHardwareType] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [serialNo, setSerialNo] = useState('');
+  const [warrantyStatus, setWarrantyStatus] = useState('');
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
@@ -68,13 +100,7 @@ const InwordReport = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [cardData, setCardData] = useState({
-      serial_no: 0,
-      trans_serialno: 0,
-      party_name: 0,
-      print_qty: 0,
-    });
+
 
   const token = Cookies.get('token');
  
@@ -82,13 +108,23 @@ const InwordReport = () => {
   const filteredData = useMemo(() => {
     return reportData.filter(item => {
       const searchableFields = [
-        'trans_serialno', 
-        'product_code', 
-        'party_name', 
-        'voucher_no', 
-        'invoice_no', 
-        'inward_status',
-        'inward_by'
+       "CustomerName",
+       "CustomerAddress",
+       "ContactPerson",
+       "ContactNo",
+       "EmailID",
+       "Invoice_PONo",
+       "HardwareType",
+       "Make",
+       "Model",
+       "AdditionalDetails",
+       "DateOfWarrentyStart",
+       "WarrentyDays",
+       "DateOfWarrentyExp",
+       "Qty",
+       "SerialNo",
+       "UniqueSerialNo",
+       "TransBy",
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -111,7 +147,7 @@ const InwordReport = () => {
 
 
 
-
+console.log("Report " , reportData)
   const handleSubmitSearch = async () => {
     if (fromDate > toDate) {
       toast({
@@ -121,13 +157,15 @@ const InwordReport = () => {
       });
       return;
     }
-    // const {CompanyName, Height, Width, JobCardNumber, LabelType, FrmDate, ToDate } = req.body;
+    // const { CustomerName, HardwareType, Make, Model, SerialNo, WarrantyStatus, FromDate, ToDate} = req.body;
     const requestBody = {
-        Trans_SerialNo : transSerialNo.trim(),
-        Party_Name : partyName.trim(),
-        Product_Code: productCode.trim(),
-        Pur_Order_No : purOrderNo.trim(),
         
+        CustomerName: customerName,
+        HardwareType: hardwareType,
+        Make: make,
+        Model: model,
+        SerialNo: serialNo,
+        WarrantyStatus: warrantyStatus,
         FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
 
@@ -135,8 +173,7 @@ const InwordReport = () => {
     };
   
     try {
-      setLoading(true);
-      const response = await fetch(`${BACKEND_URL}/api/reports/inward-report`, {
+      const response = await fetch(`${BACKEND_URL}/api/reports/get-hardware-tracking-report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,38 +181,22 @@ const InwordReport = () => {
         },
         body: JSON.stringify(requestBody),
       });
-      
-
-      const mainData = await response.json();
-      const data: JobCardReportData[] = mainData.data;
+      const changedata = await response.json();
+      const data: JobCardReportData[] = changedata.Data;
       if (data.length === 0) {
         setReportData([]);
-        setCardData({
-          serial_no: 0,
-          trans_serialno: 0,
-          party_name: 0,
-          print_qty: 0,
-        })
         setShowTable(true);
-        setTimeout(() => {
-        setLoading(false);
-        }, 2000);
         return;
       }
-  
+      
       setReportData(data);
-      setCardData(mainData.counts);
       setShowTable(true);
-      setTimeout(() => {
-        setLoading(false);
-        }, 2000);
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to get data",
         variant: "destructive",
       });
-      setLoading(false);
     }
   };
 
@@ -186,56 +207,79 @@ const InwordReport = () => {
     setFromDate(new Date());
     setToDate(new Date());
     setShowTable(false);
-    setTransSerialNo('');
-
-    setPartyName('');
-    setProductCode('');
-    setProductName('');
-    setPurOrderNo('');
-
-    setCardData({
-          serial_no: 0,
-          trans_serialno: 0,
-          party_name: 0,
-          print_qty: 0,
-        })
-
+    setCustomerName('');
+    setHardwareType('');
+    setMake('');
+    setModel('');
+    setSerialNo('');
+    setWarrantyStatus('');
+    
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
-      const doc = new jsPDF('l', 'mm', 'a4');
+      const doc = new jsPDF('l', 'mm', 'a3');
       
       const columns = [
-        { header: 'Serial No', dataKey: 'serial_no' },
-        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
-        { header: 'Voucher No', dataKey: 'voucher_no' },
-        { header: 'Party Name', dataKey: 'party_name' },
-        { header: 'Product Code', dataKey: 'product_code' },
-        { header: 'Product Name', dataKey: 'product_name' },
-        { header: 'Inward Status', dataKey: 'inward_status' },
-        { header: 'Inward By', dataKey: 'inward_by' }
-        
+        { header: 'Customer Name', dataKey: 'CustomerName' },
+        { header: 'Customer Address', dataKey: 'CustomerAddress' },
+        { header: 'Contact Person', dataKey: 'ContactPerson' },
+        { header: 'Contact No', dataKey: 'ContactNo' },
+        { header: 'Email ID', dataKey: 'EmailID' },
+        { header: 'Invoice/PO No', dataKey: 'Invoice_PONo' },
+        { header: 'Hardware Type', dataKey: 'HardwareType' },
+        { header: 'Make', dataKey: 'Make' },
+        { header: 'Model', dataKey: 'Model' },
+        { header: 'Additional Details', dataKey: 'AdditionalDetails' },
+        { header: 'Date of Warrenty Start', dataKey: 'DateOfWarrentyStart' },
+        { header: 'Warrenty Days', dataKey: 'WarrentyDays' },
+        { header: 'Date of Warrenty Exp', dataKey: 'DateOfWarrentyExp' },
+        { header: 'Qty', dataKey: 'Qty' },
+        { header: 'Serial No', dataKey: 'SerialNo' },
+        { header: 'Unique Serial No', dataKey: 'UniqueSerialNo' },
+        { header: 'Trans By', dataKey: 'TransBy' },
+        { header: 'Trans Date', dataKey: 'TransDate' },
+        { header: 'Warrenty Status', dataKey: 'WarrentyStatus' },
+
         
       ];
 
       const formattedData = data.map(row => ({
         ...row,
-        TransSerialNo: row.trans_serialno,
+        CustomerName: row.CustomerName,
+        CustomerAddress: row.CustomerAddress,
+        ContactPerson: row.ContactPerson,
+        ContactNo: row.ContactNo,
+        EmailID: row.EmailID,
+        Invoice_PONo: row.Invoice_PONo,
+        HardwareType: row.HardwareType,
+        Make: row.Make,
+        Model: row.Model,
+        AdditionalDetails: row.AdditionalDetails,
+        DateOfWarrentyStart: format(row.DateOfWarrentyStart,"yyyy-MM-dd"),
+        WarrentyDays: row.WarrentyDays,
+        DateOfWarrentyExp: format(row.DateOfWarrentyExp,"yyyy-MM-dd"),
+        Qty: row.Qty,
+        SerialNo: row.SerialNo,
+        UniqueSerialNo: row.UniqueSerialNo,
+        TransBy: row.TransBy,
+        TransDate: format(row.TransDate, "yyyy-MM-dd"),
+        WarrentyStatus: row.WarrentyStatus,
+       
        
         
        
       }));
 
       doc.setFontSize(18);
-      doc.text(`Inward Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+      doc.text(`HardwareReport - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
 
       (doc as any).autoTable({
         columns: columns,
         body: formattedData,
         startY: 30,
         styles: { 
-          fontSize: 8, 
+          fontSize: 6, 
           cellPadding: 1.5,
           overflow: 'linebreak',
           halign: 'left'
@@ -246,7 +290,7 @@ const InwordReport = () => {
           2: { cellWidth: 35 }, 
           3: { cellWidth: 20 }, 
           4: { cellWidth: 30 }, 
-          5: { cellWidth: 70 }, 
+          5: { cellWidth: 20 }, 
           6: { cellWidth: 15 }, 
           7: { cellWidth: 25 }, 
           8: { cellWidth: 15 },
@@ -298,7 +342,7 @@ const InwordReport = () => {
       return;
     }
     
-    const fileName = `Inward_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+    const fileName = `Hardware_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
     exportToPdf(reportData, fileName);
   };
 
@@ -320,26 +364,50 @@ const InwordReport = () => {
     <div className="space-y-4">
       <Card className='mt-5'>
         <CardHeader>
-          <CardTitle>Report: Inward</CardTitle>
+          <CardTitle>Report: Hardware Tracking Report</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor='customerName'>Trans SerialNo</Label>
-              <Input value={transSerialNo} onChange={(e) => setTransSerialNo(e.target.value)}  placeholder=' Enter Trans SerialNo'/>
+              <Label htmlFor='customerName'>Customer Name</Label>
+              <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)}  placeholder=' Enter Customer Name...'/>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor='hardwareType'>Hardware Tracking</Label>
+              <Input value={hardwareType} onChange={(e) => setHardwareType(e.target.value)}  placeholder=' Enter Hardware Tracking...'/>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor='make'>Make</Label>
+              <Input value={make} onChange={(e) => setMake(e.target.value)}  placeholder=' Enter Make...'/>
+            </div>
+            {/* Model, SerialNo, WarrantyStatus */}
+            
+            <div className="space-y-2">
+              <Label htmlFor='model'>Model</Label>
+              <Input value={model} onChange={(e) => setModel(e.target.value)}  placeholder=' Enter Model...'/>
             </div>
             <div className="space-y-2">
-              <Label htmlFor='PartyName'>Party Name</Label>
-              <Input value={partyName} onChange={(e) => setPartyName(e.target.value)}  placeholder=' Enter Party Name'/>
+              <Label htmlFor='serialNo'>Serial No</Label>
+              <Input value={serialNo} onChange={(e) => setSerialNo(e.target.value)}  placeholder=' Enter Serial No...'/>
             </div>
+
+
             <div className="space-y-2">
-              <Label htmlFor='ProductCode'>Product Code</Label>
-              <Input value={productCode} onChange={(e) => setProductCode(e.target.value)}  placeholder=' Enter Product Code'/>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor='purOrderNo'>Pur Order No</Label>
-              <Input value={purOrderNo} onChange={(e) => setPurOrderNo(e.target.value)}  placeholder=' Enter Pur Order No'/>
-            </div>
+                <Label htmlFor="warrantyStatus">
+                  Warranty Status
+                </Label>
+                <Select value={warrantyStatus} onValueChange={setWarrantyStatus}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Warranty Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Warranty">Warranty</SelectItem>
+                    <SelectItem value="AMC">AMC</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             
             <div className="space-y-2">
               <Label>From Date</Label>
@@ -409,85 +477,10 @@ const InwordReport = () => {
         </CardContent>
       </Card>
 
-      {/* --------------------- THis is to card-------------- */}
-            {showTable ? (
-              <div className="flex flex-wrap gap-7">
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Serial No
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.serial_no ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Unique Transaction Serial No
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.trans_serialno ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Unique Pary name{" "}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.party_name ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-      
-                <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
-                  <CardHeader>
-                    <CardTitle className="text-base text-muted-foreground underline">
-                      Total Print Qty
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-bold text-primary">
-                      {cardData.print_qty ?? 0}
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            ) : null}
-
       {showTable && (
-        (loading ? (
-                  <Card className="mt-5 p-6 space-y-4">
-                    <Skeleton className="h-6 w-40 mx-auto" />
-                    <Skeleton className="h-8 w-full" />
-                    <div className="flex justify-between">
-                      <Skeleton className="h-8 w-1/4" />
-                      <Skeleton className="h-8 w-1/4" />
-                    </div>
-                    {[...Array(5)].map((_, idx) => (
-                      <Skeleton key={idx} className="h-10 w-full" />
-                    ))}
-                    <div className="flex justify-end space-x-2">
-                      <Skeleton className="h-8 w-8" />
-                      <Skeleton className="h-8 w-8" />
-                      <Skeleton className="h-8 w-8" />
-                    </div>
-                  </Card>
-                ) :
         reportData.length > 0 ? (
           <Card className="mt-5">
-            <CardHeader className="underline underline-offset-4 text-center">Inward Report</CardHeader>
+            <CardHeader className="underline underline-offset-4 text-center">Hardware Report</CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -518,16 +511,27 @@ const InwordReport = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>No</TableHead>
-                    <TableHead>Serial No</TableHead>
-                    <TableHead>Trans Serial No</TableHead>
-                    <TableHead>Product Code</TableHead>
-                    <TableHead>Party Name</TableHead>
-                    <TableHead>Voucher No</TableHead>
+                    <TableHead>No.</TableHead>
+                    <TableHead>Customer Name</TableHead>
+                    <TableHead>Customer Address</TableHead>
+                    <TableHead>Contact Person</TableHead>
+                    <TableHead>ContactNo</TableHead>
+                    <TableHead>EmailId</TableHead>
+                    <TableHead>InvoicePo No</TableHead>
+                    <TableHead>Hardware Type</TableHead>
+                    <TableHead>Make</TableHead>
+                    <TableHead>Model</TableHead>
+                    <TableHead>AdditionalDetails</TableHead>
+                    <TableHead>DateOfWarrentyStart</TableHead>
+                    <TableHead>WarrentyDays</TableHead>
+                    <TableHead>DateOfWarrentyExp</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>SerialNo</TableHead>
+                    <TableHead>UniqueSerialNo</TableHead>
+                    <TableHead>TransBy</TableHead>
+                    <TableHead>TransDate</TableHead>
+                    <TableHead>WarrentyStatus</TableHead>
                     
-                    <TableCell>Product Name</TableCell>
-                    <TableHead>Inward Status</TableHead>
-                    <TableHead>Inward By</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -535,16 +539,26 @@ const InwordReport = () => {
                     paginatedData.map((row, index) => (
                       <React.Fragment key={index}>
                         <TableRow>
-                          <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}.</TableCell>
-                          <TableCell>{row.serial_no}</TableCell>
-                          <TableCell>{row.trans_serialno}</TableCell>
-                          <TableCell>{row.product_code}</TableCell>
-                          <TableCell>{row.party_name}</TableCell>
-                          <TableCell>{row.voucher_no}</TableCell>
-                          
-                          <TableCell>{row.product_name}</TableCell>
-                          <TableCell>{row.inward_status}</TableCell>
-                          <TableCell>{row.inward_by}</TableCell>
+                            <TableCell>{index +1}. </TableCell>
+                          <TableCell className='min-w-[200px]'>{row.CustomerName}</TableCell>
+                          <TableCell className='min-w-[200px]'>{row.CustomerAddress}</TableCell>
+                          <TableCell>{row.ContactPerson}</TableCell>
+                          <TableCell>{row.ContactNo}</TableCell>
+                          <TableCell>{row.EmailID}</TableCell>
+                          <TableCell>{row.Invoice_PONo}</TableCell>
+                          <TableCell>{row.HardwareType}</TableCell>
+                          <TableCell>{row.Make}</TableCell>
+                          <TableCell>{row.Model}</TableCell>
+                          <TableCell>{row.AdditionalDetails}</TableCell>
+                          <TableCell>{format(row.DateOfWarrentyStart,"dd-mm-yyyy")}</TableCell>
+                          <TableCell>{row.WarrentyDays}</TableCell>
+                          <TableCell>{format(row.DateOfWarrentyExp, "dd-mm-yyyy")}</TableCell>
+                          <TableCell>{row.Qty}</TableCell>
+                          <TableCell>{row.SerialNo}</TableCell>
+                          <TableCell>{row.UniqueSerialNo}</TableCell>
+                          <TableCell>{row.TransBy}</TableCell>
+                          <TableCell className='min-w-[150px]'>{format(row.TransDate, "dd-mm-yyyy")}</TableCell>
+                          <TableCell>{row.WarrentyStatus}</TableCell>
                          
                         </TableRow>
                         
@@ -614,10 +628,10 @@ const InwordReport = () => {
         ) : (
           <NoDataCard />
         )
-      ))}
+      )}
       
     </div>
   );
 };
 
-export default InwordReport;
+export default HardWareReport;

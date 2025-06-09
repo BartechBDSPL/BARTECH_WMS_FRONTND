@@ -1,4 +1,5 @@
 import Link from "next/link";
+
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -6,21 +7,22 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import InternalMoveMentReport from "@/components/reports/internal-movement-report";
+import HardWareReport from "@/components/reports/hardware-report";
+
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="RM Internal Movement Report">
+    <ContentLayout title="Report : Hardware Tracking">
       <Breadcrumb>
-        <BreadcrumbList>
+        <BreadcrumbList>  
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
+              <Link href="/dashboard">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <InternalMoveMentReport/>
+      <HardWareReport/>
     </ContentLayout>
   );
 }

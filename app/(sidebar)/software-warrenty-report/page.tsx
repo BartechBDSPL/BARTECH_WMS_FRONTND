@@ -6,21 +6,22 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import InternalMoveMentReport from "@/components/reports/internal-movement-report";
+import SoftwareTrackingReport from "@/components/reports/software-warrenty-report";
+
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="RM Internal Movement Report">
+    <ContentLayout title="Software Warranty Report">
       <Breadcrumb>
-        <BreadcrumbList>
+        <BreadcrumbList>  
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
+              <Link href="/dashboard">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <InternalMoveMentReport/>
+      <SoftwareTrackingReport/>
     </ContentLayout>
   );
 }

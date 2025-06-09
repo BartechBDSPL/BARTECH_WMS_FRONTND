@@ -6,21 +6,21 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import InternalMoveMentReport from "@/components/reports/internal-movement-report";
+import RePrintHardWareTraking from "@/components/masters/re-printhard-ware";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="RM Internal Movement Report">
+    <ContentLayout title="Re-Print Hardware Traking">
       <Breadcrumb>
-        <BreadcrumbList>
+        <BreadcrumbList>  
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
+              <Link href="/dashboard">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <InternalMoveMentReport/>
+      <RePrintHardWareTraking/>
     </ContentLayout>
   );
 }

@@ -125,18 +125,7 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/printer-master",
               value: "2_10",
             },
-            {
-              href: "/hardware-tracking",
-              label: "Hardware Tracking",
-              active: pathname === "/hardware-tracking",
-              value: "2_11",
-            },
-            {
-              href: "/software-tracking",
-              label: "Software Tracking",
-              active: pathname === "/software-tracking",
-              value: "2_12",
-            },
+           
              {
               href: "/warehouse-category-master",
               label: "WH Category Master",
@@ -161,6 +150,7 @@ export function getMenuList(pathname: string): Group[] {
           
           ],
         },
+       
         {
           href: "",
           label: "Transaction",
@@ -229,6 +219,51 @@ export function getMenuList(pathname: string): Group[] {
         //     },
         //   ],
         // },
+
+         {
+          href: "",
+          label: "Hardware Tracking",
+          active: pathname.includes("/heloj"),
+          icon: SquarePen,
+          value: "4",
+          submenus: [
+             {
+              href: "/hardware-tracking",
+              label: "Hardware Tracking",
+              active: pathname === "/hardware-tracking",
+              value: "4_1",
+            },
+            {
+              href: "/re-print-hardwork",
+              label: "Re-Print Hardwork Traking",
+              active: pathname === "/re-print-hardwork",
+              value: "4_2"
+            },
+            
+          ],
+        },
+        {
+          href: "",
+          label: "Software Tracking",
+          active: pathname.includes("/heloj"),
+          icon: SquarePen,
+          value: "4",
+          submenus: [
+           
+            {
+              href: "/software-tracking",
+              label: "Software Tracking",
+              active: pathname === "/software-tracking",
+              value: "4_3",
+            },
+             {
+              href: "/re-print-software",
+              label: "RePrint Software Label",
+              active: pathname === "/re-print-software",
+              value: "4_4",
+            },
+          ],
+        },
         {
           href: "/categories",
           label: "Reports",
@@ -265,7 +300,20 @@ export function getMenuList(pathname: string): Group[] {
             label: "Internal Movement Report",
             active: pathname === "/internal-movement",
             value: "5_1",
+          },  //hardware-traking-report
+          {
+            href: "/hardware-traking-report",
+            label: "Hardware Tracking",
+            active: pathname === "/hardware-traking-report",
+            value: "5_1",
           },
+          // software-warrenty-report
+          {
+            href: "/software-warrenty-report",
+            label: "Software Warrenty Report",
+            active: pathname === "/software-warrenty-report",
+            value: "5_1",
+          }
           
          
         ],
