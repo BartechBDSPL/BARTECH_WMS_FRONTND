@@ -390,7 +390,6 @@ const RMLabelPrinting: React.FC = () => {
           title: "Success",
           description: result.Message || "Labels printed and data saved successfully."
         });
-        
         setShowSerialNumbers(false);
         setActiveProductCode(null);
         setGeneratedSerialNumbers([]);
@@ -400,7 +399,7 @@ const RMLabelPrinting: React.FC = () => {
         setPackSize({});
         setSerialNumbersPage(1);
         setRecentPrintingPage(1);
-        
+        await fetchGRNNumbers();
         await fetchRecentLabelPrinting();
         
       } else {
