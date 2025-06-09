@@ -120,6 +120,12 @@ const QcReport = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const token = Cookies.get("token");
   const [loading, setLoading] = useState(false);
+  const [cardData, setCardData] = useState({
+    serial_no: 0,
+    unique_trans_serialno: 0,
+    unique_party_name: 0,
+    unique_product_code: 0,
+  });
 
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
@@ -162,8 +168,8 @@ const QcReport = () => {
   const handleSubmitSearch = async () => {
     if (!quantityStatus) {
       toast({
-        title: "Select Quantity Status",
-        description: "Please select a Quantity Status",
+        title: "Select Quality Status",
+        description: "Please select a Quality Status",
         variant: "destructive",
       });
       return;
@@ -201,20 +207,28 @@ const QcReport = () => {
         }
       );
 
-      const data: JobCardReportData[] = await response.json();
+      const mainData = await response.json();
+      const data: JobCardReportData[] = mainData.data;
       if (data.length === 0) {
         setReportData([]);
+        setCardData({
+          serial_no: 0,
+          unique_trans_serialno: 0,
+          unique_party_name: 0,
+          unique_product_code: 0,
+        });
         setShowTable(true);
         setTimeout(() => {
-        setLoading(false);
+          setLoading(false);
         }, 2000);
         return;
       }
 
       setReportData(data);
+      setCardData(mainData.counts);
       setShowTable(true);
       setTimeout(() => {
-      setLoading(false);
+        setLoading(false);
       }, 2000);
     } catch (error) {
       toast({
@@ -237,7 +251,12 @@ const QcReport = () => {
     setPartyName("");
     setProductCode("");
     setPurOrderNo("");
-    
+    setCardData({
+      serial_no: 0,
+      unique_trans_serialno: 0,
+      unique_party_name: 0,
+      unique_product_code: 0,
+    });
   };
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
@@ -489,7 +508,62 @@ const QcReport = () => {
           </div>
         </CardContent>
       </Card>
+      {/* --------------------- THis is to card-------------- */}
+      {showTable ? (
+        <div className="flex flex-wrap gap-7">
+          <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+            <CardHeader>
+              <CardTitle className="text-base text-muted-foreground underline">
+                Serial No
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-primary">
+                {cardData.serial_no ?? 0}
+              </p>
+            </CardContent>
+          </Card>
 
+          <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+            <CardHeader>
+              <CardTitle className="text-base text-muted-foreground underline">
+                Unique Transaction Serial No
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-primary">
+                {cardData.unique_trans_serialno ?? 0}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+            <CardHeader>
+              <CardTitle className="text-base text-muted-foreground underline">
+                Unique Pary name{" "}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-primary">
+                {cardData.unique_party_name ?? 0}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
+            <CardHeader>
+              <CardTitle className="text-base text-muted-foreground underline">
+                Unique Product Code
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-primary">
+                {cardData.unique_product_code ?? 0}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
       {showTable &&
         (loading ? (
           <Card className="mt-5 p-6 space-y-4">

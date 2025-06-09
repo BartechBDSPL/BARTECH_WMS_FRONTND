@@ -10,7 +10,7 @@ import InternalMoveMentReport from "@/components/reports/internal-movement-repor
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Inward Report">
+    <ContentLayout title="RM Internal Movement Report">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
