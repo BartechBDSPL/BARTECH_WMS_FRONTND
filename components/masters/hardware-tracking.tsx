@@ -121,7 +121,7 @@ const HardwareTracking: React.FC = () => {
   // const hardwareTypes = ["Printer", "Scanner", "Barcode Reader", "Tablet", "Mobile Computer"];
   // const makes = ["Zebra", "Honeywell", "Datalogic", "Motorola", "Epson"];
   // const models = ["ZT411", "PM43", "DS3608", "TC52", "TM-T88VI"];
-  const warrentyStatuses = ["AMC", "Warranty"];
+  const warrentyStatuses = ["Standard-Warrenty","Extended-Warrenty", "AMC"];
 
   const [customerNames, setCustomerNames] = useState<
     { CustomerName: string }[]
@@ -178,13 +178,29 @@ const HardwareTracking: React.FC = () => {
 
   const [oldData, setOldData] = useState<HardwareData | null>(null);
   const [serialNumbers, setSerialNumbers] = useState<string[]>([]);
-    const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
-    const [selectedPrinter, setSelectedPrinter] = useState("");
-    
-  
-  
-  
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState("");
 
+  const [scannedSerials, setScannedSerials] = React.useState<string[]>([]);
+
+
+  const warrantyExpiryDate = watch("dateOfWarrentyExp");
+
+  const watchStartDate = watch("dateOfWarrentyStart");
+const watchDays = watch("warrentyDays");
+
+const convertedDuration = watchDays ? convertDaysToDuration(watchDays) : "";
+
+useEffect(() => {
+  if (watchStartDate && typeof watchDays === "number" && !isNaN(watchDays)) {
+    const expiry = new Date(watchStartDate);
+    expiry.setDate(expiry.getDate() + watchDays);
+    setValue("dateOfWarrentyExp", expiry); // store it in form state
+  }
+}, [watchStartDate, watchDays, setValue]);
+
+
+  
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
       const isValid = await trigger(fieldsToValidate as any[]);
@@ -293,6 +309,30 @@ useEffect(() => {
     fetchData();
   }, []);
 
+   useEffect(() => {
+    if (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC") {
+      setValue("warrentyDays", 365); // Set value programmatically
+    } else if (selectedWarrentyStatus === "Extended-Warrenty") {
+      setValue("warrentyDays", 0); // Clear value for manual input
+    }
+  }, [selectedWarrentyStatus, setValue]);
+
+  function convertDaysToDuration(days: number): string {
+  if (!days || days < 0) return "";
+
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const remainingDays = days % 365 % 30;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (remainingDays > 0) parts.push(`${remainingDays} day${remainingDays > 1 ? "s" : ""}`);
+
+  return parts.join(" ");
+}
+
+
    const getPrinterDetails = async () => {
       try {
         const response = await axios.get(
@@ -345,7 +385,7 @@ useEffect(() => {
       setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
     }
     setValue("warrentyDays", selectedData.WarrentyDays);
-    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
     setValue("qty", selectedData.Qty);
     setValue("serialNo", '');
     setSerialNumbers(selectedData.SerialNo.split(','))
@@ -780,7 +820,7 @@ useEffect(() => {
 
   const handleWarrentyStatusChange = (value: string) => {
     setSelectedWarrentyStatus(value);
-    setValue("warrentyStatus", value as "AMC" | "Warranty");
+    setValue("warrentyStatus", value as "Standard-Warrenty"|"Extended-Warrenty"|"AMC");
   };
 
   
@@ -873,96 +913,94 @@ const handleReset = () => {
     }
   };
 
-  const submitToApi = async () => {
+ const submitToApi = async () => {
+  if (!formData) {
+    toast({
+      variant: "destructive",
+      title: "Data not found",
+      description: "Please fill in the required form details before submitting.",
+    });
+    return false;
+  }
 
-    if (!formData) {
-      console.warn("⚠️ No form data found. Aborting API call.");
-    
-      toast({
-        variant: "destructive",
-        title: "Data not found",
-        description: "Please fill in the required form details before submitting.",
-      });
-    
-      return false;
-    }
-    
-    
+  if (!selectedPrinter) {
+    toast({
+      variant: "destructive",
+      title: "Printer not selected",
+      description: "Please select a printer before submitting.",
+    });
+    return false;
+  }
 
-    try {
-      const formattedDate = formData.dateOfWarrentyStart
-        ? format(formData.dateOfWarrentyStart, "yyyy-MM-dd")
-        : "";
+  try {
+    const formattedDate = formData.dateOfWarrentyStart
+      ? format(formData.dateOfWarrentyStart, "yyyy-MM-dd")
+      : "";
 
-      const apiData = {
-        CustomerName: formData.customerName,
-        CustomerAddress: formData.customerAddress,
-        ContactPerson: formData.contactPerson,
-        ContactNo: formData.contactNo,
-        EmailID: formData.emailID,
-        Invoice_PONo: formData.invoicePONo,
-        HardwareType: formData.hardwareType,
-        Make: formData.make,
-        Model: formData.model,
-        AdditionalDetails: formData.additionalDetails || "",
-        DateOfWarrentyStart: formattedDate,
-        WarrentyDays: formData.warrentyDays,
-        WarrentyStatus: formData.warrentyStatus,
-        Qty: formData.qty,
-        SerialNo: serialNumbers.join(','),
-        User: getUserID(),
-      };
+    const apiData = {
+      CustomerName: formData.customerName,
+      CustomerAddress: formData.customerAddress,
+      ContactPerson: formData.contactPerson,
+      ContactNo: formData.contactNo,
+      EmailID: formData.emailID,
+      Invoice_PONo: formData.invoicePONo,
+      HardwareType: formData.hardwareType,
+      Make: formData.make,
+      Model: formData.model,
+      AdditionalDetails: formData.additionalDetails || "",
+      DateOfWarrentyStart: formattedDate,
+      WarrentyDays: formData.warrentyDays,
+      WarrentyStatus: formData.warrentyStatus,
+      Qty: formData.qty,
+      SerialNo: serialNumbers.join('$'),
+      User: getUserID(),
+      PrinterIpPort: selectedPrinter
+    };
 
-
-      const response = await axios.post(
-        `${BACKEND_URL}/api/master/insert-hardware-tracking-details`,
-        apiData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-
-      if (
-        response.data &&
-        response.data.length > 0 &&
-        response.data[0].Status === "T"
-      ) {
-        toast({
-          title: "Success!",
-          description:
-            response.data[0].Message ||
-            "Hardware tracking information saved successfully",
-          variant: "default",
-        });
-
-        if (response.data[0].SerialNo) {
-          console.log("📎 QR Code Serial No:", response.data[0].SerialNo);
-        }
-       setSerialNumbers([]);
-        handleReset();
-        setIsDialogOpen(false);
-        fetchData();
-        return true;
-      } else {
-        console.error("❌ Invalid response from server:", response.data);
-        return false;
+    const response = await axios.post(
+      `${BACKEND_URL}/api/master/insert-hardware-tracking-details`,
+      apiData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       }
-    } catch (error) {
+    );
+
+    if (
+      response.data &&
+      response.data.Status === "T"
+    ) {
       toast({
-        variant: "destructive",
-        title: "Error",
+        title: "Success!",
         description:
-          error instanceof Error
-            ? error.message
-            : "Failed to save hardware tracking information",
+          response.data.Message || "Hardware tracking information saved successfully",
+        variant: "default",
       });
+
+      setSerialNumbers([]);
+      handleReset();
+      setIsDialogOpen(false);
+      fetchData();
+      return true;
+    } else {
+      console.error("❌ Invalid response from server:", response.data);
       return false;
     }
-  };
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description:
+        error instanceof Error
+          ? error.message
+          : "Failed to save hardware tracking information",
+    });
+    return false;
+  }
+};
+
 
 
    
@@ -1278,6 +1316,7 @@ const handlePrintLabel = async (row: HardwareData) => {
             </table>
           </div>
         </div>
+     
 
         <DialogFooter className="flex justify-between mt-4 gap-2 sm:gap-0">
           <Button
@@ -1758,6 +1797,35 @@ const handlePrintLabel = async (row: HardwareData) => {
                               className="min-h-[80px]"
                             />
                           </div>
+                           <div className="space-y-2">
+                            <Label
+                              className={
+                                errors.warrentyStatus ? "text-destructive" : ""
+                              }
+                            >
+                              Warranty Status*
+                            </Label>
+                            <CustomDropdown
+                              options={warrentyStatuses.map((status) => ({
+                                value: status,
+                                label: status,
+                              }))}
+                              value={selectedWarrentyStatus}
+                              onValueChange={handleWarrentyStatusChange}
+                              placeholder="Select Warranty Status"
+                              searchPlaceholder="Search status..."
+                              emptyText="No statuses found"
+                            />
+                            {errors.warrentyStatus && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-sm text-destructive"
+                              >
+                                {errors.warrentyStatus.message}
+                              </motion.p>
+                            )}
+                          </div>
                           <div className="space-y-2">
                             <Label
                               className={
@@ -1813,21 +1881,30 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </motion.p>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyDays ? "text-destructive" : ""
-                              }
-                            >
+                        <div className="space-y-2">
+                            <Label className={errors.warrentyDays ? "text-destructive" : ""}>
                               Warranty Days*
                             </Label>
                             <Input
-                              type="number"
-                              {...register("warrentyDays", {
-                                valueAsNumber: true,
-                              })}
-                              placeholder="Enter warranty period in days"
-                            />
+                                type="number"
+                                {...register("warrentyDays", {
+                                  valueAsNumber: true,
+                                })}
+                                placeholder="Enter warranty period in days"
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                className={
+                                  (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                    ? "bg-gray-100 cursor-not-allowed"
+                                    : ""
+                                }
+                              />
+
+                          {convertedDuration && (
+                            <p className="whitespace-nowrap font-semibold text-sm">
+                              Approx Duration: <span className="text-blue-600 italic">≈ {convertedDuration}</span>
+                            </p>
+                          )}
+
                             {errors.warrentyDays && (
                               <motion.p
                                 initial={{ opacity: 0 }}
@@ -1838,35 +1915,27 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </motion.p>
                             )}
                           </div>
+
                           <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyStatus ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Status*
+
+                            <Label>
+                              Warranty Expiry Date
                             </Label>
-                            <CustomDropdown
-                              options={warrentyStatuses.map((status) => ({
-                                value: status,
-                                label: status,
-                              }))}
-                              value={selectedWarrentyStatus}
-                              onValueChange={handleWarrentyStatusChange}
-                              placeholder="Select Warranty Status"
-                              searchPlaceholder="Search status..."
-                              emptyText="No statuses found"
+                            <Input
+                              type="text"
+                              value={
+                                warrantyExpiryDate instanceof Date
+                                  ? format(warrantyExpiryDate, "PPP")
+                                  : warrantyExpiryDate
+                                  ? format(new Date(warrantyExpiryDate), "PPP")
+                                  : ""
+                              }
+                              readOnly
+                              className="bg-gray-100 cursor-not-allowed"
                             />
-                            {errors.warrentyStatus && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.warrentyStatus.message}
-                              </motion.p>
-                            )}
-                          </div>
+                            </div>
+
+                                              
                           <div className="space-y-2">
                             <Label
                               className={errors.qty ? "text-destructive" : ""}
@@ -1888,22 +1957,52 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </motion.p>
                             )}
                           </div>
-                          <div>
-                              {/* Existing serial number input and list */}
-                              <div>
-                                <label className="block font-medium">Serial Number</label>
-                                <input
-                                  type="text"
-                                  {...register("serialNo")}
-                                  onKeyDown={handleSerialKeyPress}
-                                  placeholder="Press Enter to add"
-                                  className="border p-2 rounded w-full"
-                                />
-                                {errors.serialNo && <p className="text-red-500">{errors.serialNo.message}</p>}
-                              </div>
+                         <div>
+                            <label className="block font-medium mb-1">Serial Number</label>
+                            <div className="flex items-center space-x-4">
+                              <input
+                                type="text"
+                                {...register("serialNo")}
+                                onKeyDown={handleSerialKeyPress}
+                                placeholder="Press Enter to add"
+                                className="border p-2 rounded w-full"
+                              />
+                              <p className="whitespace-nowrap font-semibold">
+                                Total Serial Number: <span className="text-blue-600">{serialNumbers.length}</span>
+                              </p>
+                            </div>
+
+                            {errors.serialNo && <p className="text-red-500 mt-1">{errors.serialNo.message}</p>}
+
+                            <div className="mt-2">
+                              {scannedSerials.length > 0 && (
+                                <ul className="list-disc ml-5 max-h-40 overflow-auto border p-2 rounded">
+                                  {scannedSerials.map((sn, idx) => (
+                                    <li key={idx}>{sn}</li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+
+
+
                           </div>
                          </div>
-
+                            <div className="mt-4">
+                                  <label className="font-bold block mb-2">Select Printer</label>
+                                  <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                                    <SelectTrigger className="w-full sm:w-64">
+                                      <SelectValue placeholder="Select Printer" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {printerOptions.map((printer) => (
+                                        <SelectItem key={printer.value} value={printer.value}>
+                                          {printer.label}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
                         <div className="flex justify-between pt-4">
                           <Button
@@ -1933,78 +2032,117 @@ const handlePrintLabel = async (row: HardwareData) => {
                                 {isSubmitting || isProcessing ? "Updating..." : "Update"}
                               </Button>
 
-                            <Button
-                            type="button"
-                            disabled={isSubmitting || isProcessing || isEditMode}
-                            onClick={async () => {
-                              try {
-                                setIsProcessing(true);
+                                <Button
+                                type="button"
+                                disabled={isSubmitting || isProcessing || isEditMode}
+                                onClick={async () => {
+                                  try {
+                                    setIsProcessing(true);
 
-                                // Trigger form validations
-                                const isValid = await trigger([
-                                  "hardwareType",
-                                  "make",
-                                  "model",
-                                  "dateOfWarrentyStart",
-                                  "warrentyDays",
-                                  "warrentyStatus",
-                                  "qty",
-                                ]);
+                                    // Validate required fields
+                                    const isValid = await trigger([
+                                      "hardwareType",
+                                      "make",
+                                      "model",
+                                      "dateOfWarrentyStart",
+                                      "warrentyDays",
+                                      "warrentyStatus",
+                                      "qty",
+                                    ]);
 
-                                if (!isValid) {
-                                  setIsProcessing(false);
-                                  return;
-                                }
+                                    if (!isValid) {
+                                      setIsProcessing(false);
+                                      return;
+                                    }
 
-                                const currentData = getValues();
-                                const quantity = Number(currentData.qty);
+                                    // Check if printer is selected
+                                    if (!selectedPrinter) {
+                                      toast({
+                                        variant: "destructive",
+                                        title: "Printer not selected",
+                                        description: "Please select a printer before submitting.",
+                                      });
+                                      setIsProcessing(false);
+                                      return;
+                                    }
 
-                                // Check quantity vs serialNumbers length
-                                if (serialNumbers.length !== quantity) {
-                                  toast({
-                                    variant: "destructive",
-                                    title: "Mismatch",
-                                    description: `Quantity is ${quantity}, but ${serialNumbers.length} serial numbers entered.`,
-                                  });
-                                  setIsProcessing(false);
-                                  return;
-                                }
+                                    // Split IP and port
+                                    const [ip, portStr] = selectedPrinter.split(":");
+                                    const port = parseInt(portStr) || 9100;
 
-                                // Calculate warranty expiry
-                                let expiryDate = undefined;
-                                if (currentData.dateOfWarrentyStart && currentData.warrentyDays) {
-                                  expiryDate = new Date(currentData.dateOfWarrentyStart);
-                                  expiryDate.setDate(expiryDate.getDate() + Number(currentData.warrentyDays));
-                                }
+                                    // Ping the printer
+                                    const pingRes = await fetch(`${BACKEND_URL}/api/master/ping-printer`, {
+                                      method: "POST",
+                                      headers: {
+                                        "Content-Type": "application/json",
+                                      },
+                                      body: JSON.stringify({ ip, port }),
+                                    });
 
-                                const processedData = {
-                                  ...currentData,
-                                  dateOfWarrentyExp: expiryDate,
-                                  serialNumbers,
-                                };
+                                    const pingData = await pingRes.json();
 
-                                setFormData(processedData);
-                                setIsDialogOpen(true);
-                                setCompletedSteps((prev) => [...prev.filter((step) => step !== 2), 2]);
+                                    if (!pingData.status) {
+                                      toast({
+                                        variant: "destructive",
+                                        title: "Printer Not Reachable",
+                                        description: pingData.message || "Selected printer is not responding.",
+                                      });
+                                      setIsProcessing(false);
+                                      return;
+                                    }
 
-                              } catch (error) {
-                                console.error("Validation error:", error);
-                                toast({
-                                  variant: "destructive",
-                                  title: "Validation Error",
-                                  description: error instanceof Error ? error.message : "An error occurred",
-                                });
-                              } finally {
-                                setIsProcessing(false);
-                              }
-                            }}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            {(isSubmitting || isProcessing) && (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            )}
-                            {isSubmitting || isProcessing ? "Saving..." : "Save Hardware Details"}
-                          </Button>
+                                    // Validate quantity and serial numbers
+                                    const currentData = getValues();
+                                    const quantity = Number(currentData.qty);
+
+                                    if (serialNumbers.length !== quantity) {
+                                      toast({
+                                        variant: "destructive",
+                                        title: "Mismatch",
+                                        description: `Quantity is ${quantity}, but ${serialNumbers.length} serial numbers entered.`,
+                                      });
+                                      setIsProcessing(false);
+                                      return;
+                                    }
+
+                                    // Calculate expiry date
+                                    let expiryDate = undefined;
+                                    if (currentData.dateOfWarrentyStart && currentData.warrentyDays) {
+                                      expiryDate = new Date(currentData.dateOfWarrentyStart);
+                                      expiryDate.setDate(expiryDate.getDate() + Number(currentData.warrentyDays));
+                                    }
+
+                                    // Final form data
+                                    const processedData = {
+                                      ...currentData,
+                                      dateOfWarrentyExp: expiryDate,
+                                      serialNumbers,
+                                    };
+
+                                    setFormData(processedData);
+                                    setIsDialogOpen(true);
+                                    setCompletedSteps((prev) => [...prev.filter((step) => step !== 2), 2]);
+
+                                  } catch (error) {
+                                    console.error("Validation error:", error);
+                                    toast({
+                                      variant: "destructive",
+                                      title: "Validation Error",
+                                      description: error instanceof Error ? error.message : "An error occurred",
+                                    });
+                                  } finally {
+                                    setIsProcessing(false);
+                                  }
+                                }}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {(isSubmitting || isProcessing) && (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                {isSubmitting || isProcessing ? "Saving..." : "Save Hardware Details"}
+                              </Button>
+
+
 
                           </div>
                         </div>
@@ -2081,7 +2219,7 @@ const handlePrintLabel = async (row: HardwareData) => {
             </SelectContent>
           </Select>
           <span>entries</span>
-          <Select
+          {/* <Select
                           value={selectedPrinter}
                           onValueChange={setSelectedPrinter}
                         >
@@ -2095,7 +2233,7 @@ const handlePrintLabel = async (row: HardwareData) => {
                               </SelectItem>
                             ))}
                           </SelectContent>
-                        </Select>
+                        </Select> */}
         </div>
         
         <div className="flex items-center space-x-2">
@@ -2107,7 +2245,7 @@ const handlePrintLabel = async (row: HardwareData) => {
         <TableHeader>
           <TableRow>
             <TableHead>Action</TableHead>
-            <TableHead>Print</TableHead>
+            {/* <TableHead>Print</TableHead> */}
             <TableHead>Customer Name</TableHead>
             <TableHead>Customer Address</TableHead>
             <TableHead>Contact Person</TableHead>
@@ -2155,7 +2293,7 @@ const handlePrintLabel = async (row: HardwareData) => {
                     Edit
                   </Button>
                 </TableCell>
-                <TableCell>
+                {/* <TableCell>
                   <Button 
                     variant="outline" 
                     size="sm"
@@ -2165,7 +2303,7 @@ const handlePrintLabel = async (row: HardwareData) => {
                     <Printer className="h-4 w-4" />
                     <span>Print</span>
                   </Button>
-                </TableCell>
+                </TableCell> */}
                 <TableCell>{row.CustomerName}</TableCell>
                 <TableCell>{row.CustomerAddress}</TableCell>
                 <TableCell>{row.ContactPerson}</TableCell>

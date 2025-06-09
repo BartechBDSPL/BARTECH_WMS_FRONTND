@@ -66,33 +66,35 @@ interface TableData {
   ContactNo: string;
   EmailID: string;
   Invoice_PONo: string;
-  HardwareType: string;
-  Make: string;
-  Model: string;
+  SoftwareType: string;
+  ProjectTitle: string;
+  ProjectDesc: string;
+  ProjectVersion: string;
   AdditionalDetails: string;
-  DateOfWarrentyStart: string;
+  DateOfWarrentyStart: string;  
   WarrentyDays: number;
-  DateOfWarrentyExp: string;
+  DateOfWarrentyExp: string;    
   Qty: number;
   SerialNo: string;
   UniqueSerialNo: string;
   TransBy: string;
-  TransDate: string;
+  TransDate: string;            
   WarrentyStatus: string;
 }
 
+
 interface SearchFilters {
   CustomerName: string;
-  HardwareType: string;
-  Make: string;
-  Model: string;
+  SoftwareType: string;
+  ProjectTitle: string;
+  ProjectVersion: string;
 }
 interface dropdownsOptions {
   value: string;
   label: string;
 }
 
-const RePrintHardWareTraking: React.FC = () => {
+const RePrintSoftwareTraking: React.FC = () => {
   const token = Cookies.get("token");
   const { toast } = useToast();
 
@@ -116,9 +118,9 @@ const RePrintHardWareTraking: React.FC = () => {
   // Search filters
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     CustomerName: "",
-    HardwareType: "",
-    Make: "",
-    Model: "",
+    SoftwareType: "",
+    ProjectTitle: "",
+    ProjectVersion: "",
   });
 
   // Print form states
@@ -172,14 +174,14 @@ const RePrintHardWareTraking: React.FC = () => {
     try {
       var data = {
         CustomerName: searchFilters.CustomerName.trim(),
-        HardwareType: searchFilters.HardwareType.trim(),
-        Make: searchFilters.Make.trim(),
-        Model: searchFilters.Model.trim(),
+        SoftwareType: searchFilters.SoftwareType.trim(),
+        ProjectTitle: searchFilters.ProjectTitle.trim(),
+        ProjectVersion: searchFilters.ProjectVersion.trim(),
         FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
       };
       const response = await axios.post(
-        `${BACKEND_URL}/api/master/get-hardware-tracking-details`,
+        `${BACKEND_URL}/api/master/get-software-tracking-details`,
         data,
         {
           headers: {
@@ -245,9 +247,9 @@ const RePrintHardWareTraking: React.FC = () => {
     setShowPrintForm(false);
     setSearchFilters({
       CustomerName: "",
-      HardwareType: "",
-      Make: "",
-      Model: "",
+      SoftwareType: "",
+      ProjectTitle: "",
+      ProjectVersion: "",
     });
   };
 
@@ -323,7 +325,7 @@ const handlePrint = async () => {
             description: "Preparing labels for printing...",
         });
 
-        const response = await fetch(BACKEND_URL+'/api/master/hardware-reprint', {
+        const response = await fetch(BACKEND_URL+'/api/master/Software-reprint', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -373,11 +375,9 @@ const handlePrint = async () => {
       const searchableFields = [
         item.CustomerName,
         item.CustomerAddress,
-        item.HardwareType,
-        item.Make,
-        item.Model,
-        item.SerialNo,
-        item.WarrentyStatus,
+        item.SoftwareType,
+        item.ProjectTitle,
+        item.ProjectVersion,
       ];
       return searchableFields.some((field) => {
         return (
@@ -418,7 +418,7 @@ const handlePrint = async () => {
       <Card className="w-full mx-auto mt-5">
         <CardHeader>
           <CardTitle>
-            Re-Print Hardware Tracking{" "}
+            Re-Print Software Tracking{" "}
             <span className="font-normal text-sm text-muted-foreground">
               (* Fields Are Mandatory)
             </span>
@@ -444,14 +444,14 @@ const handlePrint = async () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="HardwareType">Hardware Type</Label>
+                <Label htmlFor="SoftwareType">Software Type</Label>
                 <Input
-                  id="HardwareType"
-                  value={searchFilters.HardwareType}
+                  id="SoftwareType"
+                  value={searchFilters.SoftwareType}
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      HardwareType: e.target.value,
+                      SoftwareType: e.target.value,
                     }))
                   }
                   placeholder="Enter Hardware Type"
@@ -459,32 +459,32 @@ const handlePrint = async () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="Make">Make</Label>
+                <Label htmlFor="ProjectTitle">Project Title</Label>
                 <Input
-                  id="Make"
-                  value={searchFilters.Make}
+                  id="ProjectTitle"
+                  value={searchFilters.ProjectTitle}
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      Make: e.target.value,
+                      ProjectTitle: e.target.value,
                     }))
                   }
-                  placeholder="Enter Make"
+                  placeholder="Enter Project Title"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="Model">Model</Label>
+                <Label htmlFor="Model">Project Version</Label>
                 <Input
-                  id="Model"
-                  value={searchFilters.Model}
+                  id="ProjectVersion"
+                  value={searchFilters.ProjectVersion}
                   onChange={(e) =>
                     setSearchFilters((prev) => ({
                       ...prev,
-                      Model: e.target.value,
+                      ProjectVersion: e.target.value,
                     }))
                   }
-                  placeholder="Enter Model"
+                  placeholder="Enter Project Version"
                 />
               </div>
 
@@ -672,9 +672,9 @@ const handlePrint = async () => {
                       </TableHead>
                       <TableHead>Customer Name</TableHead>
                       <TableHead>Customer Address</TableHead>
-                      <TableHead>Hardware Type</TableHead>
-                      <TableHead>Make</TableHead>
-                      <TableHead>Model</TableHead>
+                      <TableHead>Software Type</TableHead>
+                      <TableHead>Project Title</TableHead>
+                      <TableHead>Project Version</TableHead>
                       <TableHead>Serial No</TableHead>
                       <TableHead>Qty</TableHead>
                       <TableHead>Warranty Status</TableHead>
@@ -717,9 +717,9 @@ const handlePrint = async () => {
                           </TableCell>
                           <TableCell>{row.CustomerName}</TableCell>
                           <TableCell>{row.CustomerAddress}</TableCell>
-                          <TableCell>{row.HardwareType}</TableCell>
-                          <TableCell>{row.Make}</TableCell>
-                          <TableCell>{row.Model}</TableCell>
+                          <TableCell>{row.SoftwareType}</TableCell>
+                          <TableCell>{row.ProjectTitle}</TableCell>
+                          <TableCell>{row.ProjectVersion}</TableCell>
                           <TableCell>{row.SerialNo}</TableCell>
                           <TableCell>{row.Qty}</TableCell>
                           <TableCell>{row.WarrentyStatus}</TableCell>
@@ -819,4 +819,4 @@ const handlePrint = async () => {
   );
 };
 
-export default RePrintHardWareTraking;
+export default RePrintSoftwareTraking;

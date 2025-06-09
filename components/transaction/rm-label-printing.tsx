@@ -64,8 +64,8 @@ interface GRNDetails {
   invoice_no: string;
   pur_order_no: string;
   narration: string;
-  printed_label: number;
-  remaining_label: number;
+  printed_qty: number;
+  remaining_qty: number;
 }
 
 interface SerialNumber {
@@ -91,8 +91,8 @@ const RMLabelPrinting: React.FC = () => {
   const [grnNumbers, setGRNNumbers] = useState<GRNOption[]>([]);
   const [selectedGrn, setSelectedGrn] = useState<string>('');
   const [grnDetails, setGrnDetails] = useState<GRNDetails[] | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [printQty, setPrintQty] = useState<{[key: string]: string}>({});
+  const [isLoading, setIsLoading] = useState<boolean>(false);  const [printQty, setPrintQty] = useState<{[key: string]: string}>({});
+  const [packSize, setPackSize] = useState<{[key: string]: string}>({});
   const [activeProductCode, setActiveProductCode] = useState<string | null>(null);
   const [showSerialNumbers, setShowSerialNumbers] = useState<boolean>(false);
   const [generatedSerialNumbers, setGeneratedSerialNumbers] = useState<SerialNumber[]>([]);
@@ -229,16 +229,17 @@ const RMLabelPrinting: React.FC = () => {
           title: "Error",
           description: data[0]?.Message || "Invalid GRN number"
         });
-        setGrnDetails(null);
-      } else {
+        setGrnDetails(null);      } else {
         setGrnDetails(data);
-        
-        const initialPrintQty: {[key: string]: string} = {};
+          const initialPrintQty: {[key: string]: string} = {};
+        const initialPackSize: {[key: string]: string} = {};
         data.forEach((item: GRNDetails, index: number) => {
           const uniqueKey = `${item.product_code}_${index}_${item.qty}`;
-          initialPrintQty[uniqueKey] = '';
+          initialPrintQty[uniqueKey] = item.remaining_qty.toString();
+          initialPackSize[uniqueKey] = '';
         });
         setPrintQty(initialPrintQty);
+        setPackSize(initialPackSize);
       }
     } catch (error) {
       console.error('Error fetching GRN details:', error);
@@ -250,33 +251,83 @@ const RMLabelPrinting: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handlePrintQtyChange = (uniqueKey: string, value: string) => {
+  };  const handlePrintQtyChange = (uniqueKey: string, value: string) => {
+    const parts = uniqueKey.split('_');
+    const productCode = parts[0];
+    const index = parseInt(parts[1]);
+    const correspondingItem = grnDetails?.find((item, idx) => 
+      item.product_code === productCode && idx === index
+    );
+    
+    if (value !== '' && correspondingItem) {
+      const numericValue = parseInt(value);
+      if (isNaN(numericValue) || numericValue < 0) {
+        return; 
+      }
+      
+      if (numericValue > correspondingItem.remaining_qty) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Quantity",
+          description: `Print quantity cannot exceed remaining quantity (${correspondingItem.remaining_qty}).`
+        });
+        return; 
+      }
+    }
+    
+    if (showSerialNumbers && generatedSerialNumbers.length > 0) {
+      setGeneratedSerialNumbers([]);
+      setShowSerialNumbers(false);
+      setActiveProductCode(null);
+      toast({
+        title: "Serial Numbers Cleared",
+        description: "Serial numbers have been cleared due to quantity change."
+      });
+    }
+    
     setPrintQty(prev => ({
       ...prev,
       [uniqueKey]: value
     }));
   };
 
+  const handlePackSizeChange = (uniqueKey: string, value: string) => {
+    if (showSerialNumbers && generatedSerialNumbers.length > 0) {
+      setGeneratedSerialNumbers([]);
+      setShowSerialNumbers(false);
+      setActiveProductCode(null);
+      toast({
+        title: "Serial Numbers Cleared",
+        description: "Serial numbers have been cleared due to pack size change."
+      });
+    }
+    
+    setPackSize(prev => ({
+      ...prev,
+      [uniqueKey]: value
+    }));
+  };
   const handleReset = () => {
     setSelectedGrn('');
     setGrnDetails(null);
     setPrintQty({});
+    setPackSize({});
     setActiveProductCode(null);
     setShowSerialNumbers(false);
     setGeneratedSerialNumbers([]);
   };
-
   const handlePrint = async () => {
     const productDetails = activeProductCode ? grnDetails?.find(item => item.product_code === activeProductCode) : null;
     const totalSerialQty = generatedSerialNumbers.reduce((sum, sn) => sum + sn.qty, 0);
     
-    if (productDetails && totalSerialQty !== productDetails.qty) {
+    const uniqueKey = Object.keys(printQty).find(key => key.includes(activeProductCode || ''));
+    const currentPrintQty = uniqueKey ? parseInt(printQty[uniqueKey]) : 0;
+    
+    if (productDetails && totalSerialQty !== currentPrintQty) {
       toast({
         variant: "destructive",
         title: "Quantity Mismatch",
-        description: `Total quantity of all serial numbers (${totalSerialQty}) must exactly match the product quantity (${productDetails.qty}).`
+        description: `Total quantity of all serial numbers (${totalSerialQty}) must exactly match the print quantity (${currentPrintQty}).`
       });
       return;
     }
@@ -334,22 +385,21 @@ const RMLabelPrinting: React.FC = () => {
         });
         return;
       }
-      
-      if (result.Status === 'T') {
+        if (result.Status === 'T') {
         toast({
           title: "Success",
           description: result.Message || "Labels printed and data saved successfully."
         });
-        
         setShowSerialNumbers(false);
         setActiveProductCode(null);
         setGeneratedSerialNumbers([]);
         setSelectedGrn('');
         setGrnDetails(null);
         setPrintQty({});
+        setPackSize({});
         setSerialNumbersPage(1);
         setRecentPrintingPage(1);
-        
+        await fetchGRNNumbers();
         await fetchRecentLabelPrinting();
         
       } else {
@@ -370,11 +420,11 @@ const RMLabelPrinting: React.FC = () => {
     } finally {
       setIsPrinting(false);
     }
-  };
-
-  const handleGenerateSerialNumbers = async (productCode: string, productName: string, rowIndex: number, qty: number) => {
+  };  const handleGenerateSerialNumbers = async (productCode: string, productName: string, rowIndex: number, qty: number) => {
     const uniqueKey = `${productCode}_${rowIndex}_${qty}`;
     const printQtyValue = printQty[uniqueKey];
+    const packSizeValue = packSize[uniqueKey];
+    
     
     if (!printQtyValue || parseInt(printQtyValue) <= 0) {
       toast({
@@ -385,12 +435,28 @@ const RMLabelPrinting: React.FC = () => {
       return;
     }
     
+    if (!packSizeValue || parseInt(packSizeValue) <= 0) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please enter a valid pack size."
+      });
+      return;
+    }
+    
     const productDetails = grnDetails?.find((item, index) => index === rowIndex && item.product_code === productCode);
     if (!productDetails) return;
-    
-    const totalQty = productDetails.qty;
-    const requestedLabels = parseInt(printQtyValue);
-    const remainingLabels = productDetails.remaining_label;
+      const requestedPrintQty = parseInt(printQtyValue);
+    const requestedPackSize = parseInt(packSizeValue);
+    const remainingLabels = productDetails.remaining_qty;
+    if (requestedPrintQty > remainingLabels) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Print quantity (${requestedPrintQty}) cannot be greater than remaining quantity to print (${remainingLabels}).`
+      });
+      return;
+    }
     
     setIsLoading(true);
     setActiveProductCode(productCode);
@@ -411,31 +477,37 @@ const RMLabelPrinting: React.FC = () => {
       if (!response.ok) {
         throw new Error('Failed to get serial number');
       }
+        const data = await response.json();      let startSerialNo = data.SrNo + 1;
       
-      const data = await response.json();
-      let startSerialNo = data.SrNo + 1;
+      const numberOfLabels = requestedPackSize;
+      const baseQtyPerLabel = Math.floor(requestedPrintQty / numberOfLabels);
+      const remainder = requestedPrintQty % numberOfLabels;
       
-      const qtyPerLabel = Math.floor(totalQty / requestedLabels);
-      const remainder = totalQty % requestedLabels;
+
       
       const serialNumbers: SerialNumber[] = [];
       let totalAssigned = 0;
       
-      for (let i = 0; i < requestedLabels; i++) {
+      for (let i = 0; i < numberOfLabels; i++) {
         const serialNo = `${productCode}|${selectedGrn}|${startSerialNo + i}`;
-        let labelQty = qtyPerLabel;
+        let labelQty = baseQtyPerLabel;
         
-        if (i < remainder) {
-          labelQty += 1;
+        if (i === numberOfLabels - 1 && remainder > 0) {
+          labelQty += remainder;
         }
-        
+                
         totalAssigned += labelQty;
         serialNumbers.push({ serialNo, qty: labelQty, editable: true });
       }
+
       
       setGeneratedSerialNumbers(serialNumbers);
       setSerialNumbersPage(1);
       setShowSerialNumbers(true);
+        toast({
+        title: "Serial Numbers Generated",
+        description: `Generated ${numberOfLabels} serial numbers dividing total quantity ${requestedPrintQty} evenly.`
+      });
       
     } catch (error) {
       console.error('Error generating serial numbers:', error);
@@ -448,7 +520,6 @@ const RMLabelPrinting: React.FC = () => {
       setIsLoading(false);
     }
   };
-
   const handleSerialQtyChange = (index: number, newQty: number) => {
     const updatedSerialNumbers = [...generatedSerialNumbers];
     
@@ -460,24 +531,28 @@ const RMLabelPrinting: React.FC = () => {
     const productDetails = grnDetails?.find(item => item.product_code === activeProductCode);
     if (!productDetails) return;
     
-    const totalQty = productDetails.qty;
+    const uniqueKey = Object.keys(printQty).find(key => key.includes(activeProductCode || ''));
+    const currentPrintQty = uniqueKey ? parseInt(printQty[uniqueKey]) : 0;
+    
     const currentTotal = updatedSerialNumbers.reduce((sum, sn) => sum + sn.qty, 0);
     
-    if (currentTotal > totalQty) {
+    if (currentTotal > currentPrintQty) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: `Total quantity cannot exceed ${totalQty}.`
+        description: `Total quantity cannot exceed print quantity ${currentPrintQty}.`
       });
       return;
     }
     
     setGeneratedSerialNumbers(updatedSerialNumbers);
   };
-
   const totalSerialQty = generatedSerialNumbers.reduce((sum, sn) => sum + sn.qty, 0);
   const productDetails = activeProductCode ? grnDetails?.find(item => item.product_code === activeProductCode) : null;
-  const isValidQtySum = productDetails && totalSerialQty <= productDetails.qty;
+  
+  const uniqueKey = Object.keys(printQty).find(key => key.includes(activeProductCode || ''));
+  const currentPrintQty = uniqueKey ? parseInt(printQty[uniqueKey]) : 0;
+  const isValidQtySum = productDetails && totalSerialQty <= currentPrintQty;
   
   const totalSerialNumbersPages = Math.ceil(generatedSerialNumbers.length / serialNumbersPerPage);
   const paginatedSerialNumbers = generatedSerialNumbers.slice(
@@ -601,38 +676,51 @@ const RMLabelPrinting: React.FC = () => {
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-2">Line Items</h3>
                 <div className="rounded-md border overflow-x-auto">
-                  <Table>
-                    <TableHeader>
+                  <Table>                    <TableHeader>
                       <TableRow>
                         <TableHead className="whitespace-nowrap">Product Code</TableHead>
                         <TableHead className="whitespace-nowrap">Product Name</TableHead>
                         <TableHead className="whitespace-nowrap">Quantity</TableHead>
+                        <TableHead className="whitespace-nowrap">Remaining Qty to Print</TableHead>
+                        <TableHead className="whitespace-nowrap">Printed Qty/Labels</TableHead>
                         <TableHead className="whitespace-nowrap">Print Qty</TableHead>
+                        <TableHead className="whitespace-nowrap">No. of Labels</TableHead>
                         <TableHead className="whitespace-nowrap">Actions</TableHead>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
+                    </TableHeader>                    <TableBody>
                       {grnDetails.map((item, index) => {
                         const uniqueKey = `${item.product_code}_${index}_${item.qty}`;
                         return (
-                          <TableRow key={uniqueKey}>
-                            <TableCell className="font-medium">{item.product_code}</TableCell>
+                          <TableRow key={uniqueKey}>                            <TableCell className="font-medium">{item.product_code}</TableCell>
                             <TableCell className="max-w-[200px] truncate">{item.product_name}</TableCell>
                             <TableCell>{item.qty}</TableCell>
+                            <TableCell>{item.remaining_qty}</TableCell>
+                            <TableCell>{item.printed_qty}</TableCell>
                             <TableCell>
                               <Input 
                                 type="number"
                                 min="0"
+                                max={item.remaining_qty}
                                 value={printQty[uniqueKey] || ''}
                                 onChange={(e) => handlePrintQtyChange(uniqueKey, e.target.value)}
+                                className="w-30"
+                                placeholder={item.remaining_qty.toString()}
+                              />
+                            </TableCell>
+                            <TableCell>                              <Input 
+                                type="number"
+                                min="1"
+                                value={packSize[uniqueKey] || ''}
+                                onChange={(e) => handlePackSizeChange(uniqueKey, e.target.value)}
                                 className="w-20"
+                                placeholder="No. of labels"
                               />
                             </TableCell>
                             <TableCell>
                               <Button 
                                 size="sm"
                                 onClick={() => handleGenerateSerialNumbers(item.product_code, item.product_name, index, item.qty)}
-                                disabled={isLoading || !printQty[uniqueKey] || parseInt(printQty[uniqueKey]) <= 0}
+                                disabled={isLoading || !printQty[uniqueKey] || parseInt(printQty[uniqueKey]) <= 0 || !packSize[uniqueKey] || parseInt(packSize[uniqueKey]) <= 0}
                               >
                                 Generate S/N
                               </Button>
@@ -714,16 +802,15 @@ const RMLabelPrinting: React.FC = () => {
                           </TableCell>
                         </TableRow>
                       );
-                    })}
-                    <TableRow>
+                    })}                    <TableRow>
                       <TableCell colSpan={2} className="text-right font-medium">
                         Total Quantity:
                       </TableCell>
                       <TableCell className={`font-bold ${!isValidQtySum ? 'text-red-500' : ''}`}>
                         {totalSerialQty}
-                        {productDetails && (
+                        {currentPrintQty > 0 && (
                           <span className="ml-2 text-sm">
-                            / {productDetails.qty}
+                            / {currentPrintQty}
                           </span>
                         )}
                       </TableCell>

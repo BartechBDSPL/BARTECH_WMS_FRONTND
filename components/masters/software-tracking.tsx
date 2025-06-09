@@ -24,6 +24,7 @@ import {
   ChevronUp,
   CheckCircle,
   CalendarIcon,
+  Printer,
 } from "lucide-react";
 import {
   Dialog,
@@ -98,6 +99,11 @@ const Softwaretracking: React.FC = () => {
     },
   });
 
+  interface dropdownsOptions {
+  value: string;
+  label: string;
+}
+
   // Dummy data for dropdowns
   // const customerNames = ["ABC Company", "XYZ Corporation", "Tech Solutions Ltd", "Global Systems"];
   // const customerAddresses = ["123 Main St, City", "456 Business Park, Town", "789 Tech Lane, Metro"];
@@ -108,7 +114,7 @@ const Softwaretracking: React.FC = () => {
   // const hardwareTypes = ["Printer", "Scanner", "Barcode Reader", "Tablet", "Mobile Computer"];
   // const makes = ["Zebra", "Honeywell", "Datalogic", "Motorola", "Epson"];
   // const models = ["ZT411", "PM43", "DS3608", "TC52", "TM-T88VI"];
-  const warrentyStatuses = ["AMC", "Warranty"];
+  const warrentyStatuses = ["Standard-Warrenty","Extended-Warrenty", "AMC"];
 
   const [customerNames, setCustomerNames] = useState<
     { CustomerName: string }[]
@@ -157,12 +163,20 @@ const Softwaretracking: React.FC = () => {
 
   
      const [isEditMode, setIsEditMode] = useState(false);
+
   
     const [oldData, setOldData] = useState<SoftwareData | null>(null);
 
   const token = Cookies.get("token");
   const [isLoading, setIsLoading] = useState(true);
   const [username, setUsername] = useState<string>("");
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState("");
+    const warrantyExpiryDate = watch("dateOfWarrentyExp");
+
+  const watchStartDate = watch("dateOfWarrentyStart");
+  const watchDays = watch("warrentyDays");
+  const convertedDuration = watchDays ? convertDaysToDuration(watchDays) : "";
 
   const goToNextStep = async (step: number, fieldsToValidate: string[]) => {
     if (fieldsToValidate.length > 0) {
@@ -193,7 +207,7 @@ const Softwaretracking: React.FC = () => {
   useEffect(() => {
     //setUsername("admin");
 
-    Promise.all([fetchCustomers(), fetchSoftware()]).finally(() =>
+    Promise.all([fetchCustomers(), fetchSoftware(),getPrinterDetails()]).finally(() =>
       setIsLoading(false)
     );
     fetchData();
@@ -205,6 +219,40 @@ const Softwaretracking: React.FC = () => {
     shouldValidate: true
   });
 };
+useEffect(() => {
+  if (watchStartDate && typeof watchDays === "number" && !isNaN(watchDays)) {
+    const expiry = new Date(watchStartDate);
+    expiry.setDate(expiry.getDate() + watchDays);
+    setValue("dateOfWarrentyExp", expiry); // store it in form state
+  }
+}, [watchStartDate, watchDays, setValue]);
+
+
+
+
+   useEffect(() => {
+    if (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC") {
+      setValue("warrentyDays", 365); // Set value programmatically
+    } else if (selectedWarrentyStatus === "Extended-Warrenty") {
+      setValue("warrentyDays", 0); // Clear value for manual input
+    }
+  }, [selectedWarrentyStatus, setValue]);
+
+    function convertDaysToDuration(days: number): string {
+  if (!days || days < 0) return "";
+
+  const years = Math.floor(days / 365);
+  const months = Math.floor((days % 365) / 30);
+  const remainingDays = days % 365 % 30;
+
+  const parts = [];
+  if (years > 0) parts.push(`${years} year${years > 1 ? "s" : ""}`);
+  if (months > 0) parts.push(`${months} month${months > 1 ? "s" : ""}`);
+  if (remainingDays > 0) parts.push(`${remainingDays} day${remainingDays > 1 ? "s" : ""}`);
+
+  return parts.join(" ");
+}
+
 
 
   // Fixed handleRowSelect function for proper software type handling
@@ -238,7 +286,7 @@ const handleRowSelect = (id: number) => {
       setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
     }
     setValue("warrentyDays", selectedData.WarrentyDays);
-    setValue("warrentyStatus", selectedData.WarrentyStatus as "AMC" | "Warranty");
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
     setValue("qty", selectedData.Qty);
     setValue("serialNo", selectedData.SerialNo);
     
@@ -307,6 +355,29 @@ const handleRowSelect = (id: number) => {
             description: `Try again`,
           });
         });
+    };
+
+    const getPrinterDetails = async () => {
+      try {
+        const response = await axios.get(
+          `${BACKEND_URL}/api/master/get-printer-name`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+  
+        const printers = response.data.Data.map((printer: any) => ({
+          label: printer.Printer_Name,
+          value: `${printer.Printer_ip}:${printer.Printer_port}`, // <-- value to send
+        }));
+  
+        setPrinterOptions(printers);
+      } catch (error) {
+        console.log(error);
+      }
     };
   
 
@@ -614,7 +685,7 @@ const handleHardwareTypeChange = (values: string[]) => {
 
   const handleWarrentyStatusChange = (value: string) => {
     setSelectedWarrentyStatus(value);
-    setValue("warrentyStatus", value as "AMC" | "Warranty");
+    setValue("warrentyStatus", value as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
   };
 
   const handleCustomValueChange =
@@ -886,6 +957,88 @@ const handleHardwareTypeChange = (values: string[]) => {
     });
   } finally {
     setIsProcessing(false);
+  }
+};
+
+
+const handlePrintLabel = async (row: SoftwareData) => {
+  try {
+    if (!selectedPrinter || selectedPrinter.trim() === "") {
+      toast({
+        title: "Please Select Printer!",
+        description: "Select a printer from the table top before printing.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const serialNumber = row.SerialNo?.trim();
+    if (!serialNumber) {
+      toast({
+        variant: "destructive",
+        title: "Missing Serial Number",
+        description: "Serial number is required to print the label.",
+      });
+      return;
+    }
+
+    const warrantyStartDate = row.DateOfWarrentyStart
+      ? new Date(row.DateOfWarrentyStart).toISOString().split("T")[0]
+      : "";
+
+    const warrantyExpDate = row.DateOfWarrentyExp
+      ? new Date(row.DateOfWarrentyExp).toISOString().split("T")[0]
+      : "";
+
+    const qty = Number(row.Qty) || 1;
+
+    const printData = {
+      CustomerName: row.CustomerName || "",
+      CustomerAddress: row.CustomerAddress || "",
+      ContactPerson: row.ContactPerson || "",
+      ContactNo: row.ContactNo || "",
+      EmailID: row.EmailID || "",
+      InvoicePONo: row.Invoice_PONo || "",
+      SoftwareType: row.SoftwareType || "",
+      ProjectTitle: row.ProjectTitle || "",
+      ProjectDesc: row.ProjectDesc || "",
+      ProjectVersion: row.ProjectVersion || "",
+      AdditionalDetails: row.AdditionalDetails || "",
+      WarrantyStartDate: warrantyStartDate,
+      WarrantyDays: row.WarrentyDays || "",
+      WarrantyExpDate: warrantyExpDate,
+      Quantity: qty,
+      SerialNumber: serialNumber, // comma-separated or single
+      PrinterIpPort: selectedPrinter,
+    };
+
+    const loadingToast = toast({
+      title: "Processing",
+      description: "Sending print job...",
+      duration: 60000,
+    });
+
+    const res = await axios.post(`${BACKEND_URL}/api/master/print-software-label`, printData);
+
+    if (res.data?.Status === "T") {
+      toast({
+        title: "Success",
+        description: res.data.Message || `Printed ${qty} software label(s) successfully.`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Print Failed",
+        description: res.data?.Message || "Failed to print label. Check printer connection.",
+      });
+    }
+  } catch (error) {
+    console.error("Error printing label:", error);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "An unexpected error occurred while printing.",
+    });
   }
 };
 
@@ -1523,6 +1676,35 @@ const handleHardwareTypeChange = (values: string[]) => {
                               className="min-h-[80px]"
                             />
                           </div>
+                           <div className="space-y-2">
+                            <Label
+                              className={
+                                errors.warrentyStatus ? "text-destructive" : ""
+                              }
+                            >
+                              Warranty Status*
+                            </Label>
+                            <CustomDropdown
+                              options={warrentyStatuses.map((status) => ({
+                                value: status,
+                                label: status,
+                              }))}
+                              value={selectedWarrentyStatus}
+                              onValueChange={handleWarrentyStatusChange}
+                              placeholder="Select Warranty Status"
+                              searchPlaceholder="Search status..."
+                              emptyText="No statuses found"
+                            />
+                            {errors.warrentyStatus && (
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="text-sm text-destructive"
+                              >
+                                {errors.warrentyStatus.message}
+                              </motion.p>
+                            )}
+                          </div>
                           <div className="space-y-2">
                             <Label
                               className={
@@ -1578,60 +1760,60 @@ const handleHardwareTypeChange = (values: string[]) => {
                               </motion.p>
                             )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyDays ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Days*
-                            </Label>
-                            <Input
-                              type="number"
-                              {...register("warrentyDays", {
+                        <div className="space-y-2">
+                             <Label className={errors.warrentyDays ? "text-destructive" : ""}>
+                                Warranty Days*
+                               </Label>
+                              <Input
+                                type="number"
+                                {...register("warrentyDays", {
                                 valueAsNumber: true,
-                              })}
-                              placeholder="Enter warranty period in days"
-                            />
-                            {errors.warrentyDays && (
-                              <motion.p
+                                 })}
+                                 placeholder="Enter warranty period in days"
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                className={
+                                (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                                  }
+                                  />
+                          
+                                  {convertedDuration && (
+                                  <p className="whitespace-nowrap font-semibold text-sm">
+                                  Approx Duration: <span className="text-blue-600 italic">≈ {convertedDuration}</span>
+                                  </p>
+                                  )}
+                          
+                                {errors.warrentyDays && (
+                                <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className="text-sm text-destructive"
-                              >
+                                >
                                 {errors.warrentyDays.message}
-                              </motion.p>
-                            )}
+                                </motion.p>
+                                  )}
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.warrentyStatus ? "text-destructive" : ""
-                              }
-                            >
-                              Warranty Status*
-                            </Label>
-                            <CustomDropdown
-                              options={warrentyStatuses.map((status) => ({
-                                value: status,
-                                label: status,
-                              }))}
-                              value={selectedWarrentyStatus}
-                              onValueChange={handleWarrentyStatusChange}
-                              placeholder="Select Warranty Status"
-                              searchPlaceholder="Search status..."
-                              emptyText="No statuses found"
-                            />
-                            {errors.warrentyStatus && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.warrentyStatus.message}
-                              </motion.p>
-                            )}
-                          </div>
+                           <div className="space-y-2">
+                          
+                                                      <Label>
+                                                        Warranty Expiry Date
+                                                      </Label>
+                                                      <Input
+                                                        type="text"
+                                                        value={
+                                                          warrantyExpiryDate instanceof Date
+                                                            ? format(warrantyExpiryDate, "PPP")
+                                                            : warrantyExpiryDate
+                                                            ? format(new Date(warrantyExpiryDate), "PPP")
+                                                            : ""
+                                                        }
+                                                        readOnly
+                                                        className="bg-gray-100 cursor-not-allowed"
+                                                      />
+                                                      </div>
+                          
+                         
                           <div className="space-y-2">
                             <Label
                               className={errors.qty ? "text-destructive" : ""}
@@ -1785,6 +1967,21 @@ const handleHardwareTypeChange = (values: string[]) => {
                 </SelectContent>
               </Select>
               <span>entries</span>
+              <Select
+                                        value={selectedPrinter}
+                                        onValueChange={setSelectedPrinter}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue placeholder="Select Printer" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {printerOptions.map((printer) => (
+                                            <SelectItem key={printer.value} value={printer.value}>
+                                              {printer.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
             </div>
             <div className="flex items-center space-x-2">
               <input
@@ -1801,6 +1998,7 @@ const handleHardwareTypeChange = (values: string[]) => {
             <TableHeader>
               <TableRow>
                 <TableHead>Action</TableHead>
+                <TableHead>Print</TableHead>
                 <TableHead>Customer Name</TableHead>
                 <TableHead>Customer Address</TableHead>
                 <TableHead>Contact Person</TableHead>
@@ -1848,7 +2046,19 @@ const handleHardwareTypeChange = (values: string[]) => {
                       <Button variant="ghost" onClick={() => handleRowSelect(row.ID)}>
                         Edit
                       </Button>
+                      
                     </TableCell>
+                     <TableCell>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handlePrintLabel(row)}
+                                        className="flex items-center gap-1"
+                                      >
+                                        <Printer className="h-4 w-4" />
+                                        <span>Print</span>
+                                      </Button>
+                                    </TableCell>
                     <TableCell>{row.CustomerName}</TableCell>
                     <TableCell>{row.CustomerAddress}</TableCell>
                     <TableCell>{row.ContactPerson}</TableCell>
