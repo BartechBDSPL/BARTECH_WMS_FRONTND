@@ -274,7 +274,6 @@ const JobCardApproval = () => {
     setHight(""),
     setWidth("")
   };
-
   const exportToPdf = (data: JobCardApprovalData[], fileName: string): void => {
     const doc = new jsPDF('l', 'mm', 'a4');
     const columns = [
@@ -321,7 +320,7 @@ const JobCardApproval = () => {
       didDrawPage: (data: any) => {
         doc.setFontSize(8);
         doc.text(
-          `Page ${data.pageNumber} of ${doc.getNumberOfPages()}`,
+          `Page ${data.pageNumber}`,
           doc.internal.pageSize.width / 2,
           doc.internal.pageSize.height - 10,
           { align: 'center' }
