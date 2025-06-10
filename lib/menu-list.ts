@@ -231,11 +231,11 @@ export function getMenuList(pathname: string): Group[] {
               href: "/hardware-tracking",
               label: "Hardware Tracking",
               active: pathname === "/hardware-tracking",
-              value: "4_1",
+            value: "4_1",
             },
             {
               href: "/re-print-hardwork",
-              label: "Re-Print Hardwork Traking",
+              label: "Re-Print Hardwork Label",
               active: pathname === "/re-print-hardwork",
               value: "4_2"
             },
@@ -258,7 +258,7 @@ export function getMenuList(pathname: string): Group[] {
             },
              {
               href: "/re-print-software",
-              label: "RePrint Software Label",
+              label: "Re-Print Software Label",
               active: pathname === "/re-print-software",
               value: "4_4",
             },
@@ -303,8 +303,14 @@ export function getMenuList(pathname: string): Group[] {
           },  //hardware-traking-report
           {
             href: "/hardware-traking-report",
-            label: "Hardware Tracking",
+            label: "Hardware Tracking Report",
             active: pathname === "/hardware-traking-report",
+            value: "5_1",
+          },
+          {
+            href: "/hardware-reprint-report",
+            label: "Hardware RePrint Report",
+            active: pathname === "/hardware-reprint-report",
             value: "5_1",
           },
           // software-warrenty-report
@@ -312,6 +318,12 @@ export function getMenuList(pathname: string): Group[] {
             href: "/software-warrenty-report",
             label: "Software Warrenty Report",
             active: pathname === "/software-warrenty-report",
+            value: "5_1",
+          },
+            {
+            href: "/software-reprint-report",
+            label: "Software Reprint Report",
+            active: pathname === "/software-reprint-report",
             value: "5_1",
           }
           
