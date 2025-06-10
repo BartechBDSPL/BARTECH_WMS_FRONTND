@@ -99,9 +99,15 @@ interface JobCardReportData {
   UniqueSerialNo: string;
   TransBy: string;
   TransDate: string;
+   Reason: string;
+  NoOfLabels: number;
+  AssignPrinter: string;
+  ReprintDate: string;
+  ReprintBy: string;
+    WarrentyStatus: string;
 }
 
-const SoftwareTrackingReport = () => {
+const SoftwareReprintReport = () => {
   const [customerName, setCustomerName] = useState("");
   const [softwareType, setSoftwareType] = useState("");
   const [projectTitle, setProjectTitle] = useState("");
@@ -113,30 +119,36 @@ const SoftwareTrackingReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+const [projectVersion, setProjectVersion] = useState("");
+const [serialNo, setSerialNo] = useState("");
+const [reprintBy, setReprintBy] = useState("");
+const [reason, setReason] = useState("");
+const [assignPrinter, setAssignPrinter] = useState("");
 
   const token = Cookies.get("token");
 
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
-      const searchableFields = [
-        "CustomerName",
-        "CustomerAddress",
-        "ContactPerson",
-        "ContactNo",
-        "EmailID",
-        "Invoice_PONo",
-        "HardwareType",
-        "Make",
-        "Model",
-        "AdditionalDetails",
-        "DateOfWarrentyStart",
-        "WarrentyDays",
-        "DateOfWarrentyExp",
-        "Qty",
-        "SerialNo",
-        "UniqueSerialNo",
-        "TransBy",
-      ];
+     const searchableFields = [
+  "CustomerName",
+  "CustomerAddress", 
+  "ContactPerson",
+  "ContactNo",
+  "EmailID",
+  "Invoice_PONo",
+  "SoftwareType",
+  "ProjectTitle",
+  "ProjectDesc",
+  "ProjectVersion",
+  "AdditionalDetails",
+  "SerialNo",
+  "UniqueSerialNo",
+  "TransBy",
+  "WarrentyStatus",
+  "Reason",
+  "AssignPrinter",
+  "ReprintBy"
+];
       return searchableFields.some((key) => {
         const value = (item as any)[key];
         return (
@@ -173,17 +185,19 @@ const SoftwareTrackingReport = () => {
     }
     // const { CustomerName, SoftwareType, ProjectTitle, WarrentyStatus, FromDate, ToDate} = req.body;
     const requestBody = {
-      CustomerName: customerName.trim(),
-      SoftwareType: softwareType.trim(),
-      ProjectTitle: projectTitle.trim(),
-      WarrentyStatus: warrentyStatus.trim(),
-      FromDate: format(fromDate, "yyyy-MM-dd"),
-      ToDate: format(toDate, "yyyy-MM-dd"),
-    };
-
+  CustomerName: customerName.trim(),
+  SoftwareType: softwareType.trim(),
+  ProjectTitle: projectTitle.trim(),
+  ProjectVersion: projectVersion.trim(),
+  SerialNo: serialNo.trim(),
+  ReprintBy: reprintBy.trim(),
+  WarrentyStatus: warrentyStatus.trim(),
+  FromDate: format(fromDate, "yyyy-MM-dd"),
+  ToDate: format(toDate, "yyyy-MM-dd"),
+};
     try {
       const response = await fetch(
-        `${BACKEND_URL}/api/reports/get-software-tracking-details`,
+        `${BACKEND_URL}/api/reports/get-SOftware-Reprint-report`,
         {
           method: "POST",
           headers: {
@@ -206,49 +220,59 @@ const SoftwareTrackingReport = () => {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to get data",
+        description: "Data Not Found",
         variant: "destructive",
       });
     }
   };
 
-  const handleClear = () => {
-    setReportData([]);
-    setFromDate(new Date());
-    setToDate(new Date());
-    setShowTable(false);
-    setCustomerName("");
-    setWarrantyStatus("");
-    setSoftwareType("");
-    setProjectTitle("");
-
-  };
+const handleClear = () => {
+  setReportData([]);
+  setFromDate(new Date());
+  setToDate(new Date());
+  setShowTable(false);
+  setCustomerName("");
+  setWarrantyStatus("");
+  setSoftwareType("");
+  setProjectTitle("");
+  setProjectVersion("");
+  setSerialNo("");
+  setReprintBy("");
+  setReason("");
+  setAssignPrinter("");
+};
 
   const exportToPdf = (data: JobCardReportData[], fileName: string): void => {
     try {
       const doc = new jsPDF("l", "mm", "a3");
 
-      const columns = [
-         { header: "Customer Name", dataKey: "CustomerName" },
-      { header: "Customer Address", dataKey: "CustomerAddress" },
-      { header: "Contact Person", dataKey: "ContactPerson" },
-      { header: "Contact No", dataKey: "ContactNo" },
-      { header: "Email ID", dataKey: "EmailID" },
-      { header: "Invoice/PO No", dataKey: "Invoice_PONo" },
-      { header: "Hardware Type", dataKey: "HardwareType" },
-      { header: "Make", dataKey: "Make" },
-      { header: "Model", dataKey: "Model" },
-      { header: "Additional Details", dataKey: "AdditionalDetails" },
-      { header: "Date of Warrenty Start", dataKey: "DateOfWarrentyStart" },
-      { header: "Warrenty Days", dataKey: "WarrentyDays" },
-      { header: "Date of Warrenty Exp", dataKey: "DateOfWarrentyExp" },
-      { header: "Qty", dataKey: "Qty" },
-      { header: "Serial No", dataKey: "SerialNo" },
-      { header: "Unique Serial No", dataKey: "UniqueSerialNo" },
-      { header: "Trans By", dataKey: "TransBy" },
-      { header: "Trans Date", dataKey: "TransDate" },
-      { header: "Warrenty Status", dataKey: "WarrentyStatus" },
-      ];
+     const columns = [
+  { header: "Customer Name", dataKey: "CustomerName" },
+  { header: "Customer Address", dataKey: "CustomerAddress" },
+  { header: "Contact Person", dataKey: "ContactPerson" },
+  { header: "Contact No", dataKey: "ContactNo" },
+  { header: "Email ID", dataKey: "EmailID" },
+  { header: "Invoice/PO No", dataKey: "Invoice_PONo" },
+  { header: "Software Type", dataKey: "SoftwareType" },
+  { header: "Project Title", dataKey: "ProjectTitle" },
+  { header: "Project Description", dataKey: "ProjectDesc" },
+  { header: "Project Version", dataKey: "ProjectVersion" },
+  { header: "Additional Details", dataKey: "AdditionalDetails" },
+  { header: "Date of Warranty Start", dataKey: "DateOfWarrentyStart" },
+  { header: "Warranty Days", dataKey: "WarrentyDays" },
+  { header: "Date of Warranty Exp", dataKey: "DateOfWarrentyExp" },
+  { header: "Qty", dataKey: "Qty" },
+  { header: "Serial No", dataKey: "SerialNo" },
+  { header: "Unique Serial No", dataKey: "UniqueSerialNo" },
+  { header: "Trans By", dataKey: "TransBy" },
+  { header: "Trans Date", dataKey: "TransDate" },
+  { header: "Warranty Status", dataKey: "WarrentyStatus" },
+  { header: "Reason", dataKey: "Reason" },
+  { header: "No of Labels", dataKey: "NoOfLabels" },
+  { header: "Assign Printer", dataKey: "AssignPrinter" },
+  { header: "Reprint Date", dataKey: "ReprintDate" },
+  { header: "Reprint By", dataKey: "ReprintBy" },
+];
 
       const formattedData = data.map((row) => ({
         ...row,
@@ -406,6 +430,14 @@ const SoftwareTrackingReport = () => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+            <Label htmlFor="reprintBy">Reprint By</Label>
+            <Input
+                value={reprintBy}
+                onChange={(e) => setReprintBy(e.target.value)}
+                placeholder="Enter Reprint By..."
+            />
+            </div>
 
             <div className="space-y-2">
               <Label>From Date</Label>
@@ -546,6 +578,12 @@ const SoftwareTrackingReport = () => {
                     <TableHead>Unique Serial No</TableHead>
                     <TableHead>Trans By</TableHead>
                     <TableHead>Trans Date</TableHead>
+                    <TableHead>Warranty Status</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>No of Labels</TableHead>
+                    <TableHead>Assign Printer</TableHead>
+                    <TableHead>Reprint Date</TableHead>
+                    <TableHead>Reprint By</TableHead>
                   </TableRow>
                 </TableHeader>
 
@@ -583,6 +621,14 @@ const SoftwareTrackingReport = () => {
                         <TableCell className="min-w-[150px]">
                           {format(row.TransDate, "dd-MM-yyyy")}
                         </TableCell>
+                        <TableCell>{row.WarrentyStatus}</TableCell>
+                        <TableCell>{row.Reason}</TableCell>
+                        <TableCell>{row.NoOfLabels}</TableCell>
+                        <TableCell>{row.AssignPrinter}</TableCell>
+                        <TableCell>
+                        {row.ReprintDate ? format(new Date(row.ReprintDate), "dd-MM-yyyy") : 'N/A'}
+                        </TableCell>
+                        <TableCell>{row.ReprintBy}</TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -668,4 +714,4 @@ const SoftwareTrackingReport = () => {
   );
 };
 
-export default SoftwareTrackingReport;
+export default SoftwareReprintReport;

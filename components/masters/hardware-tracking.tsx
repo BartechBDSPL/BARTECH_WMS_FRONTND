@@ -2067,29 +2067,29 @@ const handlePrintLabel = async (row: HardwareData) => {
                                     }
 
                                     // Split IP and port
-                                    const [ip, portStr] = selectedPrinter.split(":");
-                                    const port = parseInt(portStr) || 9100;
+                                    // const [ip, portStr] = selectedPrinter.split(":");
+                                    // const port = parseInt(portStr) || 9100;
 
-                                    // Ping the printer
-                                    const pingRes = await fetch(`${BACKEND_URL}/api/master/ping-printer`, {
-                                      method: "POST",
-                                      headers: {
-                                        "Content-Type": "application/json",
-                                      },
-                                      body: JSON.stringify({ ip, port }),
-                                    });
+                                    // // Ping the printer
+                                    // const pingRes = await fetch(`${BACKEND_URL}/api/master/ping-printer`, {
+                                    //   method: "POST",
+                                    //   headers: {
+                                    //     "Content-Type": "application/json",
+                                    //   },
+                                    //   body: JSON.stringify({ ip, port }),
+                                    // });
 
-                                    const pingData = await pingRes.json();
+                                    // const pingData = await pingRes.json();
 
-                                    if (!pingData.status) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Printer Not Reachable",
-                                        description: pingData.message || "Selected printer is not responding.",
-                                      });
-                                      setIsProcessing(false);
-                                      return;
-                                    }
+                                    // if (!pingData.status) {
+                                    //   toast({
+                                    //     variant: "destructive",
+                                    //     title: "Printer Not Reachable",
+                                    //     description: pingData.message || "Selected printer is not responding.",
+                                    //   });
+                                    //   setIsProcessing(false);
+                                    //   return;
+                                    // }
 
                                     // Validate quantity and serial numbers
                                     const currentData = getValues();
