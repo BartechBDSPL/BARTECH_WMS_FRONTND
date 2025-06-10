@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { toast } from "@/components/ui/use-toast";
-import { BACKEND_URL } from "@/lib/constants";
+import getUserID, { BACKEND_URL } from "@/lib/constants";
 import jsPDF from "jspdf";
 import { FaFileExcel, FaFilePdf } from "react-icons/fa";
 import Cookies from "js-cookie";
@@ -72,6 +72,7 @@ interface RawMaterialData {
 }
 
 interface JobCardReportData {
+  SrNo: string;
   CompanyName: string;
   CompanyAddress: string;
   JobDescription: string;
@@ -81,46 +82,45 @@ interface JobCardReportData {
   Unit: string;
   Ups: string;
   Core: string;
-  CutPerforation: string;
   MatCode: string;
   MatDesc: string;
-  DieType: string;
-  DieNumber: string;
   LaminationMaterial: string;
   FoilMaterialCode: string;
-  SpecialCharacteristic: string;
-  JobCardNumber: string;
-  JcSerialNumber: string;
-  CreatedBy: string;
-  CreatedDate: string;
-  UpdatedBy: string | null;
-  UpdatedDate: string | null;
-  Machine: string;
-  ColorNo: string;
-  PaperType: string;
   UpsAcross: string;
   UpsAlong: string;
   GapAcross: string;
   GapAlong: string;
   NumberOfLabel: string;
   CustomerPartNumber: string;
-  BlockNo: string;
   SupplyForm: string;
-  WindingDirection: string;
-  LabelDescription: string;
-  CylinderCode: string;
-  Image: string;
-  ApprovedBy: string;
-  ApprovedDate: string;
-  ApproveStatus: string;
-  OldProductCode: string;
-  MaterialWeb: string;
   ThermalPrintingRequired: string;
   RibbonType: string;
-  PlateFolderNo: string;
-
+  SpecialCharacteristic: string;
   ArtworkNo: string;
+  OldProductCode: string;
+  DieType?: string;
+  DieNumber?: string;
+  JcSerialNumber?: string;
+  Machine?: string;
+  ColorNo?: string;
+  PaperType?: string;
+  BlockNo?: string;
+  WindingDirection?: string;
+  LabelDescription?: string;
+  CylinderCode?: string;
+  Image?: string;
+  ApprovedBy?: string;
+  ApprovedDate?: string;
+  ApproveStatus?: string;
+  MaterialWeb?: string;
+  PlateFolderNo?: string;
+  CreatedBy?: string;
+  CreatedDate?: string;
+  UpdatedBy?: string | null;
+  UpdatedDate?: string | null;
+  JobCardNumber: string;
 }
+
 interface PreviewJobCardParams {
   jobCard: JobCardReportData;
 }
@@ -148,14 +148,6 @@ interface LabelTypeData {
 }
 
 const JobControlMasterEdit = () => {
-  const [jobCardNo, setJobCardNo] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [hight, setHight] = useState("");
-  const [width, setWidth] = useState("");
-  const [selectedLabelType, setSelectedLabelType] = useState("");
-  const [labelTypes, setLabelTypes] = useState<LabelTypeData[]>([]);
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
   const [reportData, setReportData] = useState<JobCardReportData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -165,17 +157,49 @@ const JobControlMasterEdit = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [selectedData, setSelectedData] = useState<JobCardReportData[]>([]);
-  const [selectedCompany, setSelectedCompany] = useState("");
 
+    // Table and selection state
+
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+
+  // Dropdown options
   const [customers, setCustomers] = useState<CustomerData[]>([]);
   const [addresses, setAddresses] = useState<string[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState<string>("");
+  const [labelTypes, setLabelTypes] = useState<LabelTypeData[]>([]);
+  const [rawMaterials, setRawMaterials] = useState<RawMaterialData[]>([]);
+
+  // Edit form state (all fields)
+  const [companyName, setCompanyName] = useState("");
+  const [companyAddress, setCompanyAddress] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [labelType, setLabelType] = useState("");
+  const [height, setHeight] = useState("");
+  const [width, setWidth] = useState("");
+  const [unit, setUnit] = useState("");
   const [ups, setUps] = useState("");
   const [core, setCore] = useState("");
-  const [rawMaterials, setRawMaterials] = useState<RawMaterialData[]>([]);
-  const [selectedRawMaterial, setSelectedRawMaterial] = useState("");
+  const [rawMaterial, setRawMaterial] = useState("");
   const [rawMaterialDesc, setRawMaterialDesc] = useState("");
+  const [laminationMaterial, setLaminationMaterial] = useState("");
+  const [foilMaterialCode, setFoilMaterialCode] = useState("");
+  const [upsAcross, setUpsAcross] = useState("");
+  const [upsAlong, setUpsAlong] = useState("");
+  const [gapAcross, setGapAcross] = useState("");
+  const [gapAlong, setGapAlong] = useState("");
+  const [numberOfLabels, setNumberOfLabels] = useState("");
+  const [customerPartNumber, setCustomerPartNumber] = useState("");
+  const [supplyForm, setSupplyForm] = useState("");
+  const [thermalPrintingRequired, setThermalPrintingRequired] = useState("");
+  const [ribbonType, setRibbonType] = useState("");
+  const [specialCharacteristic, setSpecialCharacteristic] = useState("");
+  const [artworkNo, setArtworkNo] = useState("");
+  const [oldProductCode, setOldProductCode] = useState("");
+  const [jobCardNumber, setJobCardNumber] = useState("");
+  const [jcSerialNumber, setJcSerialNumber] = useState("");
+  const [dieType, setDieType] = useState("");
+  const [dieNumber, setDieNumber] = useState("");
+
+  const [editMode, setEditMode] = useState(false);
 
   const [colorSequenceData, setColorSequenceData] = useState<{
     [key: string]: ColorSequenceData[];
@@ -240,27 +264,26 @@ const JobControlMasterEdit = () => {
     }
   };
 
-  const handleCompanyChange = (value: string) => {
-    setSelectedCompany(value);
-    const companyAddresses = customers
-      .filter((c) => c.Company === value)
-      .map((c) => c.Address);
-    setAddresses(companyAddresses);
-    setSelectedAddress("");
-  };
 
-  const handleRawMaterialChange = (value: string) => {
-    setSelectedRawMaterial(value);
-
-    const material = rawMaterials.find((m) => m.RawMatCode === value);
-    setRawMaterialDesc(material?.RawMatDes || "");
-  };
-
-  const handleCustomValueChange = (fieldName: string) => (value: string) => {
-    if (fieldName === "labelType") {
-      setSelectedLabelType(value);
+ useEffect(() => {
+    if (companyName) {
+      const found = customers.find((c) => c.Company === companyName);
+      setAddresses(found ? [found.Address] : []);
+      setCompanyAddress("");
     }
-  };
+  }, [companyName, customers]);
+
+  // When raw material changes, set its description
+  useEffect(() => {
+    if (rawMaterial) {
+      const found = rawMaterials.find((r) => r.RawMatCode === rawMaterial);
+      setRawMaterialDesc(found ? found.RawMatDes : "");
+    } else {
+      setRawMaterialDesc("");
+    }
+  }, [rawMaterial, rawMaterials]);
+
+
 
   const filteredData = useMemo(() => {
     return reportData.filter((item) => {
@@ -367,15 +390,44 @@ const JobControlMasterEdit = () => {
 
     setIsPreviewOpen(true);
   };
-  const handleClear = () => {
-    setJobCardNo("");
-    setSelectedLabelType("");
-    setReportData([]);
-    setFromDate(new Date());
-    setToDate(new Date());
-    setShowTable(false);
-    setCustomerName(""), setHight(""), setWidth("");
+  
+const handleClear = () => {
+    setEditIndex(null);
+    setCompanyName("");
+    setCompanyAddress("");
+    setJobDescription("");
+    setLabelType("");
+    setHeight("");
+    setWidth("");
+    setUnit("");
+    setUps("");
+    setCore("");
+    setRawMaterial("");
+    setRawMaterialDesc("");
+    setLaminationMaterial("");
+    setFoilMaterialCode("");
+    setUpsAcross("");
+    setUpsAlong("");
+    setGapAcross("");
+    setGapAlong("");
+    setNumberOfLabels("");
+    setCustomerPartNumber("");
+    setSupplyForm("");
+    setThermalPrintingRequired("");
+    setRibbonType("");
+    setSpecialCharacteristic("");
+    setArtworkNo("");
+    setOldProductCode("");
+    setJobCardNumber("");
+    setJcSerialNumber("");
+    setDieType("");
+    setDieNumber("");
+    setEditMode(false)
+    handleSubmitSearch();
+    fetchCustomers();
+    fetchRawMaterials();
   };
+
 
   const NoDataCard = () => (
     <Card className="mt-5">
@@ -921,74 +973,117 @@ const JobControlMasterEdit = () => {
     );
   };
 
-  const handleRowClick = (jobCard: JobCardReportData) => {
-    setSelectedData([jobCard]);
+ const handleEdit = (data: JobCardReportData) => {
+    
+    console.log(data.CompanyAddress)
+    setCompanyName(data.CompanyName || "");
+    setCompanyAddress(data.CompanyAddress || "");
+    setJobDescription(data.JobDescription || "");
+    setLabelType(data.LabelType || "");
+    setHeight(data.Height || "");
+    setWidth(data.Width || "");
+    setUnit(data.Unit || "");
+    setUps(data.Ups || "");
+    setCore(data.Core || "");
+    setRawMaterial(data.MatCode || "");
+    setRawMaterialDesc(data.MatDesc || "");
+    setLaminationMaterial(data.LaminationMaterial || "");
+    setFoilMaterialCode(data.FoilMaterialCode || "");
+    setUpsAcross(data.UpsAcross || "");
+    setUpsAlong(data.UpsAlong || "");
+    setGapAcross(data.GapAcross || "");
+    setGapAlong(data.GapAlong || "");
+    setNumberOfLabels(data.NumberOfLabel || "");
+    setCustomerPartNumber(data.CustomerPartNumber || "");
+    setSupplyForm(data.SupplyForm || "");
+    setThermalPrintingRequired(data.ThermalPrintingRequired || "");
+    setRibbonType(data.RibbonType || "");
+    setSpecialCharacteristic(data.SpecialCharacteristic || "");
+    setArtworkNo(data.ArtworkNo || "");
+    setOldProductCode(data.OldProductCode || "");
+    setJobCardNumber(data.JobCardNumber || "");
+    setJcSerialNumber(data.JcSerialNumber || "");
+    setDieType(data.DieType || "");
+    setDieNumber(data.DieNumber || "");
+
+    // Set addresses for dropdown
+    console.log(customers)
+const found = customers.find((c) => c.Company === data.CompanyName);
+
+if (found) {
+  setAddresses([found.Address]);           // sets dropdown options
+  setCompanyAddress(found.Address);        // auto-selects it in dropdown
+} else {
+  setAddresses([]);
+  setCompanyAddress("");                   // clear selection if not found
+}
+
+    setEditMode(true);
+    
+   
   };
-  // Get the current item (assuming we work with the first item in the array)
-  const currentData = selectedData[0] || ({} as JobCardReportData);
 
-  // Handle input changes
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    // Create a deep copy of the selectedData array
-    const updatedData = [...selectedData];
-
-    // Update the first item in the array
-    updatedData[0] = {
-      ...updatedData[0],
-      [name]: value,
+  console.log(companyAddress)
+const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // if (editIndex === null) return;
+    const payload = {
+      CompanyName: companyName,
+      CompanyAddress: companyAddress,
+      JobDescription: jobDescription,
+      LabelType: labelType,
+      Height: height,
+      Width: width,
+      Unit: unit,
+      Ups: ups,
+      Core: core,
+      MatCode: rawMaterial,
+      MatDesc: rawMaterialDesc,
+      LaminationMaterial: laminationMaterial,
+      FoilMaterialCode: foilMaterialCode,
+      UpsAcross: upsAcross,
+      UpsAlong: upsAlong,
+      GapAcross: gapAcross,
+      GapAlong: gapAlong,
+      NumberOfLabel: numberOfLabels,
+      CustomerPartNumber: customerPartNumber,
+      SupplyForm: supplyForm,
+      ThermalPrintingRequired: thermalPrintingRequired,
+      RibbonType: ribbonType,
+      SpecialCharacteristic: specialCharacteristic,
+      ArtworkNo: artworkNo,
+      OldProductCode: oldProductCode,
+      DieType: dieType,
+      DieNumber: dieNumber,
+      JobCardNumber: jobCardNumber,
+      JcSerialNumber: jcSerialNumber,
+      ModifiedBy: getUserID(),
     };
 
-    // Update the state
-    setSelectedData(updatedData);
-
-    console.log(`Field ${name} changed to: ${value}`);
-  };
-
-  // LabeledInput component
-  const LabeledInput = ({
-    label,
-    name,
-    value,
-    placeholder = "",
-    disabled = false,
-  }: {
-    label: string;
-    name: string;
-    value: string | number | undefined;
-    placeholder?: string;
-    disabled?: boolean;
-  }) => (
-    <div className="space-y-2">
-      <Label htmlFor={name}>{label}</Label>
-      <Input
-        id={name}
-        type="text"
-        name={name}
-        value={value !== undefined ? value : ""}
-        placeholder={placeholder}
-        onChange={handleChange}
-        disabled={disabled}
-        className="w-full"
-      />
-    </div>
-  );
-
-  const handleSubmit = async () => {
     try {
-      // Get the item to update
-      const dataToUpdate = selectedData[0];
-
-      // Send update request
-        // await axios.put(`/api/jobcards/${dataToUpdate.SrNo}`, dataToUpdate);
-
-      alert("Data updated successfully!");
-    } catch (error) {
-      console.error("Error updating data:", error);
-      alert("Failed to update data. Please try again.");
+      const response = await axios.post(
+        `${BACKEND_URL}/api/master/get-job-card-update`,
+        payload
+      );
+      if (response.data.success) {
+        toast({ title: "Success", description: `Success: ${response.data.message}` });
+        handleClear();
+      } else {
+        toast({
+          title: "Error",
+          description: `Error: ${response.data.message}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to update job card",
+        variant: "destructive",
+      });
     }
   };
+
 
   return (
     <>
@@ -1002,242 +1097,218 @@ const JobControlMasterEdit = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Customer Name*</Label>
-                <CustomDropdown
-                  options={Array.from(
-                    new Set(customers.map((c) => c.Company))
-                  ).map((company) => ({ value: company, label: company }))}
-                  value={selectedCompany || currentData.CompanyName}
-                  onValueChange={handleCompanyChange}
-                  placeholder="Select Customer"
-                  searchPlaceholder="Search Customer..."
-                  emptyText="No companies found"
-                  allowCustomValue
-                />
+          <form className="space-y-4" onSubmit={handleUpdate}>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Customer Name */}
+                <div className="space-y-2">
+                  <Label>Customer Name*</Label>
+                  <CustomDropdown
+                    options={Array.from(new Set(customers.map((c) => c.Company))).map((company) => ({
+                      value: company,
+                      label: company,
+                    }))}
+                    value={companyName}
+                    onValueChange={setCompanyName}
+                    placeholder="Select Customer"
+                    emptyText="No Customer Found"
+                    searchPlaceholder="Search Customer"
+                  />
+                </div>
+                {/* Customer Address */}
+                <div className="space-y-2">
+                  <Label>Customer Address*</Label>
+                  <CustomDropdown
+                    options={addresses.map((a) => ({
+                      value: a,
+                      label: a,
+                    }))}
+                    value={companyAddress}
+                    onValueChange={setCompanyAddress}
+                    placeholder="Select Address"
+                    emptyText="No Address Found"
+                    searchPlaceholder="Search Address"
+                  />
+                </div>
+                {/* Job Description */}
+                <div className="space-y-2">
+                  <Label>Job Description</Label>
+                  <Input value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
+                </div>
+                {/* Label Type */}
+                <div className="space-y-2">
+                  <Label>Label Type*</Label>
+                  <CustomDropdown
+                    options={labelTypes.map((lt) => ({
+                      value: lt.LtypeCode,
+                      label: `${lt.LtypeCode} - ${lt.LtypeDes}`,
+                    }))}
+                    value={labelType}
+                    onValueChange={setLabelType}
+                    placeholder="Select Label Type"
+                    emptyText="No Label Type Found"
+                    searchPlaceholder="Search Label Type"
+                  />
+                </div>
+                {/* Height */}
+                <div className="space-y-2">
+                  <Label>Height</Label>
+                  <Input value={height} onChange={(e) => setHeight(e.target.value)} />
+                </div>
+                {/* Width */}
+                <div className="space-y-2">
+                  <Label>Width</Label>
+                  <Input value={width} onChange={(e) => setWidth(e.target.value)} />
+                </div>
+                {/* Unit */}
+                <div className="space-y-2">
+                  <Label>Unit</Label>
+                  <Input value={unit} onChange={(e) => setUnit(e.target.value)} />
+                </div>
+                {/* Slitting Ups */}
+                <div className="space-y-2">
+                  <Label>Slitting Ups</Label>
+                  <Select value={ups} onValueChange={setUps}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...Array(10)].map((_, i) => (
+                        <SelectItem key={i + 1} value={(i + 1).toString().padStart(2, "0")}>
+                          {(i + 1).toString().padStart(2, "0")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Core */}
+                <div className="space-y-2">
+                  <Label>Core (inch)</Label>
+                  <Select value={core} onValueChange={setCore}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select core size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0].map((size) => (
+                        <SelectItem key={size} value={size.toString()}>
+                          {size.toFixed(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Raw Material */}
+                <div className="space-y-2">
+                  <Label>Raw Material</Label>
+                  <CustomDropdown
+                    options={rawMaterials.map((rm) => ({
+                      value: rm.RawMatCode,
+                      label: rm.RawMatCode,
+                    }))}
+                    value={rawMaterial}
+                    onValueChange={setRawMaterial}
+                    placeholder="Select Raw Material"
+                    emptyText="No Raw Material Found"
+                    searchPlaceholder="Search Raw Material"
+                  />
+                </div>
+                {/* Raw Material Description */}
+                <div className="space-y-2">
+                  <Label>Raw Material Description</Label>
+                  <Input value={rawMaterialDesc} disabled />
+                </div>
+                {/* Lamination Material */}
+                <div className="space-y-2">
+                  <Label>Lamination Material / Varnish</Label>
+                  <Input value={laminationMaterial} onChange={(e) => setLaminationMaterial(e.target.value)} />
+                </div>
+                {/* Foil Material Code */}
+                <div className="space-y-2">
+                  <Label>Foil Material Code</Label>
+                  <Input value={foilMaterialCode} onChange={(e) => setFoilMaterialCode(e.target.value)} />
+                </div>
+                {/* Ups Across */}
+                <div className="space-y-2">
+                  <Label>Ups Across</Label>
+                  <Input value={upsAcross} onChange={(e) => setUpsAcross(e.target.value)} />
+                </div>
+                {/* Ups Along */}
+                <div className="space-y-2">
+                  <Label>Ups Along</Label>
+                  <Input value={upsAlong} onChange={(e) => setUpsAlong(e.target.value)} />
+                </div>
+                {/* Gap Across */}
+                <div className="space-y-2">
+                  <Label>Gap Across</Label>
+                  <Input value={gapAcross} onChange={(e) => setGapAcross(e.target.value)} />
+                </div>
+                {/* Gap Along */}
+                <div className="space-y-2">
+                  <Label>Gap Along</Label>
+                  <Input value={gapAlong} onChange={(e) => setGapAlong(e.target.value)} />
+                </div>
+                {/* Number of labels per roll */}
+                <div className="space-y-2">
+                  <Label>Number of labels per roll</Label>
+                  <Input value={numberOfLabels} onChange={(e) => setNumberOfLabels(e.target.value)} />
+                </div>
+                {/* Customer Part Number */}
+                <div className="space-y-2">
+                  <Label>Customer Part Number</Label>
+                  <Input value={customerPartNumber} onChange={(e) => setCustomerPartNumber(e.target.value)} />
+                </div>
+                {/* Supply Form */}
+                <div className="space-y-2">
+                  <Label>Supply Form</Label>
+                  <Input value={supplyForm} onChange={(e) => setSupplyForm(e.target.value)} />
+                </div>
+                {/* Thermal Printing Required */}
+                <div className="space-y-2">
+                  <Label>Thermal Printing Required</Label>
+                  <Input value={thermalPrintingRequired} onChange={(e) => setThermalPrintingRequired(e.target.value)} />
+                </div>
+                {/* Ribbon Type */}
+                <div className="space-y-2">
+                  <Label>Ribbon Type</Label>
+                  <Input value={ribbonType} onChange={(e) => setRibbonType(e.target.value)} />
+                </div>
+                {/* Special Characteristic */}
+                <div className="space-y-2">
+                  <Label>Special Characteristic</Label>
+                  <Input value={specialCharacteristic} onChange={(e) => setSpecialCharacteristic(e.target.value)} />
+                </div>
+                {/* Artwork No */}
+                <div className="space-y-2">
+                  <Label>Artwork No.</Label>
+                  <Input value={artworkNo} onChange={(e) => setArtworkNo(e.target.value)} />
+                </div>
+                {/* Old Product Code */}
+                <div className="space-y-2">
+                  <Label>Old Product Code</Label>
+                  <Input value={oldProductCode} onChange={(e) => setOldProductCode(e.target.value)} />
+                </div>
+                {/* Die Type */}
+                <div className="space-y-2">
+                  <Label>Die Type</Label>
+                  <Input value={dieType} onChange={(e) => setDieType(e.target.value)} />
+                </div>
+                {/* Die Number */}
+                <div className="space-y-2">
+                  <Label>Die Number</Label>
+                  <Input value={dieNumber} onChange={(e) => setDieNumber(e.target.value)} />
+                </div>
+                {/* JobCardNumber (hidden from editing if needed) */}
+                <div className="space-y-2">
+                  <Label>Job Card Number</Label>
+                  <Input value={jobCardNumber} disabled />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Customer Address*</Label>
-                <CustomDropdown
-                  options={addresses.map((a) => ({ value: a, label: a }))}
-                  value={selectedAddress || currentData.CompanyAddress}
-                  onValueChange={(value: string) => setSelectedAddress(value)}
-                  placeholder="Select Address"
-                  searchPlaceholder="Search address..."
-                  emptyText="No addresses found"
-                  allowCustomValue
-                />
+              <div className="flex justify-end space-x-2">
+                <Button type="submit" onClick={handleUpdate} disabled={!editMode}>Update</Button>
+                <Button type="button" variant="outline" onClick={handleClear}>
+                  Cancel
+                </Button>
               </div>
-              <LabeledInput
-                label="Company Address"
-                name="CompanyAddress"
-                value={currentData.CompanyAddress}
-              />
-
-              <LabeledInput
-                label="Job Description"
-                name="JobDescription"
-                value={currentData.JobDescription}
-              />
-
-              <div className="space-y-2">
-                <Label>Label Type*</Label>
-                <CustomDropdown
-                  options={labelTypes.map((lt) => ({
-                    value: lt.LtypeCode,
-                    label: `${lt.LtypeCode} - ${lt.LtypeDes}`,
-                  }))}
-                  value={selectedLabelType || currentData.LabelType}
-                  onValueChange={(value) => setSelectedLabelType(value)}
-                  placeholder="Select Label Type"
-                  searchPlaceholder="Search label type..."
-                  emptyText="No label types found"
-                  allowCustomValue
-                />
-              </div>
-
-              <LabeledInput
-                label="Height"
-                name="Height"
-                value={currentData.Height}
-              />
-
-              <LabeledInput
-                label="Width"
-                name="Width"
-                value={currentData.Width}
-              />
-
-              <LabeledInput label="Unit" name="Unit" value={currentData.Unit} />
-
-              <div className="space-y-2">
-                <Label>Sliting Ups</Label>
-                <Select
-                  value={currentData.Ups || ups}
-                  onValueChange={(value) => setUps(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Sliting ups" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[...Array(10)].map((_, i) => (
-                      <SelectItem
-                        key={i + 1}
-                        value={(i + 1).toString().padStart(2, "0")}
-                      >
-                        {(i + 1).toString().padStart(2, "0")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Core (inch)</Label>
-                <Select
-                  value={core || currentData.Core}
-                  onValueChange={(value) => setCore(value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select core size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0].map((size) => (
-                      <SelectItem key={size} value={size.toString()}>
-                        {size.toFixed(1)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Raw Material</Label>
-                <CustomDropdown
-                  options={rawMaterials.map((rm) => ({
-                    value: rm.RawMatCode,
-                    label: rm.RawMatCode,
-                  }))}
-                  value={selectedRawMaterial || currentData.MatCode}
-                  onValueChange={handleRawMaterialChange}
-                  placeholder="Select Raw Material"
-                  searchPlaceholder="Search raw material..."
-                  emptyText="No raw materials found"
-                  allowCustomValue
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Raw Material Description</Label>
-                <Input
-                  type="text"
-                  name="RawMaterialDescription"
-                  value={rawMaterialDesc || currentData.MatDesc}
-                  disabled
-                />
-              </div>
-
-              <LabeledInput
-                label="Material Code"
-                name="MatCode"
-                value={currentData.MatCode}
-              />
-              {/* <LabeledInput
-                label="Material Web"
-                name="MatWeb"
-                value={currentData.MatDesc}
-              /> */}
-
-              <LabeledInput
-                label="Lamination Material / Varnish"
-                name="LaminationMaterialVarnish"
-                value={currentData.LaminationMaterial}
-              />
-
-              <LabeledInput
-                label="Foil Material Code"
-                name="FoilMaterialCode"
-                value={currentData.FoilMaterialCode}
-              />
-
-              <LabeledInput
-                label="Ups Across"
-                name="UpsAcross"
-                value={currentData.UpsAcross}
-              />
-
-              <LabeledInput
-                label="Ups Along"
-                name="UpsAcross"
-                value={currentData.UpsAlong}
-              />
-              <LabeledInput
-                label="Gap Across"
-                name="GapAcross"
-                value={currentData.GapAcross}
-              />
-
-              <LabeledInput
-                label="Gap Along"
-                name="GapAlong"
-                value={currentData.GapAlong}
-              />
-
-              <LabeledInput
-                label="Number of labels per roll"
-                name="NumberOfLabel"
-                value={currentData.NumberOfLabel}
-              />
-
-              <LabeledInput
-                label="Customer Part Number"
-                name="CustomerPartNumber"
-                value={currentData.CustomerPartNumber}
-              />
-
-              <LabeledInput
-                label="Supply Form"
-                name="SupplyForm"
-                value={currentData.SupplyForm}
-              />
-
-              <LabeledInput
-                label="Thermal Printing Required"
-                name="ThermalPrintingRequired"
-                value={currentData.ThermalPrintingRequired}
-              />
-
-              <LabeledInput
-                label="Ribbon Type"
-                name="RibbonType"
-                value={currentData.RibbonType}
-              />
-
-              <LabeledInput
-                label="Special Characteristic"
-                name="SpecialCharacteristic"
-                value={currentData.SpecialCharacteristic}
-              />
-
-              <LabeledInput
-                label="Artwork No."
-                name="ArtworkNo"
-                value={currentData.ArtworkNo}
-              />
-
-              <LabeledInput
-                label="Old Product Code"
-                name="OldProductCode"
-                value={currentData.OldProductCode}
-              />
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button onClick={handleSubmit} type="submit">
-                Update
-              </Button>
-
-              <Button variant="outline">Cancel</Button>
-            </div>
-          </form>
+            </form>
         </CardContent>
       </Card>
 
@@ -1297,15 +1368,15 @@ const JobControlMasterEdit = () => {
                   </TableHeader>
                   <TableBody>
                     {paginatedData.length > 0 ? (
-                      paginatedData.map((row, index) => (
-                        <React.Fragment key={index}>
+                      paginatedData.map((row, idx) => (
+                        <React.Fragment key={idx}>
                           <TableRow>
                             <TableCell>
                               <Button
                                 variant="secondary"
                                 //   size="sm"
                                 //   className="flex items-center gap-1"
-                                onClick={() => handleRowClick(row)}
+                                onClick={() => handleEdit(row)}
                               >
                                 Edit
                               </Button>

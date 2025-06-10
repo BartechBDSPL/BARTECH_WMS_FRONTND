@@ -285,19 +285,19 @@ export function getMenuList(pathname: string): Group[] {
           },
           {
             href: "/inward-report",
-            label: "Inward Report",
+            label: "RM Inward Report",
             active: pathname === "/inward-report",
             value: "5_1",
           },
           {
             href: "/put-away-report",
-            label: "Put Away Report",
+            label: "RM Put Away Report",
             active: pathname === "/put-away-report",
             value: "5_1",
           },
           {
             href: "/internal-movement",
-            label: "Internal Movement Report",
+            label: "RM Internal Movement Report",
             active: pathname === "/internal-movement",
             value: "5_1",
           },  //hardware-traking-report
