@@ -174,6 +174,18 @@ const JobControlMaster: React.FC = () => {
         return;
       }
     }
+    const jd = watch("jobDescription");
+    const discriptionData = await checkJobDescription(jd);
+
+    if (discriptionData === "F") {
+    toast({
+      variant: "destructive",
+      title: "Blocked Step",
+      description: "Job Description cannot be duplicate."
+    });
+    return; 
+  }
+
 
     if (selectedLabelType === 'PP' && step === 3) {
       if (!validateColors()) return;
@@ -206,6 +218,23 @@ const JobControlMaster: React.FC = () => {
       fetchDieData()
     ]).finally(() => setIsLoading(false));
   }, []);
+
+  
+
+  const checkJobDescription = async (data: string) => {
+    if (!data) return;
+    try {
+      const response = await axios.post(`${BACKEND_URL}/api/master/get-jobdiscrinption-check`, { JobDescription:data })
+      if (response.data[0].Status) {
+       
+        return response.data[0].Status ;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  } 
 
   const fetchCustomers = async () => {
     try {
@@ -321,6 +350,8 @@ const JobControlMaster: React.FC = () => {
     setSelectedCylinderCode(value);
     setValue("cylinderCode", value); // This sets the value in the form correctly
   }
+
+
 
   const handleCustomValueChange = (field: keyof JobCardSchema) => (value: string) => {
     setValue(field, value);
@@ -491,6 +522,7 @@ const JobControlMaster: React.FC = () => {
       formDataObj.append('OldProductCode', formData.oldProductCode || oldProductCodeValue || "");
       formDataObj.append('ThermalPrintingRequired', formData.thermalPrintingRequired || "");
       formDataObj.append('RibbonType', formData.ribbontype || "");
+      formDataObj.append('AltRibbonType', formData.alternateRibbonType || "");
       formDataObj.append('ArtworkNo', formData.artWorkNo || "");
       if (uploadedFiles.length > 0) {
         uploadedFiles.forEach(file => {
@@ -988,9 +1020,13 @@ const JobControlMaster: React.FC = () => {
                 </tr>
                 <tr className="">
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Thermal Printing Required</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">{formData.thermalPrintingRequired || "-"}</td>
-                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Ribbon Type</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{formData.thermalPrintingRequired || "-"}</td>
+                </tr>
+                <tr className="">
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Ribbon Type</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{formData.ribbontype || "-"}</td>
+                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Alternative Ribbon Type</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">{formData.alternateRibbonType || "-"}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Customer Part No.</td>
@@ -1134,7 +1170,11 @@ const JobControlMaster: React.FC = () => {
     );
   };
 
-  console.log(formData?.windingDirection);
+  console.log(formData);
+
+  
+
+
 
   return (
     <>
@@ -1288,7 +1328,10 @@ const JobControlMaster: React.FC = () => {
                         <div className="flex justify-end pt-4">
                           <Button
                             type="button"
-                            onClick={() => goToNextStep(1, ["company", "address", "jobDescription"])}
+                            onClick={() => {
+                              goToNextStep(1, ["company", "address", "jobDescription"]);
+                              
+                            }}
                             className="bg-blue-600 hover:bg-blue-700"
                           >
                             Next <ChevronDown className="ml-2 h-4 w-4" />
@@ -1911,6 +1954,18 @@ const JobControlMaster: React.FC = () => {
                               className="text-sm text-destructive"
                             >{errors.ribbontype.message}</motion.p>)}
                           </div>
+                          {/* alternateRibbonType */}
+                          <div className="space-y-2">
+                            <Label className={errors.alternateRibbonType ? "text-destructive" : ""}>Alternate Ribbon Type</Label>
+                            <Input {...register("alternateRibbonType")} />
+                            {errors.alternateRibbonType &&(<motion.p
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              className='text-sm text-destructive'
+                            >{errors.alternateRibbonType.message}</motion.p>)}
+                            </div>
+
+
 
                           <div className="space-y-2">
                             <Label className={errors.windingDirection ? "text-destructive" : ""}>Winding Direction</Label>

@@ -78,6 +78,8 @@ export const jobCardSchema = z.object({
   productionStartTimeOne: z.date().optional(),
   productionEndTimeOne: z.date().optional(),
   machinePunching: z.string().optional(),
+
+  alternateRibbonType: z.string().optional(),
 });
 
 export type JobCardSchema = z.infer<typeof jobCardSchema>;
