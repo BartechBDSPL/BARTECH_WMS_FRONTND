@@ -312,7 +312,7 @@ useEffect(() => {
    useEffect(() => {
     if (selectedWarrentyStatus === "Standard-Warranty" || selectedWarrentyStatus === "AMC") {
       setValue("warrentyDays", 365); // Set value programmatically
-    } else if (selectedWarrentyStatus === "Standard-Warranty") {
+    } else if (selectedWarrentyStatus === "Extended-Warranty") {
       setValue("warrentyDays", 0); // Clear value for manual input
     }
   }, [selectedWarrentyStatus, setValue]);
