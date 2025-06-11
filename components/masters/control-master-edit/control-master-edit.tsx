@@ -119,6 +119,7 @@ interface JobCardReportData {
   UpdatedBy?: string | null;
   UpdatedDate?: string | null;
   JobCardNumber: string;
+  AltRibbonType: string;
 }
 
 interface PreviewJobCardParams {
@@ -191,6 +192,7 @@ const JobControlMasterEdit = () => {
   const [supplyForm, setSupplyForm] = useState("");
   const [thermalPrintingRequired, setThermalPrintingRequired] = useState("");
   const [ribbonType, setRibbonType] = useState("");
+  const [alternateRibbonType, setAlternateRibbonType] = useState("");
   const [specialCharacteristic, setSpecialCharacteristic] = useState("");
   const [artworkNo, setArtworkNo] = useState("");
   const [oldProductCode, setOldProductCode] = useState("");
@@ -200,6 +202,8 @@ const JobControlMasterEdit = () => {
   const [dieNumber, setDieNumber] = useState("");
 
   const [editMode, setEditMode] = useState(false);
+
+  const [CompanyAddressError, setCompanyAddressError] = useState(true);
 
   const [colorSequenceData, setColorSequenceData] = useState<{
     [key: string]: ColorSequenceData[];
@@ -282,6 +286,10 @@ const JobControlMasterEdit = () => {
       setRawMaterialDesc("");
     }
   }, [rawMaterial, rawMaterials]);
+
+  useEffect(()=>{
+    setCompanyAddressError(true);
+  },[companyAddress])
 
 
 
@@ -426,6 +434,8 @@ const handleClear = () => {
     handleSubmitSearch();
     fetchCustomers();
     fetchRawMaterials();
+    setAlternateRibbonType("")
+    setCompanyAddressError(true);
   };
 
 
@@ -974,8 +984,6 @@ const handleClear = () => {
   };
 
  const handleEdit = (data: JobCardReportData) => {
-    
-    console.log(data.CompanyAddress)
     setCompanyName(data.CompanyName || "");
     setCompanyAddress(data.CompanyAddress || "");
     setJobDescription(data.JobDescription || "");
@@ -1005,9 +1013,9 @@ const handleClear = () => {
     setJcSerialNumber(data.JcSerialNumber || "");
     setDieType(data.DieType || "");
     setDieNumber(data.DieNumber || "");
+    setAlternateRibbonType(data.AltRibbonType || "");
 
     // Set addresses for dropdown
-    console.log(customers)
 const found = customers.find((c) => c.Company === data.CompanyName);
 
 if (found) {
@@ -1023,10 +1031,19 @@ if (found) {
    
   };
 
-  console.log(companyAddress)
+  console.log("this is to company address",companyAddress)
 const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     // if (editIndex === null) return;
+    if (!companyAddress) {
+      toast({
+        title: "Error",
+        description: "Company Address is required",
+        variant: "destructive",
+      });
+      setCompanyAddressError(false);
+      return;
+    }
     const payload = {
       CompanyName: companyName,
       CompanyAddress: companyAddress,
@@ -1050,6 +1067,7 @@ const handleUpdate = async (e: React.FormEvent) => {
       SupplyForm: supplyForm,
       ThermalPrintingRequired: thermalPrintingRequired,
       RibbonType: ribbonType,
+      AltRibbonType: alternateRibbonType,
       SpecialCharacteristic: specialCharacteristic,
       ArtworkNo: artworkNo,
       OldProductCode: oldProductCode,
@@ -1116,7 +1134,7 @@ const handleUpdate = async (e: React.FormEvent) => {
                 </div>
                 {/* Customer Address */}
                 <div className="space-y-2">
-                  <Label>Customer Address*</Label>
+                  <Label className={!CompanyAddressError ? "text-red-500" : ""}>Customer Address*</Label>
                   <CustomDropdown
                     options={addresses.map((a) => ({
                       value: a,
@@ -1128,11 +1146,13 @@ const handleUpdate = async (e: React.FormEvent) => {
                     emptyText="No Address Found"
                     searchPlaceholder="Search Address"
                   />
+                  {!CompanyAddressError && ( <div className="text-sm text-destructive">Select Address</div> )}
+                  
                 </div>
                 {/* Job Description */}
                 <div className="space-y-2">
                   <Label>Job Description</Label>
-                  <Input value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} />
+                  <Input value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} disabled/>
                 </div>
                 {/* Label Type */}
                 <div className="space-y-2">
@@ -1271,6 +1291,10 @@ const handleUpdate = async (e: React.FormEvent) => {
                   <Label>Ribbon Type</Label>
                   <Input value={ribbonType} onChange={(e) => setRibbonType(e.target.value)} />
                 </div>
+                <div className="space-y-2">
+                  <Label>Alternative Ribbon Type</Label>
+                  <Input value={alternateRibbonType} onChange={(e) => setAlternateRibbonType(e.target.value)} />
+                </div>
                 {/* Special Characteristic */}
                 <div className="space-y-2">
                   <Label>Special Characteristic</Label>
@@ -1284,7 +1308,7 @@ const handleUpdate = async (e: React.FormEvent) => {
                 {/* Old Product Code */}
                 <div className="space-y-2">
                   <Label>Old Product Code</Label>
-                  <Input value={oldProductCode} onChange={(e) => setOldProductCode(e.target.value)} />
+                  <Input value={oldProductCode} onChange={(e) => setOldProductCode(e.target.value)} disabled/>
                 </div>
                 {/* Die Type */}
                 <div className="space-y-2">

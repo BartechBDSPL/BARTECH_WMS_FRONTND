@@ -83,6 +83,13 @@ export const jobCardSchema = z.object({
   productionStartTimeFinishing: z.date().optional(),
   productionEndTimeFinishing: z.date().optional(),
 
+  // this is to new end code Finishing -----------------------------------
+  ribbonsSize: z.string().optional(),
+  alternateRibbonType: z.string().optional(),
+
+
+
+
 });
 
 export type JobCardSchema = z.infer<typeof jobCardSchema>;
