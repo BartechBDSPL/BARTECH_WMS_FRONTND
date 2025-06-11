@@ -163,54 +163,61 @@ const SoftwareTrackingReport = () => {
   }, []);
 
   const handleSubmitSearch = async () => {
-    if (fromDate > toDate) {
-      toast({
-        title: "Validation Error",
-        description: "From Date cannot be greater than To Date",
-        variant: "destructive",
-      });
+  if (fromDate > toDate) {
+    toast({
+      title: "Validation Error",
+      description: "From Date cannot be greater than To Date",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const requestBody = {
+    CustomerName: customerName.trim(),
+    SoftwareType: softwareType.trim(),
+    ProjectTitle: projectTitle.trim(),
+    WarrentyStatus: warrentyStatus.trim(),
+    FromDate: format(fromDate, "yyyy-MM-dd"),
+    ToDate: format(toDate, "yyyy-MM-dd"),
+  };
+
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/reports/get-software-tracking-details`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+    
+    const changedata = await response.json();
+    const data: JobCardReportData[] = changedata.Data;
+    
+    // Always set showTable to true after a search attempt
+    setShowTable(true);
+    
+    if (data.length === 0) {
+      setReportData([]);
       return;
     }
-    // const { CustomerName, SoftwareType, ProjectTitle, WarrentyStatus, FromDate, ToDate} = req.body;
-    const requestBody = {
-      CustomerName: customerName.trim(),
-      SoftwareType: softwareType.trim(),
-      ProjectTitle: projectTitle.trim(),
-      WarrentyStatus: warrentyStatus.trim(),
-      FromDate: format(fromDate, "yyyy-MM-dd"),
-      ToDate: format(toDate, "yyyy-MM-dd"),
-    };
 
-    try {
-      const response = await fetch(
-        `${BACKEND_URL}/api/reports/get-software-tracking-details`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-      const changedata = await response.json();
-      const data: JobCardReportData[] = changedata.Data;
-      if (data.length === 0) {
-        setReportData([]);
-        setShowTable(true);
-        return;
-      }
-
-      setReportData(data);
-      setShowTable(true);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get data",
-        variant: "destructive",
-      });
-    }
-  };
+    setReportData(data);
+  } catch (error) {
+    // Set showTable to true even when there's an error
+    setShowTable(true);
+    setReportData([]); // Set empty data to show "No Data Found"
+    
+    toast({
+      title: "Error",
+      description: "No data Found",
+      variant: "destructive",
+    });
+  }
+};
 
   const handleClear = () => {
     setReportData([]);
@@ -400,8 +407,8 @@ const SoftwareTrackingReport = () => {
                   <SelectValue placeholder="Select Warranty Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Standard-Warrenty">Standard-Warrenty</SelectItem>
-                  <SelectItem value="Extended-Warrenty">Extended-Warrenty</SelectItem>
+                  <SelectItem value="Standard-Warranty">Standard-Warranty</SelectItem>
+                  <SelectItem value="Extended-Warranty">Extended-Warranty</SelectItem>
                   <SelectItem value="AMC">AMC</SelectItem>
                 </SelectContent>
               </Select>

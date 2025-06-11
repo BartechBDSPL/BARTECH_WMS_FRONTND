@@ -148,57 +148,407 @@ const HardWareReport = () => {
 
 
 console.log("Report " , reportData)
-  const handleSubmitSearch = async () => {
-    if (fromDate > toDate) {
-      toast({
-        title: "Validation Error",
-        description: "From Date cannot be greater than To Date",
-        variant: "destructive",
-      });
-      return;
-    }
-    // const { CustomerName, HardwareType, Make, Model, SerialNo, WarrantyStatus, FromDate, ToDate} = req.body;
-    const requestBody = {
-        
-        CustomerName: customerName,
-        HardwareType: hardwareType,
-        Make: make,
-        Model: model,
-        SerialNo: serialNo,
-        WarrantyStatus: warrantyStatus,
-        FromDate: format(fromDate, "yyyy-MM-dd"),
-        ToDate: format(toDate, "yyyy-MM-dd"),
+const handleSubmitSearch = async () => {
+  if (fromDate > toDate) {
+    toast({
+      title: "Validation Error",
+      description: "From Date cannot be greater than To Date",
+      variant: "destructive",
+    });
+    return;
+  }
 
-
-    };
-  
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/reports/get-hardware-tracking-report`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(requestBody),
-      });
-      const changedata = await response.json();
-      const data: JobCardReportData[] = changedata.Data;
-      if (data.length === 0) {
-        setReportData([]);
-        setShowTable(true);
-        return;
-      }
-      
-      setReportData(data);
-      setShowTable(true);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to get data",
-        variant: "destructive",
-      });
-    }
+  const requestBody = {
+    CustomerName: customerName,
+    HardwareType: hardwareType,
+    Make: make,
+    Model: model,
+    SerialNo: serialNo,
+    WarrantyStatus: warrantyStatus,
+    FromDate: format(fromDate, "yyyy-MM-dd"),
+    ToDate: format(toDate, "yyyy-MM-dd"),
   };
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/reports/get-hardware-tracking-report`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    const changedata = await response.json();
+    const data: JobCardReportData[] = changedata.Data;
+    
+    // Always set the data and show table, regardless of whether data exists
+    setReportData(data || []);
+    setShowTable(true);
+    
+    // Reset search and pagination when new data comes in
+    setSearchTerm('');
+    setCurrentPage(1);
+    
+  } catch (error) {
+    console.error('Search error:', error);
+    toast({
+      title: "Error",
+      description: "Failed to get data",
+      variant: "destructive",
+    });
+    // On error, still show the table structure but with empty data
+    setReportData([]);
+    setShowTable(true);
+  }
+};
+
+// Also update your table rendering condition to always show the search when table is visible:
+{showTable && (
+  <Card className="mt-5">
+    <CardHeader className="underline underline-offset-4 text-center">Hardware Report</CardHeader>
+    <CardContent className="overflow-x-auto">
+      {/* Always show controls when table is visible */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <span>Show</span>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[70px]">
+              <SelectValue placeholder={itemsPerPage.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+          <span>entries</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <TableSearch onSearch={handleSearch} />
+        </div>
+      </div>
+
+      {/* Show table or no data message */}
+      {reportData.length > 0 ? (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No.</TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Customer Address</TableHead>
+                <TableHead>Contact Person</TableHead>
+                <TableHead>ContactNo</TableHead>
+                <TableHead>EmailId</TableHead>
+                <TableHead>InvoicePo No</TableHead>
+                <TableHead>Hardware Type</TableHead>
+                <TableHead>Make</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>AdditionalDetails</TableHead>
+                <TableHead>DateOfWarrentyStart</TableHead>
+                <TableHead>WarrentyDays</TableHead>
+                <TableHead>DateOfWarrentyExp</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>SerialNo</TableHead>
+                <TableHead>UniqueSerialNo</TableHead>
+                <TableHead>TransBy</TableHead>
+                <TableHead>TransDate</TableHead>
+                <TableHead>WarrentyStatus</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((row, index) => (
+                  <React.Fragment key={index}>
+                    <TableRow>
+                      <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}.</TableCell>
+                      <TableCell className='min-w-[200px]'>{row.CustomerName}</TableCell>
+                      <TableCell className='min-w-[200px]'>{row.CustomerAddress}</TableCell>
+                      <TableCell>{row.ContactPerson}</TableCell>
+                      <TableCell>{row.ContactNo}</TableCell>
+                      <TableCell>{row.EmailID}</TableCell>
+                      <TableCell>{row.Invoice_PONo}</TableCell>
+                      <TableCell>{row.HardwareType}</TableCell>
+                      <TableCell>{row.Make}</TableCell>
+                      <TableCell>{row.Model}</TableCell>
+                      <TableCell>{row.AdditionalDetails}</TableCell>
+                      <TableCell>
+                        {row.DateOfWarrentyStart
+                          ? format(new Date(row.DateOfWarrentyStart), "dd-MM-yyyy")
+                          : '-'}
+                      </TableCell>
+                      <TableCell>{row.WarrentyDays}</TableCell>
+                      <TableCell>
+                        {row.DateOfWarrentyExp ? format(new Date(row.DateOfWarrentyExp), "dd-MM-yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>{row.Qty}</TableCell>
+                      <TableCell>{row.SerialNo}</TableCell>
+                      <TableCell>{row.UniqueSerialNo}</TableCell>
+                      <TableCell>{row.TransBy}</TableCell>
+                      <TableCell className='min-w-[150px]'>
+                        {row.TransDate ? format(new Date(row.TransDate), "dd-MM-yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>{row.WarrentyStatus}</TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={20} className="text-center py-8">
+                    {searchTerm ? `No results found for "${searchTerm}"` : "Data not found"}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Pagination - only show if there's data and no search filter, or if search has results */}
+          {filteredData.length > 0 && (
+            <div className="flex justify-between items-center text-sm md:text-md mt-4">
+              <div>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+                {searchTerm && ` (filtered from ${reportData.length} total entries)`}
+              </div>
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === totalPages ||
+                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={pageNumber}>
+                            <PaginationLink
+                              isActive={pageNumber === currentPage}
+                              onClick={() => setCurrentPage(pageNumber)}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        pageNumber === currentPage - 2 ||
+                        pageNumber === currentPage + 2
+                      ) {
+                        return <PaginationEllipsis key={pageNumber} />;
+                      }
+                      return null;
+                    })}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        // Simple "Data not found" message
+        <div className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">Data not found</h3>
+          <p className="text-gray-500 text-center max-w-md">
+            No records found for the given search criteria.
+          </p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+)}
+
+// Also update your table rendering condition to always show the search when table is visible:
+{showTable && (
+  <Card className="mt-5">
+    <CardHeader className="underline underline-offset-4 text-center">Hardware Report</CardHeader>
+    <CardContent className="overflow-x-auto">
+      {/* Always show controls when table is visible */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex items-center space-x-2">
+          <span>Show</span>
+          <Select
+            value={itemsPerPage.toString()}
+            onValueChange={(value) => {
+              setItemsPerPage(Number(value));
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[70px]">
+              <SelectValue placeholder={itemsPerPage.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+          <span>entries</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <TableSearch onSearch={handleSearch} />
+        </div>
+      </div>
+
+      {/* Show table or no data message */}
+      {reportData.length > 0 ? (
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>No.</TableHead>
+                <TableHead>Customer Name</TableHead>
+                <TableHead>Customer Address</TableHead>
+                <TableHead>Contact Person</TableHead>
+                <TableHead>ContactNo</TableHead>
+                <TableHead>EmailId</TableHead>
+                <TableHead>InvoicePo No</TableHead>
+                <TableHead>Hardware Type</TableHead>
+                <TableHead>Make</TableHead>
+                <TableHead>Model</TableHead>
+                <TableHead>AdditionalDetails</TableHead>
+                <TableHead>DateOfWarrentyStart</TableHead>
+                <TableHead>WarrentyDays</TableHead>
+                <TableHead>DateOfWarrentyExp</TableHead>
+                <TableHead>Qty</TableHead>
+                <TableHead>SerialNo</TableHead>
+                <TableHead>UniqueSerialNo</TableHead>
+                <TableHead>TransBy</TableHead>
+                <TableHead>TransDate</TableHead>
+                <TableHead>WarrentyStatus</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.length > 0 ? (
+                paginatedData.map((row, index) => (
+                  <React.Fragment key={index}>
+                    <TableRow>
+                      <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}.</TableCell>
+                      <TableCell className='min-w-[200px]'>{row.CustomerName}</TableCell>
+                      <TableCell className='min-w-[200px]'>{row.CustomerAddress}</TableCell>
+                      <TableCell>{row.ContactPerson}</TableCell>
+                      <TableCell>{row.ContactNo}</TableCell>
+                      <TableCell>{row.EmailID}</TableCell>
+                      <TableCell>{row.Invoice_PONo}</TableCell>
+                      <TableCell>{row.HardwareType}</TableCell>
+                      <TableCell>{row.Make}</TableCell>
+                      <TableCell>{row.Model}</TableCell>
+                      <TableCell>{row.AdditionalDetails}</TableCell>
+                      <TableCell>
+                        {row.DateOfWarrentyStart
+                          ? format(new Date(row.DateOfWarrentyStart), "dd-MM-yyyy")
+                          : '-'}
+                      </TableCell>
+                      <TableCell>{row.WarrentyDays}</TableCell>
+                      <TableCell>
+                        {row.DateOfWarrentyExp ? format(new Date(row.DateOfWarrentyExp), "dd-MM-yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>{row.Qty}</TableCell>
+                      <TableCell>{row.SerialNo}</TableCell>
+                      <TableCell>{row.UniqueSerialNo}</TableCell>
+                      <TableCell>{row.TransBy}</TableCell>
+                      <TableCell className='min-w-[150px]'>
+                        {row.TransDate ? format(new Date(row.TransDate), "dd-MM-yyyy") : "-"}
+                      </TableCell>
+                      <TableCell>{row.WarrentyStatus}</TableCell>
+                    </TableRow>
+                  </React.Fragment>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={20} className="text-center py-8">
+                    {searchTerm ? `No results found for "${searchTerm}"` : "No data available"}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+
+          {/* Pagination - only show if there's data and no search filter, or if search has results */}
+          {filteredData.length > 0 && (
+            <div className="flex justify-between items-center text-sm md:text-md mt-4">
+              <div>
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredData.length)} of {filteredData.length} entries
+                {searchTerm && ` (filtered from ${reportData.length} total entries)`}
+              </div>
+              {totalPages > 1 && (
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, index) => {
+                      const pageNumber = index + 1;
+                      if (
+                        pageNumber === 1 ||
+                        pageNumber === totalPages ||
+                        (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                      ) {
+                        return (
+                          <PaginationItem key={pageNumber}>
+                            <PaginationLink
+                              isActive={pageNumber === currentPage}
+                              onClick={() => setCurrentPage(pageNumber)}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      } else if (
+                        pageNumber === currentPage - 2 ||
+                        pageNumber === currentPage + 2
+                      ) {
+                        return <PaginationEllipsis key={pageNumber} />;
+                      }
+                      return null;
+                    })}
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </div>
+          )}
+        </>
+      ) : (
+        // No data card - but still within the table structure
+        <div className="flex flex-col items-center justify-center py-16">
+          <AlertCircle className="h-16 w-16 text-gray-400 mb-4" />
+          <h3 className="text-xl font-semibold text-gray-600 mb-2">No Data Found</h3>
+          <p className="text-gray-500 text-center max-w-md">
+            No records found for the given search criteria. 
+            Try adjusting your filters or selecting a different date range.
+          </p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+)}
 
 
 
@@ -403,8 +753,8 @@ console.log("Report " , reportData)
                     <SelectValue placeholder="Select Warranty Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Standard-Warrenty">Standard-Warrenty</SelectItem>
-                    <SelectItem value="Extended-Warrenty">Extended-Warrenty</SelectItem>
+                    <SelectItem value="Standard-Warranty">Standard-Warranty</SelectItem>
+                    <SelectItem value="Extended-Warranty">Extended-Warranty</SelectItem>
                     <SelectItem value="AMC">AMC</SelectItem>
                   </SelectContent>
                 </Select>

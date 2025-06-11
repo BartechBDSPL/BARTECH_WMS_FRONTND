@@ -19,7 +19,7 @@ export const softwareTrackingSchema = z.object({
 
   dateOfWarrentyStart: z.date({ required_error: "Warranty Start Date is required" }),
   warrentyDays: z.number({ invalid_type_error: "Warranty Days must be a number" }).int().nonnegative(),
-  warrentyStatus: z.enum(["Standard-Warrenty","Extended-Warrenty", "AMC"], { message: "Warranty Status must be AMC or Warranty" }),
+  warrentyStatus: z.enum(["Standard-Warranty","Extended-Warranty", "AMC"], { message: "Warranty Status must be AMC or Warranty" }),
 
   qty: z.number({ invalid_type_error: "Qty must be a number" }).int().positive(),
   serialNo: z.string().min(1, { message: "Serial No is required" }),

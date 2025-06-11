@@ -11,7 +11,7 @@ import SoftwareTrackingReport from "@/components/reports/software-warrenty-repor
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Software Warranty Report">
+    <ContentLayout title="Software Tracking Report">
       <Breadcrumb>
         <BreadcrumbList>  
           <BreadcrumbItem>  

@@ -316,7 +316,7 @@ export function getMenuList(pathname: string): Group[] {
           // software-warrenty-report
           {
             href: "/software-warrenty-report",
-            label: "Software Warrenty Report",
+            label: "Software Tracking Report",
             active: pathname === "/software-warrenty-report",
             value: "5_1",
           },

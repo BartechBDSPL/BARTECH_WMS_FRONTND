@@ -114,7 +114,7 @@ const Softwaretracking: React.FC = () => {
   // const hardwareTypes = ["Printer", "Scanner", "Barcode Reader", "Tablet", "Mobile Computer"];
   // const makes = ["Zebra", "Honeywell", "Datalogic", "Motorola", "Epson"];
   // const models = ["ZT411", "PM43", "DS3608", "TC52", "TM-T88VI"];
-  const warrentyStatuses = ["Standard-Warrenty","Extended-Warrenty", "AMC"];
+  const warrentyStatuses = ["Standard-Warranty","Extended-Warranty", "AMC"];
 
   const [customerNames, setCustomerNames] = useState<
     { CustomerName: string }[]
@@ -231,9 +231,9 @@ useEffect(() => {
 
 
    useEffect(() => {
-    if (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC") {
+    if (selectedWarrentyStatus === "Standard-Warranty" || selectedWarrentyStatus === "AMC") {
       setValue("warrentyDays", 365); // Set value programmatically
-    } else if (selectedWarrentyStatus === "Extended-Warrenty") {
+    } else if (selectedWarrentyStatus === "Extended-Warranty") {
       setValue("warrentyDays", 0); // Clear value for manual input
     }
   }, [selectedWarrentyStatus, setValue]);
@@ -286,7 +286,7 @@ const handleRowSelect = (id: number) => {
       setValue("dateOfWarrentyStart", new Date(selectedData.DateOfWarrentyStart));
     }
     setValue("warrentyDays", selectedData.WarrentyDays);
-    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
+    setValue("warrentyStatus", selectedData.WarrentyStatus as "Standard-Warranty"|"Extended-Warranty"| "AMC");
     setValue("qty", selectedData.Qty);
     setValue("serialNo", selectedData.SerialNo);
     
@@ -685,7 +685,7 @@ const handleHardwareTypeChange = (values: string[]) => {
 
   const handleWarrentyStatusChange = (value: string) => {
     setSelectedWarrentyStatus(value);
-    setValue("warrentyStatus", value as "Standard-Warrenty"|"Extended-Warrenty"| "AMC");
+    setValue("warrentyStatus", value as "Standard-Warranty"|"Extended-Warranty"| "AMC");
   };
 
   const handleCustomValueChange =
@@ -1772,9 +1772,9 @@ const handlePrintLabel = async (row: SoftwareData) => {
                                 valueAsNumber: true,
                                  })}
                                  placeholder="Enter warranty period in days"
-                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" }
+                                readOnly={selectedWarrentyStatus === "Standard-Warranty" }
                                 className={
-                                (selectedWarrentyStatus === "Standard-Warrenty")
+                                (selectedWarrentyStatus === "Standard-Warranty")
                                 ? "bg-gray-100 cursor-not-allowed"
                                   : ""
                                   }

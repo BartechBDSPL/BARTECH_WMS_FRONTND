@@ -174,57 +174,62 @@ const [assignPrinter, setAssignPrinter] = useState("");
     setCurrentPage(1);
   }, []);
 
-  const handleSubmitSearch = async () => {
-    if (fromDate > toDate) {
-      toast({
-        title: "Validation Error",
-        description: "From Date cannot be greater than To Date",
-        variant: "destructive",
-      });
-      return;
-    }
-    // const { CustomerName, SoftwareType, ProjectTitle, WarrentyStatus, FromDate, ToDate} = req.body;
-    const requestBody = {
-  CustomerName: customerName.trim(),
-  SoftwareType: softwareType.trim(),
-  ProjectTitle: projectTitle.trim(),
-  ProjectVersion: projectVersion.trim(),
-  SerialNo: serialNo.trim(),
-  ReprintBy: reprintBy.trim(),
-  WarrentyStatus: warrentyStatus.trim(),
-  FromDate: format(fromDate, "yyyy-MM-dd"),
-  ToDate: format(toDate, "yyyy-MM-dd"),
-};
-    try {
-      const response = await fetch(
-        `${BACKEND_URL}/api/reports/get-SOftware-Reprint-report`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
-      const changedata = await response.json();
-      const data: JobCardReportData[] = changedata.Data;
-      if (data.length === 0) {
-        setReportData([]);
-        setShowTable(true);
-        return;
-      }
+ const handleSubmitSearch = async () => {
+  if (fromDate > toDate) {
+    toast({
+      title: "Validation Error",
+      description: "From Date cannot be greater than To Date",
+      variant: "destructive",
+    });
+    return;
+  }
 
-      setReportData(data);
-      setShowTable(true);
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Data Not Found",
-        variant: "destructive",
-      });
-    }
+  const requestBody = {
+    CustomerName: customerName.trim(),
+    SoftwareType: softwareType.trim(),
+    ProjectTitle: projectTitle.trim(),
+    ProjectVersion: projectVersion.trim(),
+    SerialNo: serialNo.trim(),
+    ReprintBy: reprintBy.trim(),
+    WarrentyStatus: warrentyStatus.trim(),
+    FromDate: format(fromDate, "yyyy-MM-dd"),
+    ToDate: format(toDate, "yyyy-MM-dd"),
   };
+
+  try {
+    const response = await fetch(
+      `${BACKEND_URL}/api/reports/get-SOftware-Reprint-report`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+    
+    const changedata = await response.json();
+    const data: JobCardReportData[] = changedata.Data;
+    
+    // Always set showTable to true after a search attempt
+    setShowTable(true);
+    
+    // Set the data (empty array if no data found)
+    setReportData(data || []);
+    
+  } catch (error) {
+    // On error, still show the table but with empty data
+    setShowTable(true);
+    setReportData([]);
+    
+    toast({
+      title: "Error",
+      description: "Data Not Found",
+      variant: "destructive",
+    });
+  }
+};
 
 const handleClear = () => {
   setReportData([]);
@@ -424,8 +429,8 @@ const handleClear = () => {
                   <SelectValue placeholder="Select Warranty Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Standard-Warrenty">Standard-Warrenty</SelectItem>
-                  <SelectItem value="Extended-Warrenty">Extended-Warrenty</SelectItem>
+                  <SelectItem value="Standard-Warranty">Standard-Warranty</SelectItem>
+                  <SelectItem value="Extended-Warranty">Extended-Warranty</SelectItem>
                   <SelectItem value="AMC">AMC</SelectItem>
                 </SelectContent>
               </Select>
