@@ -1152,9 +1152,10 @@ const handlePrintLabel = async (row: SoftwareData) => {
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Warranty Start Date
                   </td>
-                  <td className="border border-gray-800 px-2 py-1">
-                    {formData.dateOfWarrentyStart.toLocaleDateString()}
-                  </td>
+                <td className="border border-gray-800 px-2 py-1">
+                  {formData.dateOfWarrentyStart ? new Date(formData.dateOfWarrentyStart).toLocaleDateString("en-GB") : "-"}
+                </td>
+
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
@@ -1187,9 +1188,10 @@ const handlePrintLabel = async (row: SoftwareData) => {
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Warranty Expiry Date
                   </td>
-                  <td className="border border-gray-800 px-2 py-1">
-                    {formData.dateOfWarrentyExp?.toLocaleDateString() || "-"}
-                  </td>
+                 <td className="border border-gray-800 px-2 py-1">
+                  {formData.dateOfWarrentyExp ? new Date(formData.dateOfWarrentyExp).toLocaleDateString("en-GB") : "-"}
+                </td>
+
                 </tr>
               </tbody>
             </table>
@@ -1770,9 +1772,9 @@ const handlePrintLabel = async (row: SoftwareData) => {
                                 valueAsNumber: true,
                                  })}
                                  placeholder="Enter warranty period in days"
-                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" }
                                 className={
-                                (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                (selectedWarrentyStatus === "Standard-Warrenty")
                                 ? "bg-gray-100 cursor-not-allowed"
                                   : ""
                                   }

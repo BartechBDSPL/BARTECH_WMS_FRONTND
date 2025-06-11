@@ -126,7 +126,7 @@ const RePrintSoftwareTraking: React.FC = () => {
   // Print form states
   const [showPrintForm, setShowPrintForm] = useState(false);
   const [printReason, setPrintReason] = useState("");
-  const [printQuantity, setPrintQuantity] = useState("");
+  const [printQuantity, setPrintQuantity] = useState("1");
   const [selectedPrinter, setSelectedPrinter] = useState("");
 
   // Pagination and search
@@ -264,11 +264,14 @@ const RePrintSoftwareTraking: React.FC = () => {
     setShowPrintForm(newSelectedRows.length > 0);
 
     // Reset print form when no rows selected
-    if (newSelectedRows.length === 0) {
+   if (newSelectedRows.length > 0 && selectedRows.length === 0) {
+      setPrintQuantity("1");
+    } else if (newSelectedRows.length === 0) {
       setPrintReason("");
-      setPrintQuantity("");
+      setPrintQuantity("1");
       setSelectedPrinter("");
     }
+
   };
 
   // Handle select all
@@ -277,7 +280,7 @@ const RePrintSoftwareTraking: React.FC = () => {
       setSelectedRows([]);
       setShowPrintForm(false);
       setPrintReason("");
-      setPrintQuantity("");
+      setPrintQuantity("1");
       setSelectedPrinter("");
     } else {
       const allIds = data.map((item) => item.ID);

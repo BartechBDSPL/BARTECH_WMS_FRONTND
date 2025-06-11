@@ -374,8 +374,8 @@ console.log("Report " , reportData)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor='hardwareType'>Hardware Tracking</Label>
-              <Input value={hardwareType} onChange={(e) => setHardwareType(e.target.value)}  placeholder=' Enter Hardware Tracking...'/>
+              <Label htmlFor='hardwareType'>Hardware Type</Label>
+              <Input value={hardwareType} onChange={(e) => setHardwareType(e.target.value)}  placeholder=' Enter Hardware Type...'/>
             </div>
 
             <div className="space-y-2">

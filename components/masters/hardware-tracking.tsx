@@ -1026,7 +1026,7 @@ const handleUpdateClick = async () => {
 
     const isValid = await trigger([
       "hardwareType", "make", "model", "dateOfWarrentyStart",
-      "warrentyDays", "warrentyStatus", "qty", "serialNo"
+      "warrentyDays", "warrentyStatus", "qty"
     ]);
 
     if (!isValid) {
@@ -1265,9 +1265,10 @@ const handlePrintLabel = async (row: HardwareData) => {
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Warranty Start Date
                   </td>
-                  <td className="border border-gray-800 px-2 py-1">
-                    {formData.dateOfWarrentyStart.toLocaleDateString()}
+                 <td className="border border-gray-800 px-2 py-1">
+                    {new Date(formData.dateOfWarrentyStart).toLocaleDateString("en-GB")}
                   </td>
+
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
@@ -1308,9 +1309,10 @@ const handlePrintLabel = async (row: HardwareData) => {
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Warranty Expiry Date
                   </td>
-                  <td className="border border-gray-800 px-2 py-1">
-                    {formData.dateOfWarrentyExp?.toLocaleDateString() || "-"}
+                 <td className="border border-gray-800 px-2 py-1">
+                    {formData.dateOfWarrentyExp ? new Date(formData.dateOfWarrentyExp).toLocaleDateString("en-GB") : "-"}
                   </td>
+
                 </tr>
               </tbody>
             </table>
@@ -1891,9 +1893,9 @@ const handlePrintLabel = async (row: HardwareData) => {
                                   valueAsNumber: true,
                                 })}
                                 placeholder="Enter warranty period in days"
-                                readOnly={selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC"}
+                                readOnly={selectedWarrentyStatus === "Standard-Warrenty"}
                                 className={
-                                  (selectedWarrentyStatus === "Standard-Warrenty" || selectedWarrentyStatus === "AMC")
+                                  (selectedWarrentyStatus === "Standard-Warrenty")
                                     ? "bg-gray-100 cursor-not-allowed"
                                     : ""
                                 }
@@ -2066,7 +2068,7 @@ const handlePrintLabel = async (row: HardwareData) => {
                                       return;
                                     }
 
-                                    // Split IP and port
+                                    //Split IP and port
                                     // const [ip, portStr] = selectedPrinter.split(":");
                                     // const port = parseInt(portStr) || 9100;
 
