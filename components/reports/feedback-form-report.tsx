@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Calendar as CalendarIcon, ChevronDown, Eye, Printer } from "lucide-react";
+import { AlertCircle, Calendar as CalendarIcon, ChevronDown, Eye, Printer, TrendingUp, Users, Star, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -54,6 +54,17 @@ interface CustomerFeedbackReportData {
   UserAgent: string;
 }
 
+interface DashboardSummary {
+  TotalFeedbacks: number;
+  AvgOverallRating: number;
+  AvgUnderstanding: number;
+  AvgQuality: number;
+  AvgCommunication: number;
+  AvgSupport: number;
+  AvgDelivery: number;
+  AvgOfAllRatings: number;
+}
+
 const CustomerFeedbackReport = () => {
   const [customerName, setCustomerName] = useState('');
   const [companyName, setCompanyName] = useState('');
@@ -61,9 +72,12 @@ const CustomerFeedbackReport = () => {
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
   const [reportData, setReportData] = useState<CustomerFeedbackReportData[]>([]);
+  const [dashboardData, setDashboardData] = useState<DashboardSummary | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null); // Add debug state
 
   const token = Cookies.get('token');
 
@@ -71,7 +85,7 @@ const CustomerFeedbackReport = () => {
     return reportData.filter(item => {
       const searchableFields = [
         "CompanyName",
-        "CompanyAddress",
+        "CompanyAddress", 
         "CustomerName",
         "CustomerEmailAddress",
         "CustomerPhoneNumber",
@@ -98,6 +112,85 @@ const CustomerFeedbackReport = () => {
     setCurrentPage(1);
   }, []);
 
+  const fetchDashboardSummary = async () => {
+    setIsLoadingDashboard(true);
+    try {
+      const requestBody = {
+        FromDate: format(fromDate, "yyyy-MM-dd"),
+        ToDate: format(toDate, "yyyy-MM-dd"),
+      };
+
+      console.log('Dashboard Request Body:', requestBody); // Debug log
+
+      const response = await fetch(`${BACKEND_URL}/api/reports/get-Customer-feedback-Dashboard`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody),
+      });
+      
+      const result = await response.json();
+      
+      console.log('Dashboard API Response:', result); // Debug log
+      setDebugInfo(result); // Store for debugging
+      
+      if (result.Status === 'T' && result.Data && result.Data.length > 0) {
+        const rawData = result.Data[0];
+        console.log('Raw Dashboard Data:', rawData); // Debug log
+        
+        // Ensure all values are properly converted to numbers
+        const processedData = {
+          TotalFeedbacks: Number(rawData.TotalFeedbacks) || 0,
+          AvgOverallRating: Number(rawData.AvgOverallRating) || 0,
+          AvgUnderstanding: Number(rawData.AvgUnderstanding) || 0,
+          AvgQuality: Number(rawData.AvgQuality) || 0,
+          AvgCommunication: Number(rawData.AvgCommunication) || 0,
+          AvgSupport: Number(rawData.AvgSupport) || 0,
+          AvgDelivery: Number(rawData.AvgDelivery) || 0,
+          AvgOfAllRatings: Number(rawData.AvgOfAllRatings) || 0
+        };
+        
+        console.log('Processed Dashboard Data:', processedData); // Debug log
+        setDashboardData(processedData);
+      } else {
+        console.log('No dashboard data found or invalid response'); // Debug log
+        // Set default empty dashboard data
+        setDashboardData({
+          TotalFeedbacks: 0,
+          AvgOverallRating: 0,
+          AvgUnderstanding: 0,
+          AvgQuality: 0,
+          AvgCommunication: 0,
+          AvgSupport: 0,
+          AvgDelivery: 0,
+          AvgOfAllRatings: 0
+        });
+      }
+    } catch (error) {
+      console.error('Dashboard API Error:', error);
+      // Set default empty dashboard data on error
+      setDashboardData({
+        TotalFeedbacks: 0,
+        AvgOverallRating: 0,
+        AvgUnderstanding: 0,
+        AvgQuality: 0,
+        AvgCommunication: 0,
+        AvgSupport: 0,
+        AvgDelivery: 0,
+        AvgOfAllRatings: 0
+      });
+      toast({
+        title: "Error",
+        description: "Failed to fetch dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingDashboard(false);
+    }
+  };
+
   const handleSubmitSearch = async () => {
     if (fromDate > toDate) {
       toast({
@@ -116,6 +209,9 @@ const CustomerFeedbackReport = () => {
     };
 
     try {
+      // Fetch dashboard summary first
+      await fetchDashboardSummary();
+
       const response = await fetch(`${BACKEND_URL}/api/reports/get-Customer-feedback`, {
         method: "POST",
         headers: {
@@ -126,25 +222,31 @@ const CustomerFeedbackReport = () => {
       });
       
       const changedata = await response.json();
-      const data: CustomerFeedbackReportData[] = changedata.Data;
       
       // Always set showTable to true after a search attempt
       setShowTable(true);
       
-      if (data.length === 0) {
+      if (changedata.Status === 'T' && changedata.Data && changedata.Data.length > 0) {
+        setReportData(changedata.Data);
+      } else {
         setReportData([]);
-        return;
+        if (changedata.Status !== 'T') {
+          toast({
+            title: "Info",
+            description: changedata.Message || "No data found for the selected criteria",
+            variant: "default",
+          });
+        }
       }
-      
-      setReportData(data);
     } catch (error) {
+      console.error('Search API Error:', error);
       // Set showTable to true even when there's an error
       setShowTable(true);
       setReportData([]); // Set empty data to show "No Data Found"
       
       toast({
         title: "Error",
-        description: "Data Not Found",
+        description: "Failed to fetch data. Please try again.",
         variant: "destructive",
       });
     }
@@ -152,11 +254,15 @@ const CustomerFeedbackReport = () => {
 
   const handleClear = () => {
     setReportData([]);
+    setDashboardData(null);
     setFromDate(new Date());
     setToDate(new Date());
     setShowTable(false);
     setCustomerName('');
     setCompanyName('');
+    setSearchTerm('');
+    setCurrentPage(1);
+    setDebugInfo(null); // Clear debug info
   };
 
   const getRatingColor = (rating: number) => {
@@ -192,7 +298,7 @@ const CustomerFeedbackReport = () => {
         ...row,
         SubmissionDate: row.SubmissionDate ? format(new Date(row.SubmissionDate), "yyyy-MM-dd HH:mm") : "-",
         AdditionalComments: row.AdditionalComments || "-",
-        UserAgent: row.UserAgent ? row.UserAgent.substring(0, 50) + "..." : "-", // Truncate long user agent strings
+        UserAgent: row.UserAgent ? row.UserAgent.substring(0, 50) + "..." : "-",
       }));
 
       doc.setFontSize(18);
@@ -277,6 +383,135 @@ const CustomerFeedbackReport = () => {
     exportToPdf(reportData, fileName);
   };
 
+  const DashboardCards = () => {
+    if (!dashboardData) return null;
+
+    return (
+      <div className="space-y-4">
+      
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Feedbacks</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{dashboardData.TotalFeedbacks}</div>
+              <p className="text-xs text-muted-foreground">
+                Total feedback submissions
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Overall Rating</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgOverallRating)}`}>
+                {dashboardData.AvgOverallRating.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Overall satisfaction score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Understanding Rating</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgUnderstanding)}`}>
+                {dashboardData.AvgUnderstanding.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Understanding satisfaction score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Quality Rating</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgQuality)}`}>
+                {dashboardData.AvgQuality.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Quality satisfaction score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Communication Rating</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgCommunication)}`}>
+                {dashboardData.AvgCommunication.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Communication satisfaction score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Service Rating</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgSupport)}`}>
+                {dashboardData.AvgSupport.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Service support score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average Delivery Rating</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgDelivery)}`}>
+                {dashboardData.AvgDelivery.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                On-time delivery score
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Average of All Ratings</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${getRatingColor(dashboardData.AvgOfAllRatings)}`}>
+                {dashboardData.AvgOfAllRatings.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Combined average rating
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
   const NoDataCard = () => (
     <Card className="mt-5">
       <CardContent className="flex flex-col items-center justify-center py-16">
@@ -301,6 +536,7 @@ const CustomerFeedbackReport = () => {
             <div className="space-y-2">
               <Label htmlFor='customerName'>Customer Name</Label>
               <Input 
+                id='customerName'
                 value={customerName} 
                 onChange={(e) => setCustomerName(e.target.value)} 
                 placeholder='Enter Customer Name...'
@@ -310,6 +546,7 @@ const CustomerFeedbackReport = () => {
             <div className="space-y-2">
               <Label htmlFor='companyName'>Company Name</Label>
               <Input 
+                id='companyName'
                 value={companyName} 
                 onChange={(e) => setCompanyName(e.target.value)} 
                 placeholder='Enter Company Name...'
@@ -371,7 +608,9 @@ const CustomerFeedbackReport = () => {
 
           <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:space-x-2 mb-4 mt-5 md:mt-10">
             <div className="flex space-x-2">
-              <Button onClick={handleSubmitSearch}>Search</Button>
+              <Button onClick={handleSubmitSearch} disabled={isLoadingDashboard}>
+                {isLoadingDashboard ? 'Loading...' : 'Search'}
+              </Button>
               <Button variant="outline" onClick={handleClear}>Clear</Button>
             </div>
             <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2">
@@ -386,6 +625,9 @@ const CustomerFeedbackReport = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dashboard Cards - Show when showTable is true */}
+      {showTable && <DashboardCards />}
 
       {showTable && (
         reportData.length > 0 ? (
@@ -442,29 +684,28 @@ const CustomerFeedbackReport = () => {
                     paginatedData.map((row, index) => (
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}.</TableCell>
-
-                        <TableCell className='min-w-[200px]'>{row.CompanyName}</TableCell>
-                        <TableCell className='min-w-[200px]'>{row.CompanyAddress}</TableCell>
-                        <TableCell className='min-w-[150px]'>{row.CustomerName}</TableCell>
-                        <TableCell className='min-w-[200px]'>{row.CustomerEmailAddress}</TableCell>
-                        <TableCell>{row.CustomerPhoneNumber}</TableCell>
-                        <TableCell className={getRatingColor(row.UnderstandingRating)}>
-                          {row.UnderstandingRating}
+                        <TableCell className='min-w-[200px]'>{row.CompanyName || "-"}</TableCell>
+                        <TableCell className='min-w-[200px]'>{row.CompanyAddress || "-"}</TableCell>
+                        <TableCell className='min-w-[150px]'>{row.CustomerName || "-"}</TableCell>
+                        <TableCell className='min-w-[200px]'>{row.CustomerEmailAddress || "-"}</TableCell>
+                        <TableCell>{row.CustomerPhoneNumber || "-"}</TableCell>
+                        <TableCell className={getRatingColor(row.UnderstandingRating || 0)}>
+                          {row.UnderstandingRating || 0}
                         </TableCell>
-                        <TableCell className={getRatingColor(row.QualityRating)}>
-                          {row.QualityRating}
+                        <TableCell className={getRatingColor(row.QualityRating || 0)}>
+                          {row.QualityRating || 0}
                         </TableCell>
-                        <TableCell className={getRatingColor(row.CommunicationRating)}>
-                          {row.CommunicationRating}
+                        <TableCell className={getRatingColor(row.CommunicationRating || 0)}>
+                          {row.CommunicationRating || 0}
                         </TableCell>
-                        <TableCell className={getRatingColor(row.ServiceSupportRating)}>
-                          {row.ServiceSupportRating}
+                        <TableCell className={getRatingColor(row.ServiceSupportRating || 0)}>
+                          {row.ServiceSupportRating || 0}
                         </TableCell>
-                        <TableCell className={getRatingColor(row.DeliveryOnTimeRating)}>
-                          {row.DeliveryOnTimeRating}
+                        <TableCell className={getRatingColor(row.DeliveryOnTimeRating || 0)}>
+                          {row.DeliveryOnTimeRating || 0}
                         </TableCell>
-                        <TableCell className={getRatingColor(row.OverallRating)}>
-                          {row.OverallRating}
+                        <TableCell className={getRatingColor(row.OverallRating || 0)}>
+                          {row.OverallRating || 0}
                         </TableCell>
                         <TableCell className='min-w-[600px]'>
                           {row.AdditionalComments || "-"}
@@ -476,7 +717,7 @@ const CustomerFeedbackReport = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={17} className="text-center">No Data Found</TableCell>
+                      <TableCell colSpan={14} className="text-center">No Data Found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
