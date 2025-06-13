@@ -509,7 +509,7 @@ const handleClear = () => {
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
               <ExportToExcel
                 data={reportData}
-                fileName={`Job_Card_Master_Report_${format(
+                fileName={`Software_Reprint_Report_${format(
                   new Date(),
                   "yyyy-MM-dd_HH-mm"
                 )}`}
