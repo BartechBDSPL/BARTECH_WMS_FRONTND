@@ -281,51 +281,58 @@ export function getMenuList(pathname: string): Group[] {
             href: "/qc-report",
             label: "QC Report",
             active: pathname === "/qc-report",
-            value: "5_1",
+            value: "5_2",
           },
           {
             href: "/inward-report",
             label: "RM Inward Report",
             active: pathname === "/inward-report",
-            value: "5_1",
+            value: "5_3",
           },
           {
             href: "/put-away-report",
             label: "RM Put Away Report",
             active: pathname === "/put-away-report",
-            value: "5_1",
+            value: "5_4",
           },
           {
             href: "/internal-movement",
             label: "RM Internal Movement Report",
             active: pathname === "/internal-movement",
-            value: "5_1",
+            value: "5_5",
           },  //hardware-traking-report
           {
             href: "/hardware-traking-report",
             label: "Hardware Tracking Report",
             active: pathname === "/hardware-traking-report",
-            value: "5_1",
+            value: "5_6",
           },
           {
             href: "/hardware-reprint-report",
             label: "Hardware RePrint Report",
             active: pathname === "/hardware-reprint-report",
-            value: "5_1",
+            value: "5_7",
           },
           // software-warrenty-report
           {
             href: "/software-warrenty-report",
             label: "Software Tracking Report",
             active: pathname === "/software-warrenty-report",
-            value: "5_1",
+            value: "5_8",
           },
             {
             href: "/software-reprint-report",
             label: "Software Reprint Report",
             active: pathname === "/software-reprint-report",
-            value: "5_1",
+            value: "5_9",
+          },
+           {
+            href: "/feedback-form-report",
+            label: "Customer Feedback Report",
+            active: pathname === "/feedback-form-report",
+            value: "5_10",
           }
+          
           
          
         ],

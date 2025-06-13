@@ -1,6 +1,6 @@
 import { jwtDecode } from 'jwt-decode';
 import Cookies from 'js-cookie';
-export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://15.206.183.202:3005' ;
+export const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://192.168.29.85:4251' ;
 export const SECRET_KEY = process.env.NEXT_PUBLIC_SECRET_KEY ||'bdspl';
 export const ITEMS_PER_PAGE = 5;
 export const originalKey = process.env.NEXT_PUBLIC_ORIGINAL_KEY ||'sblw-3hn8-sqoy19';
