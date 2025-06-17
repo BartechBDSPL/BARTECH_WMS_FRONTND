@@ -66,11 +66,12 @@ const webAccessOptions = [
   { label: "28) - Software Tracking Report", value: "5_8" },
   { label: "29) - Software Reprint Report", value: "5_9" },
   { label: "30) - Customer Feedback Report", value: "5_10" },
-  { label: "31) - User Master", value: "6_1" },
-  { label: "32) - User Role Master", value: "6_2" },
-  { label: "33) - Change Password", value: "6_3" },
-  { label: "34) - Material Stock Take", value: "6_4" },
-  { label: "35) - GRN Excel Upload", value: "3_2" },
+   { label: "31) - Customer Complaint Report", value: "5_11" },
+  { label: "32) - User Master", value: "6_1" },
+  { label: "33) - User Role Master", value: "6_2" },
+  { label: "34) - Change Password", value: "6_3" },
+  { label: "35) - Material Stock Take", value: "6_4" },
+  { label: "36) - GRN Excel Upload", value: "3_2" },
 ];
 
 const hhtAccessOptions = [

@@ -526,7 +526,18 @@ const CustomerFeedbackReport = () => {
   );
 
   return (
+    <>
+     <div className="p-2 max-w-md">
+      <Card className="bg-white shadow-sm rounded-md">
+        <CardContent className="p-2 text-center">
+          <p className="text-sm md:text-base lg:text-lg font-semibold text-gray-800">
+            Doc Ref : QR/SW/SP - 02/05/R0
+          </p>
+        </CardContent>
+      </Card>
+    </div>
     <div className="space-y-4">
+      
       <Card className='mt-5'>
         <CardHeader>
           <CardTitle>Report: Customer Feedback</CardTitle>
@@ -775,6 +786,8 @@ const CustomerFeedbackReport = () => {
         )
       )}
     </div>
+
+    </>
   );
 };
 

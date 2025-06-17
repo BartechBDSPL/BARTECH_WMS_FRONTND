@@ -331,7 +331,14 @@ export function getMenuList(pathname: string): Group[] {
             label: "Customer Feedback Report",
             active: pathname === "/feedback-form-report",
             value: "5_10",
+          },
+             {
+            href: "/complaint-report",
+            label: "Customer Complaint Report",
+            active: pathname === "/complaint-report",
+            value: "5_11",
           }
+
           
           
          

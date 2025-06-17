@@ -362,6 +362,8 @@ const SoftwareTrackingReport = () => {
   );
 
   return (
+      
+    
     <div className="space-y-4">
       <Card className="mt-5">
         <CardHeader>
@@ -672,7 +674,9 @@ const SoftwareTrackingReport = () => {
           <NoDataCard />
         ))}
     </div>
+  
   );
 };
+
 
 export default SoftwareTrackingReport;
