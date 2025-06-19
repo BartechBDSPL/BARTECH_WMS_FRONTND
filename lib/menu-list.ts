@@ -339,19 +339,19 @@ export function getMenuList(pathname: string): Group[] {
             active: pathname === "/feedback-form-report",
             value: "5_10",
           },
-<<<<<<< HEAD
-             {
+         
+          {
             href: "/complaint-report",
             label: "Customer Complaint Report",
             active: pathname === "/complaint-report",
-=======
+            value: "5_11",
+          },
           // rep-job-card
           {
             href: "/rep-job-card",
             label: "Job Card Report",
             active: pathname === "/rep-job-card",
->>>>>>> 727a7fc (job Card and Menu upadate)
-            value: "5_11",
+            value: "5_12",
           }
 
           

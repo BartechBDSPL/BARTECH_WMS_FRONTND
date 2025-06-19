@@ -70,7 +70,8 @@ const webAccessOptions = [
   { label: "30) - Software Tracking Report", value: "5_8" },
   { label: "31) - Software Reprint Report", value: "5_9" },
   { label: "32) - Customer Feedback Report", value: "5_10" },
-  { label: "33) - Job Card Report", value: "5_11" },
+  { label: "33) - Customer Complaint Report", value: "5_11" },
+  { label: "33) - Job Card Report", value: "5_12" },
 
   
   { label: "33) - User Master", value: "6_1" },
