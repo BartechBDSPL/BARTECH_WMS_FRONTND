@@ -400,7 +400,7 @@ const InwordReport = () => {
               <Button variant="outline" onClick={handleClear}>Clear</Button>
             </div>
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
-              <ExportToExcel data={reportData} fileName={`Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} />
+              <ExportToExcel data={reportData} fileName={`RM_Inward_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} />
               <Button variant="outline" onClick={handleExportToPDF} disabled={reportData.length === 0}>
                 Export To PDF  <FaFilePdf size={17} className='ml-2 text-red-500' />
               </Button>

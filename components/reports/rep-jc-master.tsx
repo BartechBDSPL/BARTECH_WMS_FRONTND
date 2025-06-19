@@ -88,6 +88,7 @@ interface JobCardReportData {
   PlateFolderNo: string;
 
   ArtworkNo: string;
+  AltRibbonType : string;
 
 }
 interface PreviewJobCardParams {
@@ -354,7 +355,7 @@ console.log("Report " , reportData)
       }));
 
       doc.setFontSize(18);
-      doc.text(`Job Card Master Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+      doc.text(`Job Control Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
 
       (doc as any).autoTable({
         columns: columns,
@@ -426,7 +427,7 @@ console.log("Report " , reportData)
       return;
     }
     
-    const fileName = `Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+    const fileName = `Job_Control_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
     exportToPdf(reportData, fileName);
   };
 
@@ -658,9 +659,13 @@ console.log("Report " , reportData)
                 </tr>
                 <tr className="">
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Thermal Printing Required</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.ThermalPrintingRequired || "-"}</td>
-                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Ribbon Type</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.ThermalPrintingRequired || "-"}</td>
+                </tr>
+                <tr className="">
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Ribbon Type</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.RibbonType || "-"}</td>
+                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Alternative Ribbon Type</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.AltRibbonType || "-"}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Customer Part No.</td>
@@ -792,7 +797,7 @@ console.log("Report " , reportData)
     <div className="space-y-4">
       <Card className='mt-5'>
         <CardHeader>
-          <CardTitle>Report: Job Card Master</CardTitle>
+          <CardTitle>Report: Job Control Approved</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -889,7 +894,7 @@ console.log("Report " , reportData)
               <Button variant="outline" onClick={handleClear}>Clear</Button>
             </div>
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
-              <ExportToExcel data={reportData} fileName={`Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} />
+              <ExportToExcel data={reportData} fileName={`Job_Control_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} />
               <Button variant="outline" onClick={handleExportToPDF} disabled={reportData.length === 0}>
                 Export To PDF  <FaFilePdf size={17} className='ml-2 text-red-500' />
               </Button>

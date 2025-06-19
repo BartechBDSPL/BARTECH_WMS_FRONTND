@@ -113,12 +113,12 @@ export function getMenuList(pathname: string): Group[] {
               value: "2_8",
             },
             // job-card
-            {
-              href: "/job-card",
-              label: "Job Card",
-              active: pathname === "/job-card",
-              value: "2_9",
-            },
+            // {
+            //   href: "/job-card",
+            //   label: "Job Card",
+            //   active: pathname === "/job-card",
+            //   value: "2_9",
+            // },
              {
               href: "/printer-master",
               label: "Printer Master",
@@ -157,12 +157,19 @@ export function getMenuList(pathname: string): Group[] {
           active: pathname.includes("/heloj"),
           icon: ArrowLeftRight,
           value: "3",
-          submenus: [{
+          submenus: [
+            {
             href: "/job-card-approval",
             label: "Approve Job Control",
             active: pathname === "/job-card-approval",
             value: "3_1",
           },
+          {
+              href: "/job-card",
+              label: "Job Card",
+              active: pathname === "/job-card",
+              value: "3_4",
+            },
             {
               href: "/grn-excel-upload",
               label: "Excel Upload",
@@ -273,7 +280,7 @@ export function getMenuList(pathname: string): Group[] {
           submenus: [
           {
             href: "/rep-jc-master",
-            label: "Job Card Report",
+            label: "Job Control Approved Report",
             active: pathname === "/rep-jc-master",
             value: "5_1",
           },
@@ -331,6 +338,13 @@ export function getMenuList(pathname: string): Group[] {
             label: "Customer Feedback Report",
             active: pathname === "/feedback-form-report",
             value: "5_10",
+          },
+          // rep-job-card
+          {
+            href: "/rep-job-card",
+            label: "Job Card Report",
+            active: pathname === "/rep-job-card",
+            value: "5_11",
           }
           
           

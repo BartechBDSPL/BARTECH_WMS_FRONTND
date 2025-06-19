@@ -431,7 +431,7 @@ const PutAwayReport = () => {
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
               <ExportToExcel
                 data={reportData}
-                fileName={`Job_Card_Master_Report_${format(
+                fileName={`RM_Put_away_Report${format(
                   new Date(),
                   "yyyy-MM-dd_HH-mm"
                 )}`}
