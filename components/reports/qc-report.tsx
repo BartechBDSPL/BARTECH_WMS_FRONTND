@@ -422,6 +422,7 @@ const QcReport = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Approve">Approve</SelectItem>
+                  <SelectItem value="Hold">Hold</SelectItem>
                   <SelectItem value="Reject">Reject</SelectItem>
                 </SelectContent>
               </Select>
@@ -491,7 +492,7 @@ const QcReport = () => {
             <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
               <ExportToExcel
                 data={reportData}
-                fileName={`Job_Card_Master_Report_${format(
+                fileName={`QC_Report_${format(
                   new Date(),
                   "yyyy-MM-dd_HH-mm"
                 )}`}

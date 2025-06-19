@@ -17,6 +17,7 @@ import { toast } from "@/components/ui/use-toast";
 import axios from "axios";
 import getUserID, { BACKEND_URL, getHeaderToken } from "@/lib/constants";
 import { formatDateToDDMMYY } from "@/utills/dateUtils";
+import { lastDayOfDecade } from "date-fns";
 
 interface UserRole {
   U_ID: number;
@@ -46,10 +47,10 @@ const webAccessOptions = [
   { label: "9) - Edit Job Control Master", value: "2_8" },
   { label: "10) - Job Card", value: "2_9" },
   { label: "11) - Printer Master", value: "2_10" },
- 
-  { label: "12) - WH Category Master", value: "2_13"},
-  { label: "13) - Warehouse Master", value: "2_14"},
-  { label: "14) - WH Location Master", value: "2_15"},
+  { label: "12) - WH Category Master", value: "2_13" },
+  { label: "13) - Warehouse Master", value: "2_14" },
+  { label: "14) - WH Location Master", value: "2_15" },
+
   { label: "15) - Approve Job Control", value: "3_1" },
   { label: "16) - RM Label Printing", value: "3_3" },
    { label: "17) - Hardware Tracking", value: "4_1"},
@@ -66,12 +67,11 @@ const webAccessOptions = [
   { label: "28) - Software Tracking Report", value: "5_8" },
   { label: "29) - Software Reprint Report", value: "5_9" },
   { label: "30) - Customer Feedback Report", value: "5_10" },
-   { label: "31) - Customer Complaint Report", value: "5_11" },
-  { label: "32) - User Master", value: "6_1" },
-  { label: "33) - User Role Master", value: "6_2" },
-  { label: "34) - Change Password", value: "6_3" },
-  { label: "35) - Material Stock Take", value: "6_4" },
-  { label: "36) - GRN Excel Upload", value: "3_2" },
+  { label: "31) - User Master", value: "6_1" },
+  { label: "32) - User Role Master", value: "6_2" },
+  { label: "33) - Change Password", value: "6_3" },
+  { label: "34) - Material Stock Take", value: "6_4" },
+  { label: "35) - GRN Excel Upload", value: "3_2" },
 ];
 
 const hhtAccessOptions = [

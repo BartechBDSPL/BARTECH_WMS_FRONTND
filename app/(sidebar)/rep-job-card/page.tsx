@@ -1,5 +1,4 @@
 import Link from "next/link";
-import JobCardReport from "@/components/reports/rep-jc-master";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -7,10 +6,11 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
+import JobCardNewReport from "@/components/reports/jobcard-report";
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Job Control Approved Report">
+    <ContentLayout title="Job Card Report">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
@@ -20,7 +20,7 @@ export default function DashboardPage() {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <JobCardReport /> 
+      <JobCardNewReport/>
     </ContentLayout>
   );
 }

@@ -92,6 +92,7 @@ const JobControlMaster: React.FC = () => {
     setValue,
     reset,
     trigger,
+    setFocus,
     formState: { errors, isSubmitting }
   } = useForm<JobCardSchema>({
     resolver: zodResolver(jobCardSchema),
@@ -131,6 +132,7 @@ const JobControlMaster: React.FC = () => {
   const [isMetric, setIsMetric] = useState(true);
   const [activeStep, setActiveStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+
 
   const selectedLabelType = watch("labelType");
   const width = watch("width");
@@ -183,6 +185,7 @@ const JobControlMaster: React.FC = () => {
       title: "Blocked Step",
       description: "Job Description cannot be duplicate."
     });
+    setFocus("jobDescription");
     return; 
   }
 
@@ -1626,7 +1629,7 @@ const JobControlMaster: React.FC = () => {
 
 
                           <div className="space-y-2">
-                            <Label className={errors.ups ? "text-destructive" : ""}>Sliting Ups</Label>
+                            <Label className={errors.ups ? "text-destructive" : ""}>Sliting Ups <span className='text-destructive'>*</span></Label>
                             <Select onValueChange={(value) => setValue("ups", value)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select Sliting ups" />
@@ -1647,7 +1650,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.core ? "text-destructive" : ""}>Core (inch)</Label>
+                            <Label className={errors.core ? "text-destructive" : ""}>Core (inch) <span className='text-destructive'>*</span></Label>
                             <Select onValueChange={(value) => setValue("core", value)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select core size" />
@@ -1669,7 +1672,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.rawMaterial ? "text-destructive" : ""}>Raw Material</Label>
+                            <Label className={errors.rawMaterial ? "text-destructive" : ""}>Raw Material <span className='text-destructive'>*</span></Label>
                             <CustomDropdown
                               options={rawMaterials.map(rm => ({
                                 value: rm.RawMatCode,
@@ -1699,7 +1702,7 @@ const JobControlMaster: React.FC = () => {
                           )}
 
                               <div className="space-y-2">
-                              <Label className={errors.materialWeb ? "text-destructive" : ""}>Material Web</Label>
+                              <Label className={errors.materialWeb ? "text-destructive" : ""}>Material Web <span className='text-destructive'>*</span></Label>
                               <Input 
                                 value={materialWeb}
                                 onChange={(e) => {
@@ -1715,7 +1718,7 @@ const JobControlMaster: React.FC = () => {
                               >{errors.materialWeb.message}</motion.p>)}
                               </div>
                               <div className="space-y-2">
-                              <Label className={errors.plateFolderNumber ? "text-destructive" : ""}>Plate Folder Number</Label>
+                              <Label className={errors.plateFolderNumber ? "text-destructive" : ""}>Plate Folder Number <span className='text-destructive'>*</span></Label>
                               <Input 
                                 value={plateFolderNumber}
                                 onChange={(e) => {
@@ -1733,7 +1736,7 @@ const JobControlMaster: React.FC = () => {
 
 
                           <div className="space-y-2">
-                            <Label className={errors.cut ? "text-destructive" : ""}>Cut</Label>
+                            <Label className={errors.cut ? "text-destructive" : ""}>Cut <span className='text-destructive'>*</span></Label>
                             <Select onValueChange={(value) => setValue("cut", value)} >
                               <SelectTrigger>
                                 <SelectValue placeholder="Select cut option" />
@@ -1753,7 +1756,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.perforation ? "text-destructive" : ""}>Perforation</Label>
+                            <Label className={errors.perforation ? "text-destructive" : ""}>Perforation <span className='text-destructive'>*</span></Label>
                             <Select onValueChange={(value) => setValue("perforation", value)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select perforation option" />
@@ -1772,7 +1775,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.dieType ? "text-destructive" : ""}>Die Type</Label>
+                            <Label className={errors.dieType ? "text-destructive" : ""}>Die Type <span className='text-destructive'>*</span></Label>
                             <CustomDropdown
                               options={dieTypes.map(dt => ({
                                 value: dt,
@@ -1795,7 +1798,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.dieNumber ? "text-destructive" : ""}>Die Number</Label>
+                            <Label className={errors.dieNumber ? "text-destructive" : ""}>Die Number <span className='text-destructive'>*</span></Label>
                             <CustomDropdown
                               options={dieNumbers.map(dn => ({
                                 value: dn,
@@ -1819,7 +1822,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.cylinderCode ? "text-destructive" : ""}>Cylinder Teeth</Label>
+                            <Label className={errors.cylinderCode ? "text-destructive" : ""}>Cylinder Teeth <span className='text-destructive'>*</span></Label>
                             <CustomDropdown
                               options={cylinderCode.map(cc => ({
                                 value: cc,
@@ -1841,7 +1844,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label  className={errors.laminationMaterial ? "text-destructive" : ""}>Lamination Material / Varnish</Label>
+                            <Label  className={errors.laminationMaterial ? "text-destructive" : ""}>Lamination Material / Varnish <span className='text-destructive'>*</span></Label>
                             <Input {...register("laminationMaterial")} />
                             {errors.laminationMaterial &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1851,7 +1854,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.foilMaterialCode ? "text-destructive" : ""}>Foil Material Code</Label>
+                            <Label className={errors.foilMaterialCode ? "text-destructive" : ""}>Foil Material Code <span className='text-destructive'>*</span></Label>
                             <Input {...register("foilMaterialCode")} />
                             {errors.foilMaterialCode &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1862,7 +1865,7 @@ const JobControlMaster: React.FC = () => {
 
                           {/* New additional fields */}
                           <div className="space-y-2">
-                            <Label className={errors.upsAcross ? "text-destructive" : ""}>Ups Across</Label>
+                            <Label className={errors.upsAcross ? "text-destructive" : ""}>Ups Across <span className='text-destructive'>*</span></Label>
                             <Input {...register("upsAcross")} />
                             {errors.upsAcross &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1872,7 +1875,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.upsAlong ? "text-destructive" : ""}>Ups Along</Label>
+                            <Label className={errors.upsAlong ? "text-destructive" : ""}>Ups Along <span className='text-destructive'>*</span></Label>
                             <Input {...register("upsAlong")} />
                             {errors.upsAlong &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1882,7 +1885,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.gapAcross ? "text-destructive" : ""}>Gap Across</Label>
+                            <Label className={errors.gapAcross ? "text-destructive" : ""}>Gap Across <span className='text-destructive'>*</span></Label>
                             <Input {...register("gapAcross")} />
                             {errors.gapAcross &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1892,7 +1895,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.gapAlong ? "text-destructive" : ""}>Gap Along</Label>
+                            <Label className={errors.gapAlong ? "text-destructive" : ""}>Gap Along <span className='text-destructive'>*</span></Label>
                             <Input {...register("gapAlong")} />
                             {errors.gapAlong &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1902,7 +1905,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.numberOfLabels ? "text-destructive" : ""}>Number of labels per roll</Label>
+                            <Label className={errors.numberOfLabels ? "text-destructive" : ""}>Number of labels per roll <span className='text-destructive'>*</span></Label>
                             <Input {...register("numberOfLabels")} />
                             {errors.numberOfLabels &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1912,7 +1915,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.customerPartNo ? "text-destructive" : ""}>Customer Part Number</Label>
+                            <Label className={errors.customerPartNo ? "text-destructive" : ""}>Customer Part Number <span className='text-destructive'>*</span></Label>
                             <Input {...register("customerPartNo")} />
                             {errors.customerPartNo &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1926,7 +1929,7 @@ const JobControlMaster: React.FC = () => {
                             <Input {...register("blockNo")} />
                           </div> */}
                           <div className="space-y-2">
-                            <Label className={errors.supplyForm ? "text-destructive" : ""}>Supply Form</Label>
+                            <Label className={errors.supplyForm ? "text-destructive" : ""}>Supply Form <span className='text-destructive'>*</span></Label>
                             <Input {...register("supplyForm")} />
                             {errors.supplyForm &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1936,7 +1939,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.thermalPrintingRequired ? "text-destructive" : ""}>Thermal Printing Required</Label>
+                            <Label className={errors.thermalPrintingRequired ? "text-destructive" : ""}>Thermal Printing Required <span className='text-destructive'>*</span></Label>
                             <Input {...register("thermalPrintingRequired")} />
                             {errors.thermalPrintingRequired &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1946,7 +1949,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.ribbontype ? "text-destructive" : ""}>Ribbon Type</Label>
+                            <Label className={errors.ribbontype ? "text-destructive" : ""}>Ribbon Type <span className='text-destructive'>*</span></Label>
                             <Input {...register("ribbontype")} />
                             {errors.ribbontype &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1956,7 +1959,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
                           {/* alternateRibbonType */}
                           <div className="space-y-2">
-                            <Label className={errors.alternateRibbonType ? "text-destructive" : ""}>Alternate Ribbon Type</Label>
+                            <Label className={errors.alternateRibbonType ? "text-destructive" : ""}>Alternate Ribbon Type </Label>
                             <Input {...register("alternateRibbonType")} />
                             {errors.alternateRibbonType &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1968,7 +1971,7 @@ const JobControlMaster: React.FC = () => {
 
 
                           <div className="space-y-2">
-                            <Label className={errors.windingDirection ? "text-destructive" : ""}>Winding Direction</Label>
+                            <Label className={errors.windingDirection ? "text-destructive" : ""}>Winding Direction <span className='text-destructive'>*</span></Label>
                             <Select onValueChange={(value) => setValue("windingDirection", value)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Select winding direction" />
@@ -1989,7 +1992,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.specialCharacteristic ? "text-destructive" : ""}>Special Characteristic</Label>
+                            <Label className={errors.specialCharacteristic ? "text-destructive" : ""}>Special Characteristic <span className='text-destructive'>*</span></Label>
                             <Input {...register("specialCharacteristic")} />
                             {errors.specialCharacteristic &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -1998,7 +2001,7 @@ const JobControlMaster: React.FC = () => {
                             >{errors.specialCharacteristic.message}</motion.p>)}
                           </div>
                           <div className="space-y-2">
-                            <Label className={errors.artWorkNo ? "text-destructive" : ""}>Artwork No.</Label>
+                            <Label className={errors.artWorkNo ? "text-destructive" : ""}>Artwork No. <span className='text-destructive'>*</span></Label>
                             <Input {...register("artWorkNo")} />
                             {errors.artWorkNo &&(<motion.p
                               initial={{ opacity: 0 }}
@@ -2008,7 +2011,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.oldProductCode ? "text-destructive" : ""}>Old Product Code</Label>
+                            <Label className={errors.oldProductCode ? "text-destructive" : ""}>Old Product Code <span className='text-destructive'>*</span></Label>
                             <Input
                               {...register("oldProductCode")}
                               placeholder="Enter old product code"
@@ -2023,7 +2026,7 @@ const JobControlMaster: React.FC = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <Label className={errors.machines ? "text-destructive" : ""}>Machines</Label>
+                            <Label className={errors.machines ? "text-destructive" : ""}>Machines <span className='text-destructive'>*</span></Label>
                             <MultiSelect
                               options={machines.map(machine => ({
                                 label: `${machine.MachineCode} - ${machine.MachineDes}`,

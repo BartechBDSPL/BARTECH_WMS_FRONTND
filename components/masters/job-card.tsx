@@ -262,11 +262,11 @@ const JobCard: React.FC = () => {
       const response = await axios.post(
         `${BACKEND_URL}/api/master/get-all-jc-Number`
       );
-      const data: { JobCardNumber: string }[] = response.data.result;
+      const data: { JobDescription: string }[] = response.data.result;
       setJcNumberOption(
         data.map((item) => ({
-          value: item.JobCardNumber,
-          label: item.JobCardNumber,
+          value: item.JobDescription,
+          label: item.JobDescription,
         }))
       );
     } catch (error) {
@@ -500,8 +500,8 @@ const JobCard: React.FC = () => {
         SODate: soDT || "",
         Date: jobbcardDate?.toLocaleDateString() || "",
         Shift: shift || "",
-        JobCardNumber: jcNumber || "",
-        JobDescription: jcAllData.JobDescription || "",
+        JobDescription: jcNumber || "",
+        JobCardNumber: jcAllData.JobCardNumber || "",
         LabelSize: jcAllData.Width && jcAllData.Height && jcAllData.Unit ? `${jcAllData.Width}×${jcAllData.Height}${jcAllData.Unit}` : "",
         WindingDirection: jcAllData.WindingDirection || "",
         MatDesc: jcAllData.MatDesc || "",
@@ -1693,7 +1693,7 @@ const JobCard: React.FC = () => {
                       <CardContent className="space-y-4 pt-0">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div className="space-y-2">
-                            <Label>Date <span className="text-destructive">*</span> </Label>
+                            <Label>Date  </Label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
@@ -1728,7 +1728,7 @@ const JobCard: React.FC = () => {
                                 errors.soNO ? "text-destructive" : ""
                               }
                             >
-                              SO NO. <span className="text-destructive">*</span>
+                              SO NO. 
                             </Label>
                             <Input
                               type="text"
@@ -1766,15 +1766,15 @@ const JobCard: React.FC = () => {
                                 errors.jcNumber ? "text-destructive" : ""
                               }
                             >
-                              JC Number <span className="text-destructive">*</span>
+                              JC Description 
                             </Label>
                             <CustomDropdown
                               options={jcNumberOption}
                               value={jcNumber}
                               onValueChange={handleJcNumberChange}
-                              placeholder="Select JC Number"
-                              searchPlaceholder="Search JC Number..."
-                              emptyText="No JC Number found"
+                              placeholder="Select JC Description"
+                              searchPlaceholder="Search JC Description..."
+                              emptyText="No JC Description found"
                               allowCustomValue
                               onCustomValueChange={handleCustomValueChange(
                                 "jcNumber"
@@ -1793,9 +1793,9 @@ const JobCard: React.FC = () => {
                           
 
                           <div className="space-y-2">
-                            <Label>JC Description</Label>
+                            <Label>JC Card Number</Label>
                             <Input
-                              value={jcAllData.JobDescription ? jcAllData.JobDescription : ''}
+                              value={jcAllData.JobCardNumber ? jcAllData.JobCardNumber : ''}
                               // onChange={(e) => setJcDescription(e.target.value)}
                               placeholder="Enter JC Description"
                               disabled
@@ -1808,7 +1808,7 @@ const JobCard: React.FC = () => {
                               htmlFor="Status"
                               className={errors.Shift ? "text-destructive" : ""}
                             >
-                              Shift <span className="text-destructive">*</span>
+                              Shift 
                             </Label>
                             <Select
                               value={shift}
@@ -1843,7 +1843,7 @@ const JobCard: React.FC = () => {
                                 errors.Quantity ? "text-destructive" : ""
                               }
                             >
-                              Quantity <span className="text-destructive">*</span>
+                              Quantity 
                             </Label>
                             <Input
                               type="number"
@@ -1907,7 +1907,7 @@ const JobCard: React.FC = () => {
                                 errors.materialWeb ? "text-destructive" : ""
                               }
                             >
-                              Material Web <span className="text-destructive">*</span>
+                              Material Web 
                             </Label>
                             <Input
                               type="text"
@@ -1934,7 +1934,7 @@ const JobCard: React.FC = () => {
                                 errors.upsAcross ? "text-destructive" : ""
                               }
                             >
-                              Ups Across <span className="text-destructive">*</span>
+                              Ups Across 
                             </Label>
                             <Input
                               type="text"
@@ -1961,7 +1961,7 @@ const JobCard: React.FC = () => {
                                 errors.Operator ? "text-destructive" : ""
                               }
                             >
-                              Operator <span className="text-destructive">*</span>
+                              Operator 
                             </Label>
                             <Input
                               type="text"
@@ -1984,7 +1984,7 @@ const JobCard: React.FC = () => {
                           </div>
                           {/* Remarks */}
                           <div className="space-y-2">
-                            <Label>Remarks <span className="text-destructive">*</span></Label>
+                            <Label>Remarks </Label>
                             <Input
                               type="text"
                               value={remarks}

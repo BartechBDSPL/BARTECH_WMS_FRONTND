@@ -758,18 +758,29 @@ const handleClear = () => {
                     {jobCard.Machine || "-"}
                   </td>
                 </tr>
-                <tr className="">
+                <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Thermal Printing Required
                   </td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">
+                  <td
+                    className="border border-gray-800 px-2 py-1 font-semibold"
+                    colSpan={3}
+                  >
                     {jobCard.ThermalPrintingRequired || "-"}
                   </td>
+                </tr>
+                <tr className="">
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
                     Ribbon Type
                   </td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">
                     {jobCard.RibbonType || "-"}
+                  </td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">
+                    Alternative Ribbon Type
+                  </td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">
+                    {jobCard.AltRibbonType || "-"}
                   </td>
                 </tr>
                 <tr>

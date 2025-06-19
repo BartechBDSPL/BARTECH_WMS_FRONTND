@@ -87,6 +87,7 @@ interface JobCardApprovalData {
   MaterialWeb: string;
   PlateFolderNo: string;
   ArtworkNo : string;
+  AltRibbonType : string;
 }
 
 interface ColorSequenceData {
@@ -114,8 +115,7 @@ const JobCardApproval = () => {
     const [width, setWidth] = useState("");
   const [selectedLabelType, setSelectedLabelType] = useState("");
   const [labelTypes, setLabelTypes] = useState<LabelTypeData[]>([]);
-  const [fromDate, setFromDate] = useState(new Date());
-  const [toDate, setToDate] = useState(new Date());
+ 
   const [showTable, setShowTable] = useState(false);
   const [reportData, setReportData] = useState<JobCardApprovalData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -129,6 +129,15 @@ const JobCardApproval = () => {
   const username = Cookies.get('username') || '';
   const [selectedJobCard, setSelectedJobCard] = useState<JobCardApprovalData | null>(null);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+  const [lodingTableData, setLodingTableData] = useState(false);
+
+
+
+    useEffect(() => {
+    fetchLabelTypes();
+    fetchDataInTable();
+  }, []);
  
   const fetchLabelTypes = async () => {
     try {
@@ -140,6 +149,53 @@ const JobCardApproval = () => {
       toast({ variant: 'destructive', title: "Failed to fetch label types" });
     }
   };
+
+  const fetchDataInTable = async () => {
+    
+    try {
+      setLodingTableData(true);
+  const requestBody = {
+      CompanyName: '',
+      Height: '',
+      Width: '',
+      JobCardNumber: '',
+      LabelType: '',
+      FrmDate: '',
+      ToDate: '',
+      
+    };
+    
+      const response = await fetch(`${BACKEND_URL}/api/transaction/job-card-approval`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody),
+      });
+  
+      const data: JobCardApprovalData[] = await response.json();
+      if (data.length === 0) {
+        setReportData([]);
+        setShowTable(false);
+        setLodingTableData(false);
+        return;
+      }
+  
+      setReportData(data);
+      setShowTable(true);
+      setLodingTableData(false);
+      
+      
+      
+    } catch (error) {
+      toast({ variant: 'destructive', title: "Failed to fetch data" });
+      setLodingTableData(false);
+    } finally {
+      setLodingTableData(false);
+    }
+   
+  }
 
   const handleCustomValueChange = (fieldName: string) => (value: string) => {
     if (fieldName === "labelType") {
@@ -178,14 +234,7 @@ const JobCardApproval = () => {
   }, []);
 
   const handleSubmitSearch = async () => {
-    if (fromDate > toDate) {
-      toast({
-        title: "Validation Error",
-        description: "From Date cannot be greater than To Date",
-        variant: "destructive",
-      });
-      return;
-    }
+    
 
     const requestBody = {
       CompanyName: customerName.trim(),
@@ -193,8 +242,9 @@ const JobCardApproval = () => {
       Width: width.trim(),
       JobCardNumber: jobCardNo.trim(),
       LabelType: selectedLabelType.trim(),
-      FrmDate: format(fromDate, "yyyy-MM-dd"),
-      ToDate: format(toDate, "yyyy-MM-dd")
+      FrmDate: '',
+      ToDate: '',
+      Status: "Pending",
     };
   
     try {
@@ -225,9 +275,7 @@ const JobCardApproval = () => {
     }
   };
 
-  useEffect(() => {
-    fetchLabelTypes();
-  }, []);
+
 
   const toggleRow = async (jobCardNumber: string, labelType: string) => {
     // Only allow expanding for PP label type
@@ -267,12 +315,11 @@ const JobCardApproval = () => {
     setJobCardNo("");
     setSelectedLabelType("");
     setReportData([]);
-    setFromDate(new Date());
-    setToDate(new Date());
     setShowTable(false);
     setCustomerName(""),
     setHight(""),
     setWidth("")
+    fetchDataInTable()
   };
   const exportToPdf = (data: JobCardApprovalData[], fileName: string): void => {
     const doc = new jsPDF('l', 'mm', 'a4');
@@ -332,7 +379,7 @@ const JobCardApproval = () => {
   };
 
   const handleExportToPDF = () => {
-    exportToPdf(reportData, `Job_Card_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`);
+    exportToPdf(reportData, `Job_Control_Master_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`);
   };
 
   const NoDataCard = () => (
@@ -685,14 +732,14 @@ const JobCardApproval = () => {
                   <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.ArtworkNo || "-"}</td>
                 </tr>
                 <tr className="">
-                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Machine</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.Machine || "-"}</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Thermal Printing Required</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold" colSpan={3}>{jobCard.ThermalPrintingRequired || "-"}</td>
                 </tr>
                 <tr className="">
-                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Thermal Printing Required</td>
-                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.ThermalPrintingRequired || "-"}</td>
-                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Ribbon Type</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Ribbon Type</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.RibbonType || "-"}</td>
+                  <td className='border border-gray-800 font-bold px-2 py-1 bg-gray-100'>Alternative Ribbon Type</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.AltRibbonType || "-"}</td>
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Customer Part No.</td>
@@ -864,56 +911,7 @@ const JobCardApproval = () => {
               <Label>Job Card Number</Label>
               <Input value={jobCardNo} onChange={(e) => setJobCardNo(e.target.value)} />
             </div>
-            <div className="space-y-2">
-              <Label>From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !fromDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={fromDate}
-                    onSelect={(date) => setFromDate(date || new Date())}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="space-y-2">
-              <Label>To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !toDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={toDate}
-                    onSelect={(date) => setToDate(date || new Date())}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            
           </div>
           <div className="flex flex-col sm:flex-row justify-between gap-4 mt-6">
             <div className="flex gap-2">
@@ -969,7 +967,7 @@ const JobCardApproval = () => {
                   <TableSearch onSearch={handleSearch} />
                 </div>
               </div>
-
+              {!lodingTableData ?( <>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -1097,6 +1095,7 @@ const JobCardApproval = () => {
                   )}
                 </TableBody>
               </Table>
+              </>) : (<>Loading........</>)}
 
               <div className="flex justify-between items-center text-sm md:text-md mt-4">
                 <div>

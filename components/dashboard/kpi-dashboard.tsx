@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { BACKEND_URL } from '@/lib/constants';
 
 // Define TypeScript interfaces for the dashboard data
 interface DashboardData {
@@ -58,7 +59,7 @@ const KpiDashboard: React.FC = () => {
       setRefreshing(true);
       setError(null);
       
-      const response = await fetch('http://192.168.29.84:4251/api/dashboard/rmkpi', {
+      const response = await fetch(BACKEND_URL+'/api/dashboard/rmkpi', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
