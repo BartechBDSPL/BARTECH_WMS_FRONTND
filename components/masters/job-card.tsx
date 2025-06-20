@@ -573,6 +573,7 @@ const JobCard: React.FC = () => {
           description: res.Message || "Job control saved successfully",
           variant: "default",
         });
+        generateJobCardNumber()
   
         handleReset();
       } else {
