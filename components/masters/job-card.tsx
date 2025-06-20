@@ -152,6 +152,11 @@ const JobCard: React.FC = () => {
 
   const [generatorJCNO, setGeneratorJCNO] = useState("");
 
+
+  const [jcDescriptionErr, setJcDescriptionErr] = useState(false)
+  const [QuantityErr, setQuantityErr] = useState(false)
+  const [jobCardDateErr, setJobCardDateErr] = useState(false);
+
   /**
   |--------------------------------------------------
   | --------------------------this is to my new code for job card printing------------------------------
@@ -202,6 +207,37 @@ const JobCard: React.FC = () => {
         return;
       }
     }
+
+    if (!jobbcardDate) {
+  toast({
+    variant: "destructive",
+    title: "Missing Job Card Date",
+    description: "Please select Job Card Date.",
+  });
+  setJobCardDateErr(true);
+  return;
+} 
+
+
+    if (!jcNumber || jcNumber.trim() === "") {
+    toast({
+      variant: "destructive",
+      title: "Missing JC Description",
+      description: "Please select or enter a valid JC Description.",
+    });
+    setJcDescriptionErr(true);
+    return;
+  }
+
+   if (!quantity || quantity.trim() === "" || isNaN(Number(quantity))) {
+    toast({
+      variant: "destructive",
+      title: "Invalid Quantity",
+      description: "Please enter a valid quantity.",
+    });
+    setQuantityErr(true);
+    return;
+  }
 
     if (selectedLabelType === "PP" && step === 3) {
       if (!validateColors()) return;
@@ -642,6 +678,7 @@ const JobCard: React.FC = () => {
 
 
     getJcNumber();
+    setJcDescriptionErr(false)
   };
 
   useEffect(() => {
@@ -1694,7 +1731,7 @@ const JobCard: React.FC = () => {
                       <CardContent className="space-y-4 pt-0">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                           <div className="space-y-2">
-                            <Label>Date  </Label>
+                            <Label>Date  </Label><span className="text-destructive">*</span>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
@@ -1721,6 +1758,9 @@ const JobCard: React.FC = () => {
                                   initialFocus
                                 />
                               </PopoverContent>
+                              {jobCardDateErr && (
+                              <p className="text-sm text-red-500 mt-1 ml-1">Job Card Date is required</p>
+                            )}
                             </Popover>
                           </div>
                           <div className="space-y-2">
@@ -1764,10 +1804,10 @@ const JobCard: React.FC = () => {
                           <div className="space-y-2">
                             <Label
                               className={
-                                errors.jcNumber ? "text-destructive" : ""
+                                errors.jcNumber || jcDescriptionErr ? "text-destructive" : ""
                               }
                             >
-                              JC Description 
+                              JC Description  <span className="text-destructive">*</span>
                             </Label>
                             <CustomDropdown
                               options={jcNumberOption}
@@ -1781,13 +1821,13 @@ const JobCard: React.FC = () => {
                                 "jcNumber"
                               )}
                             />
-                            {errors.jcNumber && (
+                            {(errors.jcNumber || jcDescriptionErr) && (
                               <motion.p
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 className="text-sm text-destructive"
                               >
-                                {errors.jcNumber.message}
+                                {errors.jcNumber?.message  || `Plz Select the Dropdown !!!`}
                               </motion.p>
                             )}
                           </div>
@@ -1845,7 +1885,7 @@ const JobCard: React.FC = () => {
                               }
                             >
                               Quantity 
-                            </Label>
+                            </Label><span className="text-destructive">*</span>
                             <Input
                               type="number"
                               value={quantity}
@@ -1862,14 +1902,8 @@ const JobCard: React.FC = () => {
                               placeholder="Enter Quantity"
                               disabled={!jcAllData}
                             />
-                            {errors.Quantity && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.Quantity.message}
-                              </motion.p>
+                            {QuantityErr && (
+                              <p className="text-sm text-red-500 mt-1 ml-1">Quantity is required</p>
                             )}
                           </div>
 
