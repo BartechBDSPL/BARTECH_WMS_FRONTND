@@ -208,36 +208,41 @@ const JobCard: React.FC = () => {
       }
     }
 
-    if (!jobbcardDate) {
-  toast({
-    variant: "destructive",
-    title: "Missing Job Card Date",
-    description: "Please select Job Card Date.",
-  });
-  setJobCardDateErr(true);
-  return;
-} 
 
+
+ let hasError = false;
 
     if (!jcNumber || jcNumber.trim() === "") {
-    toast({
-      variant: "destructive",
-      title: "Missing JC Description",
-      description: "Please select or enter a valid JC Description.",
-    });
-    setJcDescriptionErr(true);
-    return;
-  }
+      setJcDescriptionErr(true);
+      hasError = true;
+    } else {
+      setJcDescriptionErr(false);
+    }
 
-   if (!quantity || quantity.trim() === "" || isNaN(Number(quantity))) {
-    toast({
-      variant: "destructive",
-      title: "Invalid Quantity",
-      description: "Please enter a valid quantity.",
-    });
-    setQuantityErr(true);
-    return;
-  }
+    if (!quantity || quantity.trim() === "" || isNaN(Number(quantity))) {
+      setQuantityErr(true);
+      hasError = true;
+    } else {
+      setQuantityErr(false);
+    }
+
+    if (!jobbcardDate) {
+      setJobCardDateErr(true);
+      hasError = true;
+    } else {
+      setJobCardDateErr(false);
+    }
+
+    if (hasError) {
+      toast({
+        variant: "destructive",
+        title: "Plz Fill Required !!!!!",
+        description: "Please select or enter a valid Input.",
+      });
+      return;
+    }
+
+
 
     if (selectedLabelType === "PP" && step === 3) {
       if (!validateColors()) return;
@@ -906,7 +911,7 @@ const JobCard: React.FC = () => {
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
-            Job Control Preview - {jcAllData.JobCardNumber}
+            Job Card Preview - {generatorJCNO}
           </DialogTitle>
         </DialogHeader>
 
@@ -927,13 +932,13 @@ const JobCard: React.FC = () => {
                     className="border border-gray-800 font-bold px-2 py-1 text-start"
                     colSpan={2}
                   >
-                    J.C NO: {generatorJCNO}
+                    Job Card NO: {generatorJCNO}
                   </th>
                   <th
                     className="border border-gray-800 font-bold px-2 py-1 text-start"
                     colSpan={4}
                   >
-                    J.C. DT:{" "}
+                    Job Card Date:{" "}
                     {jobbcardDate ? jobbcardDate.toLocaleDateString() : ""}
                   </th>
                 </tr>
@@ -989,13 +994,13 @@ const JobCard: React.FC = () => {
                 {/* Row with mix of widths, normalized to 6 columns */}
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    JC Number
+                    Job Control No.
                   </td>
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
-                    {jcNumber ? jcNumber : ""}
+                    {jcAllData.JobCardNumber ? jcAllData.JobCardNumber : ""}
                   </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Job Description
+                    Job Control Desc.
                   </td>
                   <td
                     className="border border-gray-800 px-2 py-1 w-1/2 font-semibold"
@@ -1283,13 +1288,13 @@ const JobCard: React.FC = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    JC Number
+                    Job Control No.
                   </td>
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
-                    {jcNumber ? jcNumber : ""}
+                    {jcAllData.JobCardNumber ? jcAllData.JobCardNumber : ""}
                   </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Job Description
+                    Job Control Desc.
                   </td>
                   <td
                     className="border border-gray-800 px-2 py-1 w-1/2 font-semibold"
@@ -1543,7 +1548,7 @@ const JobCard: React.FC = () => {
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Westage %
+                    Wastage %
                   </td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold"></td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
@@ -1730,8 +1735,16 @@ const JobCard: React.FC = () => {
                     >
                       <CardContent className="space-y-4 pt-0">
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                           <div className="space-y-2">
+                              <Label>Job Card Number</Label>
+                              <Input
+                                value={generatorJCNO || ''}
+                                placeholder="Job Card Number"
+                                disabled
+                              />
+                            </div>
                           <div className="space-y-2">
-                            <Label>Date  </Label><span className="text-destructive">*</span>
+                            <Label className={jobCardDateErr ? "text-destructive" : ""}>Date  </Label><span className="text-destructive">*</span>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
@@ -1759,7 +1772,7 @@ const JobCard: React.FC = () => {
                                 />
                               </PopoverContent>
                               {jobCardDateErr && (
-                              <p className="text-sm text-red-500 mt-1 ml-1">Job Card Date is required</p>
+                              <p className="text-sm text-red-500 mt-1 ml-1">Job Card Date is required !!!</p>
                             )}
                             </Popover>
                           </div>
@@ -1807,19 +1820,20 @@ const JobCard: React.FC = () => {
                                 errors.jcNumber || jcDescriptionErr ? "text-destructive" : ""
                               }
                             >
-                              JC Description  <span className="text-destructive">*</span>
+                              Job Control Description  <span className="text-destructive">*</span>
                             </Label>
                             <CustomDropdown
                               options={jcNumberOption}
                               value={jcNumber}
                               onValueChange={handleJcNumberChange}
-                              placeholder="Select JC Description"
+                              placeholder="Select Job Control Description"
                               searchPlaceholder="Search JC Description..."
                               emptyText="No JC Description found"
                               allowCustomValue
                               onCustomValueChange={handleCustomValueChange(
                                 "jcNumber"
                               )}
+                              
                             />
                             {(errors.jcNumber || jcDescriptionErr) && (
                               <motion.p
@@ -1834,11 +1848,11 @@ const JobCard: React.FC = () => {
                           
 
                           <div className="space-y-2">
-                            <Label>JC Card Number</Label>
+                            <Label>Job Control Number</Label>
                             <Input
                               value={jcAllData.JobCardNumber ? jcAllData.JobCardNumber : ''}
                               // onChange={(e) => setJcDescription(e.target.value)}
-                              placeholder="Enter JC Description"
+                              placeholder="Enter Job Control Number"
                               disabled
                             />
                           
@@ -1881,11 +1895,11 @@ const JobCard: React.FC = () => {
                           <div className="space-y-2">
                             <Label
                               className={
-                                errors.Quantity ? "text-destructive" : ""
+                                (errors.Quantity || QuantityErr ) ? "text-destructive" : ""
                               }
                             >
-                              Quantity 
-                            </Label><span className="text-destructive">*</span>
+                              Quantity  <span className="text-destructive">*</span>
+                            </Label>
                             <Input
                               type="number"
                               value={quantity}
@@ -1903,7 +1917,7 @@ const JobCard: React.FC = () => {
                               disabled={!jcAllData}
                             />
                             {QuantityErr && (
-                              <p className="text-sm text-red-500 mt-1 ml-1">Quantity is required</p>
+                              <p className="text-sm text-red-500 mt-1 ml-1">Quantity is required !!!</p>
                             )}
                           </div>
 
@@ -2365,12 +2379,12 @@ const JobCard: React.FC = () => {
                                 />
                               </div>
                              <div className="space-y-2">
-                                <Label>JC Number</Label>
+                                <Label>Job Card Number</Label>
                                 <Input
                                   type="text"
                                   value={
-                                    jcNumber
-                                      ? jcNumber
+                                    generatorJCNO
+                                      ? generatorJCNO
                                       : ""
                                   }
                                   placeholder="JC Number"
@@ -2378,12 +2392,12 @@ const JobCard: React.FC = () => {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label>JC Description </Label>
+                                <Label>Job Control Description </Label>
                                 <Input
                                   type="text"
                                   value={
-                                    jcDescription
-                                      ? jcDescription
+                                    jcAllData.JobDescription
+                                      ? jcAllData.JobDescription
                                       : ""
                                   }
                                   placeholder="JC Description "
@@ -2391,12 +2405,12 @@ const JobCard: React.FC = () => {
                                 />
                               </div>
                               <div className="space-y-2">
-                                <Label>JC Number</Label>
+                                <Label>Job Control Number</Label>
                                 <Input
                                   type="text"
                                   value={
-                                    jcNumber
-                                      ? jcNumber
+                                    jcAllData.JobCardNumber
+                                      ? jcAllData.JobCardNumber
                                       : ""
                                   }
                                   placeholder="JC Number"

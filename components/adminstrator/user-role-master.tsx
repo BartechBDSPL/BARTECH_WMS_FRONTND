@@ -72,6 +72,7 @@ const webAccessOptions = [
   { label: "32) - Customer Feedback Report", value: "5_10" },
   { label: "33) - Customer Complaint Report", value: "5_11" },
   { label: "33) - Job Card Report", value: "5_12" },
+   { label: "33) - RM Picking Report", value: "5_13" },
 
   
   { label: "33) - User Master", value: "6_1" },

@@ -1024,5 +1024,4 @@ const JobCardReport = () => {
     </div>
   );
 };
-
 export default JobCardReport;

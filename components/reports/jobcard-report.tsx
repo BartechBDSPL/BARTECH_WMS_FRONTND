@@ -610,7 +610,7 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-center">
-            Job Card Preview - {selectedJobCard.JobCardNumber}
+            Job Card Preview - {selectedJobCard.WorkOrderNo}
           </DialogTitle>
         </DialogHeader>
 
@@ -631,13 +631,13 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                     className="border border-gray-800 font-bold px-2 py-1 text-start"
                     colSpan={2}
                   >
-                    J.C NO: {selectedJobCard.JobCardNumber || ''}
+                    Job Card NO: {selectedJobCard.WorkOrderNo || ''}
                   </th>
                   <th
                     className="border border-gray-800 font-bold px-2 py-1 text-start"
                     colSpan={4}
                   >
-                    J.C. DT:{" "}
+                    Job Card Date:{" "}
                     {jobCardDate ? jobCardDate.toLocaleDateString() : ""}
                   </th>
                 </tr>
@@ -693,13 +693,13 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                 {/* Row with mix of widths, normalized to 6 columns */}
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    JC Number
+                    Job Control No.
                   </td>
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
                     {selectedJobCard.JobCardNumber || ""}
                   </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Job Description
+                    Job Control Desc.
                   </td>
                   <td
                     className="border border-gray-800 px-2 py-1 w-1/2 font-semibold"
@@ -983,13 +983,13 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    JC Number
+                    Job Control No.
                   </td>
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
                     {selectedJobCard.JobCardNumber ||  ""}
                   </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Job Description
+                    Job Control Desc.
                   </td>
                   <td
                     className="border border-gray-800 px-2 py-1 w-1/2 font-semibold"
@@ -1239,7 +1239,7 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                 </tr>
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Westage %
+                    Wastage %
                   </td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold"></td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
@@ -1291,7 +1291,7 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => setIsPreviewOpen(false)}
               disabled={isSubmitting}
             >
               Cancel
@@ -1491,9 +1491,9 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                   <TableRow>
                     
                     <TableHead>No.</TableHead>
-                    <TableHead>WorkOrderNo</TableHead>
+                    <TableHead>Job Card No</TableHead>
+                    <TableHead>Job Control No</TableHead>
                     <TableHead>JobDescription</TableHead>
-                    <TableHead>JobCardNumber</TableHead>
                     <TableHead>Shift</TableHead>
                     <TableHead>SONo</TableHead>
                     <TableHead>SODate</TableHead>
@@ -1517,8 +1517,8 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                             {(currentPage - 1) * itemsPerPage + index + 1}.
                           </TableCell>
                           <TableCell>{row.WorkOrderNo}</TableCell>
-                          <TableCell>{row.JobDescription}</TableCell>
                           <TableCell>{row.JobCardNumber}</TableCell>
+                          <TableCell>{row.JobDescription}</TableCell>
                           <TableCell>{row.Shift}</TableCell>
                           <TableCell>{row.SONo}</TableCell>
                           <TableCell className="min-w-[100px]">{row.SODate ? format(row.SODate, "dd-MM-yyyy") : ""}</TableCell>

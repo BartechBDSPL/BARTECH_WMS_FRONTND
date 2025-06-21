@@ -279,9 +279,9 @@ export function getMenuList(pathname: string): Group[] {
           value: "5",
           submenus: [
           {
-            href: "/rep-jc-master",
+            href: "/rep-job-control",
             label: "Job Control Approved Report",
-            active: pathname === "/rep-jc-master",
+            active: pathname === "/rep-job-control",
             value: "5_1",
           },
           {
@@ -351,7 +351,14 @@ export function getMenuList(pathname: string): Group[] {
             label: "Job Card Report",
             active: pathname === "/rep-job-card",
             value: "5_12",
+          },
+             {
+            href: "/rep-rm-picking",
+            label: "RM Picking Report",
+            active: pathname === "/rep-rm-picking",
+            value: "5_13",
           }
+          
           
           
          

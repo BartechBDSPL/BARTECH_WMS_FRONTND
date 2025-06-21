@@ -834,8 +834,8 @@ console.log("Report " , reportData)
             </div>
 
             <div className="space-y-2">
-              <Label>Job Card Number</Label>
-              <Input value={jobCardNo} onChange={(e) => setJobCardNo(e.target.value)} placeholder='Job Card Number'/>
+              <Label>Job Control Number</Label>
+              <Input value={jobCardNo} onChange={(e) => setJobCardNo(e.target.value)} placeholder='Job Control Number'/>
             </div>
             <div className="space-y-2">
               <Label>From Date</Label>
@@ -906,7 +906,7 @@ console.log("Report " , reportData)
       {showTable && (
         reportData.length > 0 ? (
           <Card className="mt-5">
-            <CardHeader className="underline underline-offset-4 text-center">Job Card Master Report</CardHeader>
+            <CardHeader className="underline underline-offset-4 text-center">Job Control Approved</CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -938,7 +938,7 @@ console.log("Report " , reportData)
                 <TableHeader>
                   <TableRow>
                     <TableHead></TableHead>
-                    <TableHead>Job Card No</TableHead>
+                    <TableHead>Job Control No</TableHead>
                     <TableHead>Label Type</TableHead>
                     <TableHead>Company Name</TableHead>
                     <TableHead>Job Description</TableHead>
