@@ -73,7 +73,9 @@ const webAccessOptions = [
   { label: "33) - Customer Complaint Report", value: "5_11" },
   { label: "33) - Job Card Report", value: "5_12" },
    { label: "33) - RM Picking Report", value: "5_13" },
-
+   { label: "33) - RM Production Material Receipt Report", value: "5_14" },
+   { label: "33) - RM Production Material Return Report", value: "5_15" },
+ { label: "33) - RM Warehouse Material Receipt Report", value: "5_16" },
   
   { label: "33) - User Master", value: "6_1" },
   { label: "34) - User Role Master", value: "6_2" },

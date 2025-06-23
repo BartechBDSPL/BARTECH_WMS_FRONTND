@@ -357,7 +357,28 @@ export function getMenuList(pathname: string): Group[] {
             label: "RM Picking Report",
             active: pathname === "/rep-rm-picking",
             value: "5_13",
+          },
+              {
+            href: "/rep-rm-production-material",
+            label: "RM  Material Receipt  Report ",
+            active: pathname === "/rep-rm-production-material",
+            value: "5_14",
+          },
+             {
+            href: "/rep-rm-production-material-return",
+            label: "RM  Material Return  Report ",
+            active: pathname === "/rep-rm-production-material-return",
+            value: "5_15",
+          },
+            {
+            href: "/rep-warehouse-material-receipt",
+            label: "RM  Warehouse Material Receipt  Report ",
+            active: pathname === "/rep-warehouse-material-receipt",
+            value: "5_16",
           }
+          
+          
+          
           
           
           

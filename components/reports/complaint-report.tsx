@@ -78,6 +78,7 @@ interface CustomerFeedbackReportData {
   SoftwareType: string;
   ProjectTitle: string;
   ProjectVersion: string;
+  TypeOfComplaint:string
 }
 
 interface DashboardSummary {
@@ -97,6 +98,7 @@ const CustomerComplaintReport = () => {
   const [type, setType] = useState('');
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
+   const [typeOfComplaint, setTypeOfComplaint] = useState("all");
   const [showDashboard, setShowDashboard] = useState(false); // Separate state for dashboard
   const [showTable, setShowTable] = useState(false);
   const [reportData, setReportData] = useState<CustomerFeedbackReportData[]>([]);
@@ -120,7 +122,7 @@ const CustomerComplaintReport = () => {
         "SerialNo", "UniqueSerialNo", "ComplaintBy", "ComplaintEmailId",
         "ComplaintName", "ComplaintDescription", "Priority", "Status",
         "TakenBy", "AcknowledgedBy", "ResolvedAt", "Type", "Problem",
-        "RootCause", "Action", "SoftwareType", "ProjectTitle", "ProjectVersion"
+        "RootCause", "Action", "SoftwareType", "ProjectTitle", "ProjectVersion","TypeOfComplaint"
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -153,8 +155,14 @@ const CustomerComplaintReport = () => {
   const fetchDashboardSummary = async () => {
     setIsLoadingDashboard(true);
 
+    const cleanTypeOfComplaint = typeOfComplaint === "all" ? "" : typeOfComplaint;
+    const typeHS = type === "all" ? "" : type;
     try {
       const requestBody = {
+          CustomerName: customerName || "",          
+        CustomerAddress: customerAddress || "",
+        Type: typeHS || "",
+        TypeOfComplaint: cleanTypeOfComplaint || "",
         FromDate: format(fromDate, "yyyy-MM-dd"),
         ToDate: format(toDate, "yyyy-MM-dd"),
       };
@@ -255,13 +263,16 @@ const CustomerComplaintReport = () => {
       });
       return;
     }
-
+    const cleanTypeOfComplaint = typeOfComplaint === "all" ? "" : typeOfComplaint;
+    const typeHS = type === "all" ? "" : type;
+    
     const requestBody = {
       CustomerName: customerName,
       CustomerAddress: customerAddress,
-      Type: type,
+      Type: typeHS,
       FromDate: format(fromDate, "yyyy-MM-dd"),
       ToDate: format(toDate, "yyyy-MM-dd"),
+      TypeOfComplaint:cleanTypeOfComplaint 
     };
 
     try {
@@ -281,7 +292,7 @@ const CustomerComplaintReport = () => {
       });
 
       const changedata = await response.json();
-      console.log("Complaint Report API Response:", changedata);
+   
 
       if (changedata.Status === "T" && Array.isArray(changedata.Data)) {
         if (changedata.Data.length > 0) {
@@ -376,6 +387,7 @@ const CustomerComplaintReport = () => {
         { header: 'Action', dataKey: 'Action' },
         { header: 'Software Type', dataKey: 'SoftwareType' },
         { header: 'Project Title', dataKey: 'ProjectTitle' },
+         { header: 'Type of Complaint', dataKey: 'TypeOfComplaint' },
       ];
 
       const formattedData = data.map(row => ({
@@ -616,13 +628,31 @@ const CustomerComplaintReport = () => {
                       <SelectValue placeholder="Select Type" />
                       </SelectTrigger>
                       <SelectContent>
+                         <SelectItem value="all">Select  Type</SelectItem>
                       <SelectItem value="SW">Software</SelectItem>
                       <SelectItem value="HW">Hardware</SelectItem>
                       </SelectContent>
                   </Select>
                   </div>
 
-              
+                    <div className="space-y-2">
+                    <Label htmlFor='typeofcomplaint'>Complaint Type</Label>
+                    <Select
+                      value={typeOfComplaint}
+                      onValueChange={(value) => setTypeOfComplaint(value)}
+                    >
+                      <SelectTrigger id="typeofcomplaint">
+                        <SelectValue placeholder="Select Complaint Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Select Complaint Type</SelectItem> {/* This acts as the placeholder */}
+                        <SelectItem value="Changes">Changes</SelectItem>
+                        <SelectItem value="Complaint">Complaint</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+
               <div className="space-y-2">
                 <Label>From Date</Label>
                 <Popover>
@@ -768,6 +798,7 @@ const CustomerComplaintReport = () => {
       <TableHead>Software Type</TableHead>
       <TableHead>Project Title</TableHead>
       <TableHead>Project Version</TableHead>
+      <TableHead>Type  of Complaint</TableHead>
     </TableRow>
   </TableHeader>
   <TableBody>
@@ -815,6 +846,7 @@ const CustomerComplaintReport = () => {
           <TableCell>{row.SoftwareType || "-"}</TableCell>
           <TableCell>{row.ProjectTitle || "-"}</TableCell>
           <TableCell>{row.ProjectVersion || "-"}</TableCell>
+          <TableCell>{row.TypeOfComplaint || "-"}</TableCell>
         </TableRow>
       ))
     ) : (
