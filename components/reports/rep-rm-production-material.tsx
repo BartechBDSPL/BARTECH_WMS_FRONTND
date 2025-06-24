@@ -325,12 +325,12 @@ const RMProductionMaterialReceiptReport = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor='workOrderNo'>Work Order No</Label>
+              <Label htmlFor='workOrderNo'>Job Card No</Label>
               <Input 
                 id="workOrderNo"
                 value={workOrderNo} 
                 onChange={(e) => setWorkOrderNo(e.target.value)} 
-                placeholder='Enter Work Order No'
+                placeholder='Enter job Card No'
               />
             </div>
             
@@ -345,22 +345,22 @@ const RMProductionMaterialReceiptReport = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor='jobCardNumber'>Job Card Number</Label>
+              <Label htmlFor='jobCardNumber'>Job Control Number</Label>
               <Input 
                 id="jobCardNumber"
                 value={jobCardNumber} 
                 onChange={(e) => setJobCardNumber(e.target.value)} 
-                placeholder='Enter Job Card Number'
+                placeholder='Enter Job Control Number'
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor='jobCardDescription'>Job Card Description</Label>
+              <Label htmlFor='jobCardDescription'>Job Control Description</Label>
               <Input 
                 id="jobCardDescription"
                 value={jobCardDescription} 
                 onChange={(e) => setJobCardDescription(e.target.value)} 
-                placeholder='Enter Job Card Description'
+                placeholder='Enter Job Control Description'
               />
             </div>
 

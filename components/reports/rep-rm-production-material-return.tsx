@@ -305,12 +305,12 @@ const RMProductionMaterialReturnReport = () => {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor='workOrderNo'>Work Order No</Label>
+              <Label htmlFor='workOrderNo'>Job Card No</Label>
               <Input 
                 id="workOrderNo"
                 value={workOrderNo} 
                 onChange={(e) => setWorkOrderNo(e.target.value)} 
-                placeholder='Enter Work Order No'
+                placeholder='Enter job Card No'
               />
             </div>
             
