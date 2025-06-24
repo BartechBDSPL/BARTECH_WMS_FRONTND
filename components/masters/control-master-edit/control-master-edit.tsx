@@ -120,6 +120,7 @@ interface JobCardReportData {
   UpdatedDate?: string | null;
   JobCardNumber: string;
   AltRibbonType: string;
+  CutPerforation:string;
 }
 
 interface PreviewJobCardParams {
@@ -179,6 +180,7 @@ const JobControlMasterEdit = () => {
   const [unit, setUnit] = useState("");
   const [ups, setUps] = useState("");
   const [core, setCore] = useState("");
+  
   const [rawMaterial, setRawMaterial] = useState("");
   const [rawMaterialDesc, setRawMaterialDesc] = useState("");
   const [laminationMaterial, setLaminationMaterial] = useState("");
@@ -200,6 +202,17 @@ const JobControlMasterEdit = () => {
   const [jcSerialNumber, setJcSerialNumber] = useState("");
   const [dieType, setDieType] = useState("");
   const [dieNumber, setDieNumber] = useState("");
+  const [cutPerforation, setCutPerforation] = useState("");
+const [machine, setMachine] = useState("");
+const [colorNo, setColorNo] = useState("");
+const [paperType, setPaperType] = useState("");
+const [blockNo, setBlockNo] = useState("");
+const [windingDirection, setWindingDirection] = useState("");
+const [labelDescription, setLabelDescription] = useState("");
+const [image, setImage] = useState(""); 
+const [cylinderCode, setCylinderCode] = useState("");
+const [materialWeb, setMaterialWeb] = useState("");
+const [plateFolderNo, setPlateFolderNo] = useState("");
 
   const [editMode, setEditMode] = useState(false);
 
@@ -436,6 +449,7 @@ const handleClear = () => {
     fetchRawMaterials();
     setAlternateRibbonType("")
     setCompanyAddressError(true);
+    setCylinderCode("");
   };
 
 
@@ -640,7 +654,7 @@ const handleClear = () => {
                     {jobCard.LabelType}
                   </td>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">
-                    JC No
+                    Job Control No
                   </td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 text-red-600 font-semibold">
                     {jobCard.JobCardNumber}
@@ -995,123 +1009,151 @@ const handleClear = () => {
   };
 
  const handleEdit = (data: JobCardReportData) => {
-    setCompanyName(data.CompanyName || "");
-    setCompanyAddress(data.CompanyAddress || "");
-    setJobDescription(data.JobDescription || "");
-    setLabelType(data.LabelType || "");
-    setHeight(data.Height || "");
-    setWidth(data.Width || "");
-    setUnit(data.Unit || "");
-    setUps(data.Ups || "");
-    setCore(data.Core || "");
-    setRawMaterial(data.MatCode || "");
-    setRawMaterialDesc(data.MatDesc || "");
-    setLaminationMaterial(data.LaminationMaterial || "");
-    setFoilMaterialCode(data.FoilMaterialCode || "");
-    setUpsAcross(data.UpsAcross || "");
-    setUpsAlong(data.UpsAlong || "");
-    setGapAcross(data.GapAcross || "");
-    setGapAlong(data.GapAlong || "");
-    setNumberOfLabels(data.NumberOfLabel || "");
-    setCustomerPartNumber(data.CustomerPartNumber || "");
-    setSupplyForm(data.SupplyForm || "");
-    setThermalPrintingRequired(data.ThermalPrintingRequired || "");
-    setRibbonType(data.RibbonType || "");
-    setSpecialCharacteristic(data.SpecialCharacteristic || "");
-    setArtworkNo(data.ArtworkNo || "");
-    setOldProductCode(data.OldProductCode || "");
-    setJobCardNumber(data.JobCardNumber || "");
-    setJcSerialNumber(data.JcSerialNumber || "");
-    setDieType(data.DieType || "");
-    setDieNumber(data.DieNumber || "");
-    setAlternateRibbonType(data.AltRibbonType || "");
+  setCompanyName(data.CompanyName || "");
+  setJobDescription(data.JobDescription || "");
+  setLabelType(data.LabelType || "");
+  setHeight(data.Height || "");
+  setWidth(data.Width || "");
+  setUnit(data.Unit || "");
+  setUps(data.Ups || "");
+  setCore(data.Core || "");
+  setRawMaterial(data.MatCode || "");
+  setRawMaterialDesc(data.MatDesc || "");
+  setLaminationMaterial(data.LaminationMaterial || "");
+  setFoilMaterialCode(data.FoilMaterialCode || "");
+  setUpsAcross(data.UpsAcross || "");
+  setUpsAlong(data.UpsAlong || "");
+  setGapAcross(data.GapAcross || "");
+  setGapAlong(data.GapAlong || "");
+  setNumberOfLabels(data.NumberOfLabel || "");
+  setCustomerPartNumber(data.CustomerPartNumber || "");
+  setSupplyForm(data.SupplyForm || "");
+  setThermalPrintingRequired(data.ThermalPrintingRequired || "");
+  setRibbonType(data.RibbonType || "");
+  setSpecialCharacteristic(data.SpecialCharacteristic || "");
+  setArtworkNo(data.ArtworkNo || "");
+  setOldProductCode(data.OldProductCode || "");
+  setJobCardNumber(data.JobCardNumber || "");
+  setJcSerialNumber(data.JcSerialNumber || "");
+  setDieType(data.DieType || "");
+  setDieNumber(data.DieNumber || "");
+  setAlternateRibbonType(data.AltRibbonType || "");
+setCutPerforation(data.CutPerforation || "");
+  setMachine(data.Machine || "");
+  setColorNo(data.ColorNo || "");
+  setPaperType(data.PaperType || "");
+  setBlockNo(data.BlockNo || "");
+  setWindingDirection(data.WindingDirection || "");
+  setLabelDescription(data.LabelDescription || "");
+  setImage(data.Image || "");
+  setCylinderCode(data.CylinderCode || "");
+  setMaterialWeb(data.MaterialWeb || "");
+  setPlateFolderNo(data.PlateFolderNo || "");
+  setCylinderCode(data.CylinderCode||"")
+  // Handle company address setting properly
+  const found = customers.find((c) => c.Company === data.CompanyName);
+  
+  if (found) {
+    setAddresses([found.Address]);
+    // Use setTimeout to ensure addresses are set before setting the selected value
+    setTimeout(() => {
+      setCompanyAddress(data.CompanyAddress || found.Address);
+    }, 0);
+  } else {
+    setAddresses([]);
+    setCompanyAddress("");
+  }
 
-    // Set addresses for dropdown
-const found = customers.find((c) => c.Company === data.CompanyName);
-
-if (found) {
-  setAddresses([found.Address]);           // sets dropdown options
-  setCompanyAddress(found.Address);        // auto-selects it in dropdown
-} else {
-  setAddresses([]);
-  setCompanyAddress("");                   // clear selection if not found
-}
-
-    setEditMode(true);
-    
-   
-  };
+  setEditMode(true);
+};
 
   console.log("this is to company address",companyAddress)
 const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // if (editIndex === null) return;
-    if (!companyAddress) {
-      toast({
-        title: "Error",
-        description: "Company Address is required",
-        variant: "destructive",
-      });
-      setCompanyAddressError(false);
-      return;
-    }
-    const payload = {
-      CompanyName: companyName,
-      CompanyAddress: companyAddress,
-      JobDescription: jobDescription,
-      LabelType: labelType,
-      Height: height,
-      Width: width,
-      Unit: unit,
-      Ups: ups,
-      Core: core,
-      MatCode: rawMaterial,
-      MatDesc: rawMaterialDesc,
-      LaminationMaterial: laminationMaterial,
-      FoilMaterialCode: foilMaterialCode,
-      UpsAcross: upsAcross,
-      UpsAlong: upsAlong,
-      GapAcross: gapAcross,
-      GapAlong: gapAlong,
-      NumberOfLabel: numberOfLabels,
-      CustomerPartNumber: customerPartNumber,
-      SupplyForm: supplyForm,
-      ThermalPrintingRequired: thermalPrintingRequired,
-      RibbonType: ribbonType,
-      AltRibbonType: alternateRibbonType,
-      SpecialCharacteristic: specialCharacteristic,
-      ArtworkNo: artworkNo,
-      OldProductCode: oldProductCode,
-      DieType: dieType,
-      DieNumber: dieNumber,
-      JobCardNumber: jobCardNumber,
-      JcSerialNumber: jcSerialNumber,
-      ModifiedBy: getUserID(),
-    };
+  e.preventDefault();
 
-    try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/master/get-job-card-update`,
-        payload
-      );
-      if (response.data.success) {
-        toast({ title: "Success", description: `Success: ${response.data.message}` });
-        handleClear();
-      } else {
-        toast({
-          title: "Error",
-          description: `Error: ${response.data.message}`,
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
+  if (!companyAddress) {
+    toast({
+      title: "Error",
+      description: "Company Address is required",
+      variant: "destructive",
+    });
+    setCompanyAddressError(false);
+    return;
+  }
+
+  const payload = {
+    CompanyName: companyName,
+    CompanyAddress: companyAddress,
+    JobDescription: jobDescription,
+    LabelType: labelType,
+    Height: height,
+    Width: width,
+    Unit: unit,
+    Ups: ups,
+    Core: core,
+    CutPerforation: cutPerforation, // You must define this in state
+    MatCode: rawMaterial,
+    MatDesc: rawMaterialDesc,
+    DieType: dieType,
+    DieNumber: dieNumber,
+    LaminationMaterial: laminationMaterial,
+    FoilMaterialCode: foilMaterialCode,
+    SpecialCharacteristic: specialCharacteristic,
+    JobCardNumber: jobCardNumber,
+    JcSerialNumber: jcSerialNumber,
+    Machine: machine, // You must define these in state
+    ColorNo: colorNo,
+    PaperType: paperType,
+    UpsAcross: upsAcross,
+    UpsAlong: upsAlong,
+    GapAcross: gapAcross,
+    GapAlong: gapAlong,
+    NumberOfLabel: numberOfLabels,
+    CustomerPartNumber: customerPartNumber,
+    BlockNo: blockNo,
+    SupplyForm: supplyForm,
+    WindingDirection: windingDirection,
+    LabelDescription: labelDescription,
+    Image: image, // Base64 or blob string
+    OldProductCode: oldProductCode,
+    CylinderCode: cylinderCode,
+    MaterialWeb: materialWeb,
+    PlateFolderNo: plateFolderNo,
+    ThermalPrintingRequired: thermalPrintingRequired,
+    RibbonType: ribbonType,
+    AltRibbonType: alternateRibbonType,
+    ArtworkNo: artworkNo,
+    ModifiedBy: getUserID()
+  };
+
+  try {
+    const response = await axios.post(
+      `${BACKEND_URL}/api/master/get-job-card-update`,
+      payload
+    );
+
+    if (response.data.success) {
+      toast({
+        title: "Success",
+        description: `Success: ${response.data.message}`
+      });
+      handleClear(); // Resets form
+    } else {
       toast({
         title: "Error",
-        description: "Failed to update job card",
-        variant: "destructive",
+        description: `Error: ${response.data.message}`,
+        variant: "destructive"
       });
     }
-  };
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: "Failed to update job card",
+      variant: "destructive"
+    });
+  }
+};
+
 
 
   return (
@@ -1257,6 +1299,10 @@ const handleUpdate = async (e: React.FormEvent) => {
                   <Label>Foil Material Code</Label>
                   <Input value={foilMaterialCode} onChange={(e) => setFoilMaterialCode(e.target.value)} />
                 </div>
+                  <div className="space-y-2">
+                  <Label>Cylinder Teeth</Label>
+                  <Input value={cylinderCode} onChange={(e) => setCylinderCode(e.target.value)} />
+                </div>
                 {/* Ups Across */}
                 <div className="space-y-2">
                   <Label>Ups Across</Label>
@@ -1352,7 +1398,7 @@ const handleUpdate = async (e: React.FormEvent) => {
           (reportData.length > 0 ? (
             <Card className="mt-5">
               <CardHeader className="underline underline-offset-4 text-center">
-                Job Cantrol Master{" "}
+                Edit Job Control Master{" "}
               </CardHeader>
               <CardContent className="overflow-x-auto">
                 <div className="flex justify-between items-center mb-4">
@@ -1385,7 +1431,7 @@ const handleUpdate = async (e: React.FormEvent) => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Edit</TableHead>
-                      <TableHead>Job Card No</TableHead>
+                      <TableHead>Job Control No</TableHead>
                       <TableHead>Label Type</TableHead>
                       <TableHead>Company Name</TableHead>
                       <TableHead>Job Description</TableHead>

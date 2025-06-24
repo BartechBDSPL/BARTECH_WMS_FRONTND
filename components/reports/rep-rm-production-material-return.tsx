@@ -68,7 +68,8 @@ const RMProductionMaterialReturnReport = () => {
         'product_code', 
         'product_name', 
         'work_orderno', 
-        'return_by'
+        'return_by',
+        
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -203,7 +204,7 @@ const RMProductionMaterialReturnReport = () => {
         work_orderno: row.work_orderno || '',
         return_qty: row.return_qty?.toString() || '0',
         return_by: row.return_by || '',
-        return_date: row.return_date || '',
+        return_date: row.return_date ? format(new Date(row.return_date ), 'yyyy-MM-dd') : '' ,
         issue_qty: row.issue_qty?.toString() || '0',
         consume_qty: row.consume_qty?.toString() || '0'
       }));
@@ -471,7 +472,7 @@ const RMProductionMaterialReturnReport = () => {
                           <TableCell className="text-right">{row.issue_qty}</TableCell>
                         <TableCell className="text-right">{row.consume_qty}</TableCell>
                         <TableCell>{row.return_by}</TableCell>
-                        <TableCell>{row.return_date}</TableCell>
+                        <TableCell>{row.return_date? format(new Date(row.return_date), 'yyyy-MM-dd') : ''}</TableCell>
                       
                       </TableRow>
                     ))

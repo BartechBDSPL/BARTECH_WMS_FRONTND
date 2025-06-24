@@ -978,7 +978,7 @@ const JobControlMaster: React.FC = () => {
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Label Type</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 font-semibold">{formData.labelType}</td>
-                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">JC No</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Job Control No</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 text-red-600 font-semibold">{jobNumber}</td>
                 </tr>
                 <tr>
