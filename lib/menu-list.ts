@@ -204,28 +204,27 @@ export function getMenuList(pathname: string): Group[] {
         //     value: "7_1",
         //   },],
         // },
-      
-        // {
-        //   href: "",
-        //   label: "Re-Print",
-        //   active: pathname.includes("/heloj"),
-        //   icon: Printer,
-        //   value: "8",
-        //   submenus: [
-        //     {
-        //       href: "/reprint-fg-label-printing",
-        //       label: "Reprint Primary Pack Label",
-        //       active: pathname === "/reprint-fg-label-printing",
-        //       value: "8_1",
-        //     },
-        //     {
-        //       href: "/reprint-pallet-barcode",
-        //       label: "Reprint Pallet Label",
-        //       active: pathname === "/reprint-pallet-barcode",
-        //       value: "8_2",
-        //     },
-        //   ],
-        // },
+        {
+          href: "",
+          label: "Re-Print",
+          active: pathname.includes("/sdsd"),
+          icon: Printer,
+          value: "8",
+          submenus: [
+            {
+              href: "/reprint-rm-label",
+              label: "Reprint RM Label",
+              active: pathname === "/reprint-rm-label",
+              value: "8_2",
+            },
+            {
+              href: "/reprint-pallet-barcode",
+              label: "Reprint Pallet Label",
+              active: pathname === "/reprint-pallet-barcode",
+              value: "8_3",
+            },
+          ],
+        },
 
          {
           href: "",
