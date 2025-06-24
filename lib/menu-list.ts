@@ -380,15 +380,14 @@ export function getMenuList(pathname: string): Group[] {
             label: "RM  Label Reprint Report ",
             active: pathname === "/rep-rm-label-reprint",
             value: "5_17",
+          },
+             {
+            href: "/rep-grn",
+            label: "GRN Report ",
+            active: pathname === "/rep-grn",
+            value: "5_18",
           }
-          
-          
-          
-          
-          
-          
-          
-          
+            
          
         ],
         },        {

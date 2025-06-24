@@ -50,6 +50,10 @@ interface RMReprintLabelPrintingData {
   print_date: string;
   print_qty: number;
   serial_no: string;
+  RePrintReason: string;
+  RePrintQty: number;
+  RePrintBy: string;
+  RePrintDate: string;
 }
 
 const RMReprintLabelPrintingReport = () => {
@@ -77,7 +81,9 @@ const RMReprintLabelPrintingReport = () => {
         'invoice_no',
         'pur_order_no',
         'print_by',
-        'serial_no'
+        'serial_no',
+        'RePrintReason',
+        'RePrintBy'
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -101,8 +107,10 @@ const RMReprintLabelPrintingReport = () => {
     "Print Quantity": item.print_qty,
     "Print By": item.print_by,
     "Print Date": item.print_date ? format(new Date(item.print_date), 'yyyy-MM-dd') : '',
-   
-    
+    "Reprint Reason": item.RePrintReason,
+    "Reprint Quantity": item.RePrintQty,
+    "Reprint By": item.RePrintBy,
+    "Reprint Date": item.RePrintDate ? format(new Date(item.RePrintDate), 'yyyy-MM-dd') : '',
   }));
 
   const paginatedData = useMemo(() => {
@@ -200,7 +208,6 @@ const RMReprintLabelPrintingReport = () => {
       
       const columns = [
         { header: 'Row No', dataKey: 'CountRow' },
-        { header: 'ID', dataKey: 'id' },
         { header: 'Trans Serial No', dataKey: 'trans_serialno' },
         { header: 'Serial No', dataKey: 'serial_no' },
         { header: 'Voucher No', dataKey: 'voucher_no' },
@@ -210,17 +217,19 @@ const RMReprintLabelPrintingReport = () => {
         { header: 'Qty', dataKey: 'qty' },
         { header: 'Invoice No', dataKey: 'invoice_no' },
         { header: 'PO No', dataKey: 'pur_order_no' },
-         { header: 'Print Qty', dataKey: 'print_qty' },
+        { header: 'Print Qty', dataKey: 'print_qty' },
         { header: 'Print By', dataKey: 'print_by' },
         { header: 'Print Date', dataKey: 'print_date' },
-       
-        
+        { header: 'Reprint Reason', dataKey: 'RePrintReason' },
+        { header: 'Reprint Qty', dataKey: 'RePrintQty' },
+        { header: 'Reprint By', dataKey: 'RePrintBy' },
+        { header: 'Reprint Date', dataKey: 'RePrintDate' },
       ];
 
       const formattedData = data.map(row => ({
         CountRow: row.CountRow?.toString() || '',
-        id: row.id || '',
         trans_serialno: row.trans_serialno || '',
+        serial_no: row.serial_no || '',
         voucher_no: row.voucher_no || '',
         party_name: row.party_name || '',
         product_code: row.product_code || '',
@@ -228,10 +237,13 @@ const RMReprintLabelPrintingReport = () => {
         qty: row.qty?.toString() || '0',
         invoice_no: row.invoice_no || '',
         pur_order_no: row.pur_order_no || '',
+        print_qty: row.print_qty?.toString() || '0',
         print_by: row.print_by || '',
         print_date: row.print_date ? format(new Date(row.print_date), 'yyyy-MM-dd') : '',
-        print_qty: row.print_qty?.toString() || '0',
-        serial_no: row.serial_no || ''
+        RePrintReason: row.RePrintReason || '',
+        RePrintQty: row.RePrintQty?.toString() || '0',
+        RePrintBy: row.RePrintBy || '',
+        RePrintDate: row.RePrintDate ? format(new Date(row.RePrintDate), 'yyyy-MM-dd') : '',
       }));
 
       doc.setFontSize(18);
@@ -242,26 +254,29 @@ const RMReprintLabelPrintingReport = () => {
         body: formattedData,
         startY: 30,
         styles: { 
-          fontSize: 6, 
+          fontSize: 5, 
           cellPadding: 1,
           overflow: 'linebreak',
           halign: 'left'
         },
         columnStyles: {
-          0: { cellWidth: 15 }, 
-          1: { cellWidth: 15 }, 
-          2: { cellWidth: 20 }, 
-          3: { cellWidth: 20 }, 
-          4: { cellWidth: 25 }, 
-          5: { cellWidth: 20 }, 
-          6: { cellWidth: 30 }, 
-          7: { cellWidth: 15 },
-          8: { cellWidth: 20 },
-          9: { cellWidth: 20 },
-          10: { cellWidth: 20 },
-          11: { cellWidth: 20 },
-          12: { cellWidth: 15 },
-          13: { cellWidth: 20 }
+          0: { cellWidth: 12 }, // Row No
+          1: { cellWidth: 18 }, // Trans Serial No
+          2: { cellWidth: 15 }, // Serial No
+          3: { cellWidth: 18 }, // Voucher No
+          4: { cellWidth: 20 }, // Party Name
+          5: { cellWidth: 15 }, // Product Code
+          6: { cellWidth: 25 }, // Product Name
+          7: { cellWidth: 12 }, // Qty
+          8: { cellWidth: 18 }, // Invoice No
+          9: { cellWidth: 15 }, // PO No
+          10: { cellWidth: 12 }, // Print Qty
+          11: { cellWidth: 15 }, // Print By
+          12: { cellWidth: 18 }, // Print Date
+          13: { cellWidth: 20 }, // Reprint Reason
+          14: { cellWidth: 12 }, // Reprint Qty
+          15: { cellWidth: 15 }, // Reprint By
+          16: { cellWidth: 18 }, // Reprint Date
         },
         headStyles: { 
           fillColor: [66, 66, 66],
@@ -365,57 +380,57 @@ const RMReprintLabelPrintingReport = () => {
               />
             </div>
 
-             <div className="space-y-2">
-                                   <Label>From Date</Label>
-                                   <Popover>
-                                     <PopoverTrigger asChild>
-                                       <Button
-                                         variant={"outline"}
-                                         className={cn(
-                                           "w-full justify-start text-left font-normal",
-                                           !fromDate && "text-muted-foreground"
-                                         )}
-                                       >
-                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                         {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
-                                       </Button>
-                                     </PopoverTrigger>
-                                     <PopoverContent className="w-auto p-0">
-                                       <Calendar
-                                         mode="single"
-                                         selected={fromDate}
-                                         onSelect={(date) => setFromDate(date || new Date())}
-                                         initialFocus
-                                       />
-                                     </PopoverContent>
-                                   </Popover>
-                                 </div>
-                                 
-                                 <div className="space-y-2">
-                                   <Label>To Date</Label>
-                                   <Popover>
-                                     <PopoverTrigger asChild>
-                                       <Button
-                                         variant={"outline"}
-                                         className={cn(
-                                           "w-full justify-start text-left font-normal",
-                                           !toDate && "text-muted-foreground"
-                                         )}
-                                       >
-                                         <CalendarIcon className="mr-2 h-4 w-4" />
-                                         {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
-                                       </Button>
-                                     </PopoverTrigger>
-                                     <PopoverContent className="w-auto p-0">
-                                       <Calendar
-                                         mode="single"
-                                         selected={toDate}
-                                         onSelect={(date) => setToDate(date || new Date())}
-                                         initialFocus
-                                       />
-                                     </PopoverContent>
-                                   </Popover>
-                                 </div>
+            <div className="space-y-2">
+              <Label>From Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fromDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={fromDate}
+                    onSelect={(date) => setFromDate(date || new Date())}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>To Date</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !toDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={toDate}
+                    onSelect={(date) => setToDate(date || new Date())}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
           
           <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:space-x-2 mb-4 mt-5 md:mt-10">
@@ -485,11 +500,13 @@ const RMReprintLabelPrintingReport = () => {
                     <TableHead>Qty</TableHead>
                     <TableHead>Invoice No</TableHead>
                     <TableHead>Purchase Order No</TableHead>
-                     <TableHead>Print Qty</TableHead>
+                    <TableHead>Print Qty</TableHead>
                     <TableHead>Print By</TableHead>
                     <TableHead>Print Date</TableHead>
-                   
-                    
+                    <TableHead>Reprint Reason</TableHead>
+                    <TableHead>Reprint Qty</TableHead>
+                    <TableHead>Reprint By</TableHead>
+                    <TableHead>Reprint Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -497,25 +514,32 @@ const RMReprintLabelPrintingReport = () => {
                     paginatedData.map((row, index) => (
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}</TableCell>
-                        <TableCell>{row.trans_serialno}</TableCell>
-                        <TableCell>{row.serial_no}</TableCell>
-                        <TableCell>{row.voucher_no}</TableCell>
-                        <TableCell className="min-w-[150px]">{row.party_name}</TableCell>
-                        <TableCell>{row.product_code}</TableCell>
-                        <TableCell className="min-w-[200px]">{row.product_name}</TableCell>
-                        <TableCell className="text-right">{row.qty}</TableCell>
-                        <TableCell>{row.invoice_no}</TableCell>
-                        <TableCell>{row.pur_order_no}</TableCell>
-                         <TableCell className="text-right">{row.print_qty}</TableCell>
-                        <TableCell>{row.print_by}</TableCell>
-                        <TableCell>{row.print_date ? format(new Date(row.print_date), 'yyyy-MM-dd') : ''}</TableCell>
-                       
-                  
+                        <TableCell className="text-center">{row.trans_serialno}</TableCell>
+                        <TableCell className="text-center">{row.serial_no}</TableCell>
+                        <TableCell className="text-center">{row.voucher_no}</TableCell>
+                        <TableCell className="text-center">{row.party_name}</TableCell>
+                        <TableCell className="text-center">{row.product_code}</TableCell>
+                        <TableCell className="text-center">{row.product_name}</TableCell>
+                        <TableCell className="text-center">{row.qty}</TableCell>
+                        <TableCell className="text-center">{row.invoice_no}</TableCell>
+                        <TableCell className="text-center">{row.pur_order_no}</TableCell>
+                        <TableCell className="text-center">{row.print_qty}</TableCell>
+                        <TableCell className="text-center">{row.print_by}</TableCell>
+                        <TableCell className="text-center">
+                          {row.print_date ? format(new Date(row.print_date), 'yyyy-MM-dd') : ''}
+                        </TableCell>
+                        <TableCell className="text-center min-w-[150px]">{row.RePrintReason}</TableCell>
+                        <TableCell className="text-center">{row.RePrintQty}</TableCell>
+                        <TableCell className="text-center">{row.RePrintBy}</TableCell>
+                        <TableCell className="text-center">
+                          {row.RePrintDate ? format(new Date(row.RePrintDate), 'yyyy-MM-dd') : ''}
+                        </TableCell>
+
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={15} className="text-center">No Data Found</TableCell>
+                      <TableCell colSpan={17} className="text-center">No Data Found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>

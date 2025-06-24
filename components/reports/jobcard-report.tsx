@@ -1457,7 +1457,7 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
         ) : reportData.length > 0 ? (
           <Card className="mt-5">
             <CardHeader className="underline underline-offset-4 text-center">
-              Job Control Report
+              Job Card Report
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">

@@ -497,14 +497,14 @@ const RMProductionMaterialReceiptReport = () => {
                     paginatedData.map((row, index) => (
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}</TableCell>
-                        <TableCell className="font-medium">{row.serial_no}</TableCell>
+                        <TableCell>{row.serial_no}</TableCell>
                         <TableCell>{row.work_orderno}</TableCell>
                         <TableCell>{row.trans_serialno}</TableCell>
                         <TableCell>{row.job_card_number}</TableCell>
-                        <TableCell className="min-w-[200px]">{row.job_card_description}</TableCell>
+                        <TableCell >{row.job_card_description}</TableCell>
                         <TableCell>{row.product_code}</TableCell>
-                        <TableCell className="min-w-[200px]">{row.product_name}</TableCell>
-                        <TableCell className="text-right">{row.qty}</TableCell>
+                        <TableCell>{row.product_name}</TableCell>
+                        <TableCell>{row.qty}</TableCell>
                         <TableCell>{row.receipt_by}</TableCell>
                         <TableCell>{row.receipt_date  ? format(new Date(row.receipt_date), 'yyyy-MM-dd') : ''}</TableCell>
                       

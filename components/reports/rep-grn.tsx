@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertCircle, Calendar as CalendarIcon } from "lucide-react";
+import { AlertCircle, Calendar as CalendarIcon} from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -34,25 +34,41 @@ import {
 } from "@/components/ui/pagination";
 import TableSearch from '@/utills/tableSearch';
 import { Label } from '../ui/label';
-import axios from 'axios';
 
-interface RMWarehouseReceiptData {
-  serial_no: string;
+interface GRNReportData {
+  file_name: string;
+  trans_serialno: string;
+  trans_date: string;
+  voucher_no: string;
+  voucher_date: string;
+  party_name: string;
   product_code: string;
   product_name: string;
-  receipt_qty: number;
-  receipt_by: string;
-  receipt_date: string;
-  bin: string;
+  qty: number;
+  pending: number;
+  rate: number;
+  taxable: number;
+  narration: string;
+  invoice_no: string;
+  invoice_date: string;
+  pur_order_no: string;
+  pur_order_date: string;
+  remark: string;
+  inserted_by: string;
+  inserted_date: string;
 }
 
-const RMWarehouseReceiptReport = () => {
+const GrnReport = () => {
+  const [fileName, setFileName] = useState("");
+  const [transSerialNo, setTransSerialNo] = useState("");
+  const [partyName, setPartyName] = useState("");
   const [productCode, setProductCode] = useState("");
   const [productName, setProductName] = useState("");
+  const [invoiceNo, setInvoiceNo] = useState("");
   const [fromDate, setFromDate] = useState(new Date());
   const [toDate, setToDate] = useState(new Date());
   const [showTable, setShowTable] = useState(false);
-  const [reportData, setReportData] = useState<RMWarehouseReceiptData[]>([]);
+  const [reportData, setReportData] = useState<GRNReportData[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -62,11 +78,14 @@ const RMWarehouseReceiptReport = () => {
   const filteredData = useMemo(() => {
     return reportData.filter(item => {
       const searchableFields = [
-        'serial_no',
+        'file_name',
+        'trans_serialno',
+        'party_name',
         'product_code', 
         'product_name', 
-        'receipt_by',
-        'bin'
+        'invoice_no',
+        'voucher_no',
+        'inserted_by'
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -75,15 +94,28 @@ const RMWarehouseReceiptReport = () => {
     });
   }, [reportData, searchTerm]);
   
-  const formattedData = reportData.map((item) => ({
-    "Serial No": item.serial_no,
+  const formattedData = reportData.map((item, index) => ({
+    "Sr. No": index + 1,
+    "File Name": item.file_name,
+    "Trans Serial No": item.trans_serialno,
+    "Trans Date": item.trans_date ? format(new Date(item.trans_date), 'yyyy-MM-dd') : '',
+    "Voucher No": item.voucher_no,
+    "Voucher Date": item.voucher_date ? format(new Date(item.voucher_date), 'yyyy-MM-dd') : '',
+    "Party Name": item.party_name,
     "Product Code": item.product_code,
     "Product Name": item.product_name,
-    "Receipt Quantity": item.receipt_qty,
-    "Bin": item.bin,
-    "Receipt By": item.receipt_by,
-    "Receipt Date": item.receipt_date ? format(new Date(item.receipt_date), 'yyyy-MM-dd') : '',
-   
+    "Quantity": item.qty,
+    "Pending": item.pending,
+    "Rate": item.rate,
+    "Taxable": item.taxable,
+    "Narration": item.narration,
+    "Invoice No": item.invoice_no,
+    "Invoice Date": item.invoice_date ? format(new Date(item.invoice_date), 'yyyy-MM-dd') : '',
+    "Purchase Order No": item.pur_order_no,
+    "Purchase Order Date": item.pur_order_date ? format(new Date(item.pur_order_date), 'yyyy-MM-dd') : '',
+    "Remark": item.remark,
+    "Inserted By": item.inserted_by,
+    "Inserted Date": item.inserted_date ? format(new Date(item.inserted_date), 'yyyy-MM-dd') : '',
   }));
 
   const paginatedData = useMemo(() => {
@@ -109,15 +141,19 @@ const RMWarehouseReceiptReport = () => {
     }
 
     const requestBody = {
+      File_Name: fileName.trim(),
+      Trans_SerialNo: transSerialNo.trim(),
+      Party_Name: partyName.trim(),
       Product_Code: productCode.trim(),
       Product_Name: productName.trim(),
+      Invoice_No: invoiceNo.trim(),
       FromDate: format(fromDate, "yyyy-MM-dd"),
       ToDate: format(toDate, "yyyy-MM-dd"),
     };
 
     setLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/api/reports//get-rm-warehouse-material-Receipt`, {
+      const response = await fetch(`${BACKEND_URL}/api/reports/get-grn-report`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +166,7 @@ const RMWarehouseReceiptReport = () => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data: RMWarehouseReceiptData[] = await response.json();
+      const data: GRNReportData[] = await response.json();
       
       if (data.length === 0) {
         setReportData([]);
@@ -163,8 +199,12 @@ const RMWarehouseReceiptReport = () => {
   };
 
   const handleClear = () => {
+    setFileName("");
+    setTransSerialNo("");
+    setPartyName("");
     setProductCode("");
     setProductName("");
+    setInvoiceNo("");
     setReportData([]);
     setFromDate(new Date());
     setToDate(new Date());
@@ -173,33 +213,40 @@ const RMWarehouseReceiptReport = () => {
     setCurrentPage(1);
   };
 
-  const exportToPdf = (data: RMWarehouseReceiptData[], fileName: string): void => {
+  const exportToPdf = (data: GRNReportData[], fileName: string): void => {
     try {
-      const doc = new jsPDF('l', 'mm', 'a4');
+      const doc = new jsPDF('l', 'mm', 'a3');
       
       const columns = [
-        { header: 'Serial No', dataKey: 'serial_no' },
+        { header: 'File Name', dataKey: 'file_name' },
+        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
+        { header: 'Trans Date', dataKey: 'trans_date' },
+        { header: 'Party Name', dataKey: 'party_name' },
         { header: 'Product Code', dataKey: 'product_code' },
         { header: 'Product Name', dataKey: 'product_name' },
-        { header: 'Receipt Qty', dataKey: 'receipt_qty' },
-         { header: 'Bin', dataKey: 'bin' },
-        { header: 'Receipt By', dataKey: 'receipt_by' },
-        { header: 'Receipt Date', dataKey: 'receipt_date' },
-       
+        { header: 'Qty', dataKey: 'qty' },
+        { header: 'Rate', dataKey: 'rate' },
+        { header: 'Invoice No', dataKey: 'invoice_no' },
+        { header: 'Inserted By', dataKey: 'inserted_by' },
+         { header: 'Inserted Date', dataKey: 'inserted_date' },
       ];
 
       const formattedData = data.map(row => ({
-        serial_no: row.serial_no || '',
+        file_name: row.file_name || '',
+        trans_serialno: row.trans_serialno || '',
+        trans_date: row.trans_date ? format(new Date(row.trans_date), 'yyyy-MM-dd') : '',
+        party_name: row.party_name || '',
         product_code: row.product_code || '',
         product_name: row.product_name || '',
-        receipt_qty: row.receipt_qty?.toString() || '0',
-        receipt_by: row.receipt_by || '',
-        receipt_date: row.receipt_date ? format(new Date(row.receipt_date), 'yyyy-MM-dd') : '',
-        bin: row.bin || ''
+        qty: row.qty?.toString() || '0',
+        rate: row.rate?.toString() || '0',
+        invoice_no: row.invoice_no || '',
+        inserted_by: row.inserted_by || '',
+        inserted_date:row.inserted_date ? format(new Date(row.inserted_date), 'yyyy-MM-dd') : '',
       }));
 
       doc.setFontSize(18);
-      doc.text(`RM Warehouse Receipt Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
+      doc.text(`GRN Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}`, 14, 22);
 
       (doc as any).autoTable({
         columns: columns,
@@ -212,13 +259,16 @@ const RMWarehouseReceiptReport = () => {
           halign: 'left'
         },
         columnStyles: {
-          0: { cellWidth: 30 }, 
-          1: { cellWidth: 35 }, 
-          2: { cellWidth: 80 }, 
-          3: { cellWidth: 25 }, 
-          4: { cellWidth: 35 }, 
-          5: { cellWidth: 35 }, 
-          6: { cellWidth: 30 }
+          0: { cellWidth: 25 }, 
+          1: { cellWidth: 30 }, 
+          2: { cellWidth: 25 }, 
+          3: { cellWidth: 40 }, 
+          4: { cellWidth: 30 }, 
+          5: { cellWidth: 60 }, 
+          6: { cellWidth: 20 }, 
+          7: { cellWidth: 20 }, 
+          8: { cellWidth: 25 }, 
+          9: { cellWidth: 25 }
         },
         headStyles: { 
           fillColor: [66, 66, 66],
@@ -267,7 +317,7 @@ const RMWarehouseReceiptReport = () => {
       return;
     }
     
-    const fileName = `RM_Warehouse_Receipt_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
+    const fileName = `GRN_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`;
     exportToPdf(reportData, fileName);
   };
 
@@ -288,10 +338,40 @@ const RMWarehouseReceiptReport = () => {
     <div className="space-y-4">
       <Card className='mt-5'>
         <CardHeader>
-          <CardTitle>Report: RM Warehouse Receipt</CardTitle>
+          <CardTitle>Report: GRN (Goods Receipt Note)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor='fileName'>File Name</Label>
+              <Input 
+                id="fileName"
+                value={fileName} 
+                onChange={(e) => setFileName(e.target.value)} 
+                placeholder='Enter File Name'
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor='transSerialNo'>Trans Serial No</Label>
+              <Input 
+                id="transSerialNo"
+                value={transSerialNo} 
+                onChange={(e) => setTransSerialNo(e.target.value)} 
+                placeholder='Enter Trans Serial No'
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor='partyName'>Party Name</Label>
+              <Input 
+                id="partyName"
+                value={partyName} 
+                onChange={(e) => setPartyName(e.target.value)} 
+                placeholder='Enter Party Name'
+              />
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor='productCode'>Product Code</Label>
               <Input 
@@ -313,56 +393,66 @@ const RMWarehouseReceiptReport = () => {
             </div>
 
             <div className="space-y-2">
-              <Label>From Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !fromDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={fromDate}
-                    onSelect={(date) => setFromDate(date || new Date())}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor='invoiceNo'>Invoice No</Label>
+              <Input 
+                id="invoiceNo"
+                value={invoiceNo} 
+                onChange={(e) => setInvoiceNo(e.target.value)} 
+                placeholder='Enter Invoice No'
+              />
             </div>
-            
-            <div className="space-y-2">
-              <Label>To Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !toDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={toDate}
-                    onSelect={(date) => setToDate(date || new Date())}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+
+             <div className="space-y-2">
+                                  <Label>From Date</Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal",
+                                          !fromDate && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {fromDate ? format(fromDate, "PPP") : <span>Pick a date</span>}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                      <Calendar
+                                        mode="single"
+                                        selected={fromDate}
+                                        onSelect={(date) => setFromDate(date || new Date())}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
+                                
+                                <div className="space-y-2">
+                                  <Label>To Date</Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal",
+                                          !toDate && "text-muted-foreground"
+                                        )}
+                                      >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {toDate ? format(toDate, "PPP") : <span>Pick a date</span>}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                      <Calendar
+                                        mode="single"
+                                        selected={toDate}
+                                        onSelect={(date) => setToDate(date || new Date())}
+                                        initialFocus
+                                      />
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
           </div>
           
           <div className="flex flex-col md:flex-row justify-between space-y-2 md:space-y-0 md:space-x-2 mb-4 mt-5 md:mt-10">
@@ -372,10 +462,10 @@ const RMWarehouseReceiptReport = () => {
               </Button>
               <Button variant="outline" onClick={handleClear}>Clear</Button>
             </div>
-          <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
+            <div className="flex flex-col spac-y-2 sm:flex-row sm:space-x-2">
               <ExportToExcel 
                 data={formattedData} 
-                fileName={`RM_Production_Material_Receipt_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} 
+                fileName={`GRN_Report_${format(new Date(), 'yyyy-MM-dd_HH-mm')}`} 
               />
               <Button variant="outline" onClick={handleExportToPDF} disabled={reportData.length === 0}>
                 Export To PDF <FaFilePdf size={17} className='ml-2 text-red-500' />
@@ -389,7 +479,7 @@ const RMWarehouseReceiptReport = () => {
         reportData.length > 0 ? (
           <Card className="mt-5">
             <CardHeader className="underline underline-offset-4 text-center">
-              <CardTitle>RM Warehouse Receipt Report</CardTitle>
+              <CardTitle>GRN Report</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
@@ -423,14 +513,18 @@ const RMWarehouseReceiptReport = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>No</TableHead>
-                    <TableHead>Serial No</TableHead>
+                    <TableHead>File Name</TableHead>
+                    <TableHead>Trans Serial No</TableHead>
+                    <TableHead>Trans Date</TableHead>
+                    <TableHead>Voucher No</TableHead>
+                    <TableHead>Party Name</TableHead>
                     <TableHead>Product Code</TableHead>
                     <TableHead>Product Name</TableHead>
-                    <TableHead>Receipt Qty</TableHead>
-                    <TableHead>Bin</TableHead>
-                    <TableHead>Receipt By</TableHead>
-                    <TableHead>Receipt Date</TableHead>
-                 
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Rate</TableHead>
+                    <TableHead>Invoice No</TableHead>
+                    <TableHead>Inserted By</TableHead>
+                     <TableHead>Inserted Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -438,19 +532,23 @@ const RMWarehouseReceiptReport = () => {
                     paginatedData.map((row, index) => (
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}</TableCell>
-                        <TableCell className="text-center">{row.serial_no}</TableCell>
-                        <TableCell className="text-center">{row.product_code}</TableCell>
-                        <TableCell className="text-center">{row.product_name}</TableCell>
-                        <TableCell className="text-center">{row.receipt_qty}</TableCell>
-                        <TableCell className="text-center">{row.bin}</TableCell>
-                        <TableCell className="text-center">{row.receipt_by}</TableCell>
-                        <TableCell className="text-center">{row.receipt_date ? format(new Date(row.receipt_date), 'yyyy-MM-dd') : ''}</TableCell>
-                      
+                        <TableCell>{row.file_name}</TableCell>
+                        <TableCell className="font-medium">{row.trans_serialno}</TableCell>
+                        <TableCell>{row.trans_date ? format(new Date(row.trans_date), 'yyyy-MM-dd') : ''}</TableCell>
+                        <TableCell>{row.voucher_no}</TableCell>
+                        <TableCell className="min-w-[150px]">{row.party_name}</TableCell>
+                        <TableCell>{row.product_code}</TableCell>
+                        <TableCell className="min-w-[200px]">{row.product_name}</TableCell>
+                        <TableCell className="text-center">{row.qty}</TableCell>
+                        <TableCell className="text-center">{row.rate}</TableCell>
+                        <TableCell>{row.invoice_no}</TableCell>
+                        <TableCell>{row.inserted_by}</TableCell>
+                        <TableCell>{row.inserted_date ? format(new Date(row.inserted_date), 'yyyy-MM-dd') : ''}</TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center">No Data Found</TableCell>
+                      <TableCell colSpan={12} className="text-center">No Data Found</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -517,4 +615,4 @@ const RMWarehouseReceiptReport = () => {
   );
 };
 
-export default RMWarehouseReceiptReport;
+export default GrnReport;

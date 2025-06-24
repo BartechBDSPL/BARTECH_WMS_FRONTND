@@ -465,12 +465,12 @@ const RMProductionMaterialReturnReport = () => {
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}</TableCell>
                         <TableCell>{row.work_orderno}</TableCell>
-                        <TableCell className="font-medium">{row.serial_no}</TableCell>
+                        <TableCell>{row.serial_no}</TableCell>
                         <TableCell>{row.product_code}</TableCell>
-                        <TableCell className="min-w-[200px]">{row.product_name}</TableCell>
-                        <TableCell className="text-right">{row.return_qty}</TableCell>
-                          <TableCell className="text-right">{row.issue_qty}</TableCell>
-                        <TableCell className="text-right">{row.consume_qty}</TableCell>
+                        <TableCell>{row.product_name}</TableCell>
+                        <TableCell>{row.return_qty}</TableCell>
+                          <TableCell>{row.issue_qty}</TableCell>
+                        <TableCell>{row.consume_qty}</TableCell>
                         <TableCell>{row.return_by}</TableCell>
                         <TableCell>{row.return_date? format(new Date(row.return_date), 'yyyy-MM-dd') : ''}</TableCell>
                       

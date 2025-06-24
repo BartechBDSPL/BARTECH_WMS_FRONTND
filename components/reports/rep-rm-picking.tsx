@@ -475,15 +475,18 @@ const RMPickingReport = () => {
                         paginatedData.map((row, index) => (
                             <TableRow key={index}>
                             <TableCell>{index + 1}</TableCell>
-                            <TableCell className="font-medium">{row.serial_no}</TableCell>
-                            <TableCell>{row.trans_serialno}</TableCell>
-                            <TableCell>{row.work_orderno}</TableCell>
-                            <TableCell>{row.product_code}</TableCell>
-                            <TableCell className="min-w-[300px]">{row.product_name}</TableCell>
-                            <TableCell>{row.bin}</TableCell>
-                            <TableCell className="text-right">{row.pick_qty}</TableCell>
-                            <TableCell>{row.pick_by}</TableCell>
-                            <TableCell>{row.pick_date  ? format(new Date(row.pick_date), 'yyyy-MM-dd') : ''}</TableCell>
+                           <TableCell className="text-center">{row.serial_no}</TableCell>
+                          <TableCell className="text-center">{row.trans_serialno}</TableCell>
+                          <TableCell className="text-center">{row.work_orderno}</TableCell>
+                          <TableCell className="text-center">{row.product_code}</TableCell>
+                          <TableCell className="text-center min-w-[300px]">{row.product_name}</TableCell>
+                          <TableCell className="text-center">{row.bin}</TableCell>
+                          <TableCell className="text-center">{row.pick_qty}</TableCell>
+                          <TableCell className="text-center">{row.pick_by}</TableCell>
+                          <TableCell className="text-center">
+                            {row.pick_date ? format(new Date(row.pick_date), 'yyyy-MM-dd') : ''}
+                          </TableCell>
+
                             </TableRow>
                         ))
                         ) : (
