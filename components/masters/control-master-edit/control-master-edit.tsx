@@ -1091,7 +1091,7 @@ const handleUpdate = async (e: React.FormEvent) => {
     Unit: unit,
     Ups: ups,
     Core: core,
-    CutPerforation: cutPerforation, // You must define this in state
+    CutPerforation: cutPerforation, 
     MatCode: rawMaterial,
     MatDesc: rawMaterialDesc,
     DieType: dieType,
@@ -1101,7 +1101,7 @@ const handleUpdate = async (e: React.FormEvent) => {
     SpecialCharacteristic: specialCharacteristic,
     JobCardNumber: jobCardNumber,
     JcSerialNumber: jcSerialNumber,
-    Machine: machine, // You must define these in state
+    Machine: machine, 
     ColorNo: colorNo,
     PaperType: paperType,
     UpsAcross: upsAcross,
@@ -1114,7 +1114,7 @@ const handleUpdate = async (e: React.FormEvent) => {
     SupplyForm: supplyForm,
     WindingDirection: windingDirection,
     LabelDescription: labelDescription,
-    Image: image, // Base64 or blob string
+    Image: image,
     OldProductCode: oldProductCode,
     CylinderCode: cylinderCode,
     MaterialWeb: materialWeb,
