@@ -159,9 +159,9 @@ export function getMenuList(pathname: string): Group[] {
           value: "3",
           submenus: [
             {
-            href: "/job-card-approval",
+            href: "/job-control-approval",
             label: "Approve Job Control",
-            active: pathname === "/job-card-approval",
+            active: pathname === "/job-control-approval",
             value: "3_1",
           },
           {
@@ -374,7 +374,15 @@ export function getMenuList(pathname: string): Group[] {
             label: "RM  Warehouse Material Receipt  Report ",
             active: pathname === "/rep-warehouse-material-receipt",
             value: "5_16",
+          },
+             {
+            href: "/rep-rm-label-reprint",
+            label: "RM  Label Reprint Report ",
+            active: pathname === "/rep-rm-label-reprint",
+            value: "5_17",
           }
+          
+          
           
           
           

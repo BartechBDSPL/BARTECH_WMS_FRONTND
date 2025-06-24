@@ -1,4 +1,5 @@
 import Link from "next/link";
+import RMlabelReprint from "@/components/reports/rep-rm-label-reprint";
 import { ContentLayout } from "@/components/admin-panel/content-layout";
 import {
   Breadcrumb,
@@ -6,20 +7,20 @@ import {
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb";
-import JobControlMasterEdit from "@/components/masters/control-master-edit/control-master-edit";
+
 export default function DashboardPage() {
   return (
-    <ContentLayout title="Edit Job Control Master">
+    <ContentLayout title="RM Label Reprint Report">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
             <BreadcrumbLink asChild>
-              <Link href="/dashboard">Home</Link>
+              <Link href="/">Home</Link>
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-     <JobControlMasterEdit/>
+      <RMlabelReprint /> 
     </ContentLayout>
   );
 }

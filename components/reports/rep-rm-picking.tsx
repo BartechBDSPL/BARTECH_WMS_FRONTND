@@ -45,6 +45,7 @@ interface RMPickingReportData {
   bin: string;
   pick_qty: number;
   pick_by: string;
+  pick_date:string;
 }
 
 
@@ -71,7 +72,8 @@ const RMPickingReport = () => {
         'product_code', 
         'product_name', 
         'bin',
-        'pick_by'
+        'pick_by',
+        'pick_date'
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -89,6 +91,7 @@ const RMPickingReport = () => {
   "Bin": item.bin,
   "Pick Quantity": item.pick_qty,
   "Picked By": item.pick_by,
+  "Picked Date":item.pick_date ? format(new Date(item.pick_date), 'yyyy-MM-dd') : ''
 }));
 
   const paginatedData = useMemo(() => {
@@ -194,7 +197,8 @@ const RMPickingReport = () => {
         { header: 'Product Name', dataKey: 'product_name' },
         { header: 'Bin', dataKey: 'bin' },
         { header: 'Pick Qty', dataKey: 'pick_qty' },
-        { header: 'Pick By', dataKey: 'pick_by' }
+        { header: 'Pick By', dataKey: 'pick_by' },
+         { header: 'Pick Date', dataKey: 'pick_date' }
       ];
 
       const formattedData = data.map(row => ({
@@ -205,7 +209,8 @@ const RMPickingReport = () => {
         product_name: row.product_name || '',
         bin: row.bin || '',
         pick_qty: row.pick_qty?.toString() || '0',
-        pick_by: row.pick_by || ''
+        pick_by: row.pick_by || '',
+        pick_date: row.pick_date ? format(new Date(row.pick_date), 'yyyy-MM-dd') : ''
       }));
 
       doc.setFontSize(18);
@@ -462,6 +467,7 @@ const RMPickingReport = () => {
                         <TableHead>Bin</TableHead>
                         <TableHead>Pick Qty</TableHead>
                         <TableHead>Pick By</TableHead>
+                        <TableHead>Pick Date</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -477,6 +483,7 @@ const RMPickingReport = () => {
                             <TableCell>{row.bin}</TableCell>
                             <TableCell className="text-right">{row.pick_qty}</TableCell>
                             <TableCell>{row.pick_by}</TableCell>
+                            <TableCell>{row.pick_date  ? format(new Date(row.pick_date), 'yyyy-MM-dd') : ''}</TableCell>
                             </TableRow>
                         ))
                         ) : (

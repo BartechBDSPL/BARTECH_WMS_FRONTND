@@ -1345,11 +1345,11 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="jobCardNumber">Job Card Number</Label>
+              <Label htmlFor="jobCardNumber">Job Control Number</Label>
               <Input
                 value={jobCardNumber}
                 onChange={(e) => setJobCardNumber(e.target.value)}
-                placeholder=" Enter Job Card Number"
+                placeholder=" Enter Job Control Number"
               />
             </div>
             <div className="space-y-2">

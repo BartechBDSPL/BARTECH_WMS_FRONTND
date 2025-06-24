@@ -324,7 +324,7 @@ const JobCardApproval = () => {
   const exportToPdf = (data: JobCardApprovalData[], fileName: string): void => {
     const doc = new jsPDF('l', 'mm', 'a4');
     const columns = [
-      { header: 'Job Card No', dataKey: 'JobCardNumber' },
+      { header: 'Job Control No', dataKey: 'JobCardNumber' },
       { header: 'Label Type', dataKey: 'LabelType' },
       { header: 'Company Name', dataKey: 'CompanyName' },
       { header: 'Job Description', dataKey: 'JobDescription' },
@@ -434,7 +434,7 @@ const JobCardApproval = () => {
     if (selectedRows.length === 0) {
       toast({
         title: "No Job Cards Selected",
-        description: "Please select at least one job card to approve.",
+        description: "Please select at least one job control to approve.",
         variant: "destructive",
       });
       return;
@@ -621,7 +621,7 @@ const JobCardApproval = () => {
           <!DOCTYPE html>
           <html>
           <head>
-            <title>Job Card - ${selectedJobCard?.JobCardNumber || 'Print'}</title>
+            <title>Job Control - ${selectedJobCard?.JobCardNumber || 'Print'}</title>
             ${printStyles}
           </head>
           <body>
@@ -692,7 +692,7 @@ const JobCardApproval = () => {
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Label Type</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 font-semibold">{jobCard.LabelType}</td>
-                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">JC No</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Job Control No</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 text-red-600 font-semibold">{jobCard.JobCardNumber}</td>
                 </tr>
                 <tr>
@@ -908,7 +908,7 @@ const JobCardApproval = () => {
              </div>
                          
             <div className="space-y-2">
-              <Label>Job Card Number</Label>
+              <Label>Job Control Number</Label>
               <Input value={jobCardNo} onChange={(e) => setJobCardNo(e.target.value)} />
             </div>
             
@@ -940,7 +940,7 @@ const JobCardApproval = () => {
       {showTable && (
         reportData.length > 0 ? (
           <Card className="mt-5">
-            <CardHeader className="underline underline-offset-4 text-center">Job Card Approval</CardHeader>
+            <CardHeader className="underline underline-offset-4 text-center">Job Control Approval</CardHeader>
             <CardContent className="overflow-x-auto">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -979,7 +979,7 @@ const JobCardApproval = () => {
                       />
                     </TableHead>
                     <TableHead></TableHead>
-                    <TableHead>Job Card No</TableHead>
+                    <TableHead>Job Control No</TableHead>
                     <TableHead>Label Type</TableHead>
                     <TableHead>Company Name</TableHead>
                     <TableHead>Job Description</TableHead>
