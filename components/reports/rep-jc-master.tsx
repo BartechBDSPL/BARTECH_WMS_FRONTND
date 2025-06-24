@@ -612,7 +612,7 @@ console.log("Report " , reportData)
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Label Type</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 font-semibold">{jobCard.LabelType}</td>
-                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">JC No</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/4 bg-gray-100">Job Control No</td>
                   <td className="border border-gray-800 px-2 py-1 w-1/4 text-red-600 font-semibold">{jobCard.JobCardNumber}</td>
                 </tr>
                 <tr>

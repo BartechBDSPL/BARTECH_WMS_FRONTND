@@ -79,10 +79,10 @@ const RMProductionMaterialReturnReport = () => {
   }, [reportData, searchTerm]);
   
   const formattedData = reportData.map((item) => ({
+    "Job Card No": item.work_orderno,
     "Serial No": item.serial_no,
     "Product Code": item.product_code,
     "Product Name": item.product_name,
-    "Job Card No": item.work_orderno,
     "Return Quantity": item.return_qty,
     "Issue Quantity": item.issue_qty,
     "Consume Quantity": item.consume_qty,
@@ -185,10 +185,10 @@ const RMProductionMaterialReturnReport = () => {
       const doc = new jsPDF('l', 'mm', 'a4');
       
       const columns = [
+          { header: 'Job Card No', dataKey: 'work_orderno' },
         { header: 'Serial No', dataKey: 'serial_no' },
         { header: 'Product Code', dataKey: 'product_code' },
         { header: 'Product Name', dataKey: 'product_name' },
-        { header: 'Job Card No', dataKey: 'work_orderno' },
         { header: 'Return Qty', dataKey: 'return_qty' },
          { header: 'Issue Qty', dataKey: 'issue_qty' },
         { header: 'Consume Qty', dataKey: 'consume_qty' },
@@ -447,10 +447,10 @@ const RMProductionMaterialReturnReport = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>No</TableHead>
+                    <TableHead>Job Card No</TableHead>
                     <TableHead>Serial No</TableHead>
                     <TableHead>Product Code</TableHead>
                     <TableHead>Product Name</TableHead>
-                    <TableHead>Job Card No</TableHead>
                     <TableHead>Return Qty</TableHead>
                       <TableHead>Issue Qty</TableHead>
                     <TableHead>Consume Qty</TableHead>
@@ -464,10 +464,10 @@ const RMProductionMaterialReturnReport = () => {
                     paginatedData.map((row, index) => (
                       <TableRow key={index}>
                         <TableCell>{((currentPage - 1) * itemsPerPage) + index + 1}</TableCell>
+                        <TableCell>{row.work_orderno}</TableCell>
                         <TableCell className="font-medium">{row.serial_no}</TableCell>
                         <TableCell>{row.product_code}</TableCell>
                         <TableCell className="min-w-[200px]">{row.product_name}</TableCell>
-                        <TableCell>{row.work_orderno}</TableCell>
                         <TableCell className="text-right">{row.return_qty}</TableCell>
                           <TableCell className="text-right">{row.issue_qty}</TableCell>
                         <TableCell className="text-right">{row.consume_qty}</TableCell>
