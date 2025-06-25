@@ -523,6 +523,7 @@ const GrnReport = () => {
                     <TableHead>Qty</TableHead>
                     <TableHead>Rate</TableHead>
                     <TableHead>Invoice No</TableHead>
+                    <TableHead>Remark</TableHead>
                     <TableHead>Inserted By</TableHead>
                      <TableHead>Inserted Date</TableHead>
                   </TableRow>
@@ -542,6 +543,7 @@ const GrnReport = () => {
                         <TableCell className="text-center">{row.qty}</TableCell>
                         <TableCell className="text-center">{row.rate}</TableCell>
                         <TableCell>{row.invoice_no}</TableCell>
+                        <TableCell  className="text-center">{row.remark}</TableCell>
                         <TableCell>{row.inserted_by}</TableCell>
                         <TableCell>{row.inserted_date ? format(new Date(row.inserted_date), 'yyyy-MM-dd') : ''}</TableCell>
                       </TableRow>
