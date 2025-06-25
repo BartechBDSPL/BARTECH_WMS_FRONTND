@@ -362,6 +362,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
 
       // Reset form after successful print
       setShowAdditionalFields(false);
+      setShowTable(false);
       setSelectedRows([]);
       setFormData(prev => ({ ...prev, reason: '', noOfLabels: '1' }));
 
