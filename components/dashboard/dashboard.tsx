@@ -9,8 +9,8 @@ import LiveStock from './live-stock'
 function Dashboard() {
   return (
     <div className="w-full">
-      <Tabs defaultValue="main" className="w-full">
-        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 gap-2 sm:mb-0 mb-20 mt-5">
+      <Tabs defaultValue="live-stock" className="w-full">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 gap-2 sm:mb-0 mb-32 mt-5">
           <TabsTrigger value="main" className="text-sm sm:text-base">
             Main Dashboard
           </TabsTrigger>

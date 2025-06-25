@@ -32,17 +32,10 @@ import {
 } from "@/components/ui/table";
 
 interface LiveStockItem {
-  MATERIAL: string;
-  MATERIAL_TEXT: string;
-  BATCH: string;
-  STORAGE_LOCATION: string;
-  Location: string;
-  PackUnitPerPallet: number | null;
-  PcsPerPackunit: number | null;
+  product_code: string;
+  product_name: string;
+  bin: string;
   Available_Stock: number;
-  Total_Box: number | null;
-  Total_Pallet: number | null;
-  cleanMaterial?: string;
 }
 
 interface DropdownOption {
@@ -58,13 +51,11 @@ const LiveStock: React.FC = () => {
   const [filterOption, setFilterOption] = useState("all");
   const [filterValue, setFilterValue] = useState("");
   const [uniqueOptions, setUniqueOptions] = useState<{
-    materials: DropdownOption[];
-    batches: string[];
-    storageLocations: string[];
+    products: DropdownOption[];
+    bins: string[];
   }>({
-    materials: [],
-    batches: [],
-    storageLocations: [],
+    products: [],
+    bins: [],
   });
   useEffect(() => {
     fetchLiveStockData();
@@ -73,23 +64,19 @@ const LiveStock: React.FC = () => {
   useEffect(() => {
     // Extract unique values for filtering
     if (stockData.length > 0) {
-      const materials = Array.from(new Set(stockData.map(item => item.MATERIAL)));
-      const batches = Array.from(new Set(stockData.map(item => item.BATCH)));
-      const storageLocations = Array.from(new Set(stockData.map(item => item.STORAGE_LOCATION)));
+      const products = Array.from(new Set(stockData.map(item => item.product_code)));
+      const bins = Array.from(new Set(stockData.map(item => item.bin)));
       
       setUniqueOptions({
-        materials: materials.map(material => {
-          // Get the material without leading zeros
-          const cleanMaterial = material.replace(/^0+/, '');
-          // Find the corresponding material text
-          const materialText = stockData.find(item => item.MATERIAL === material)?.MATERIAL_TEXT || '';
+        products: products.map(productCode => {
+          // Find the corresponding product name
+          const productName = stockData.find(item => item.product_code === productCode)?.product_name || '';
           return { 
-            value: material, 
-            label: `${cleanMaterial} - ${materialText}`
+            value: productCode, 
+            label: `${productCode} - ${productName}`
           };
         }),
-        batches,
-        storageLocations,
+        bins,
       });
     }
   }, [stockData]);
@@ -112,16 +99,8 @@ const LiveStock: React.FC = () => {
       }
       
       const data = await response.json();
-      // Process data to ensure clean format
-      const processedData = data.map((item: LiveStockItem) => ({
-        ...item,
-        // Store original MATERIAL but use clean version for display
-        MATERIAL: item.MATERIAL,
-        cleanMaterial: item.MATERIAL.replace(/^0+/, '')
-      }));
-      
-      setStockData(processedData);
-      setFilteredData(processedData);
+      setStockData(data);
+      setFilteredData(data);
     } catch (error) {
       console.error('Error fetching live stock data:', error);
     } finally {
@@ -135,22 +114,19 @@ const LiveStock: React.FC = () => {
     // Apply search term filter
     if (searchTerm) {
       results = results.filter(item => 
-        item.MATERIAL_TEXT.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.MATERIAL.toLowerCase().includes(searchTerm.toLowerCase())
+        item.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.product_code.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
     // Apply specific filters
     if (filterOption !== "all" && filterValue) {
       switch (filterOption) {
-        case "material":
-          results = results.filter(item => item.MATERIAL === filterValue);
+        case "product":
+          results = results.filter(item => item.product_code === filterValue);
           break;
-        case "batch":
-          results = results.filter(item => item.BATCH === filterValue);
-          break;
-        case "storageLocation":
-          results = results.filter(item => item.STORAGE_LOCATION === filterValue);
+        case "bin":
+          results = results.filter(item => item.bin === filterValue);
           break;
       }
     }
@@ -158,27 +134,23 @@ const LiveStock: React.FC = () => {
     setFilteredData(results);
   };
 
-  // Group data by storage location
-  const groupedByStorageLocation = filteredData.reduce((acc, item) => {
-    if (!acc[item.STORAGE_LOCATION]) {
-      acc[item.STORAGE_LOCATION] = [];
+  // Group data by bin location
+  const groupedByBin = filteredData.reduce((acc, item) => {
+    if (!acc[item.bin]) {
+      acc[item.bin] = [];
     }
-    acc[item.STORAGE_LOCATION].push(item);
+    acc[item.bin].push(item);
     return acc;
   }, {} as Record<string, LiveStockItem[]>);
 
-  // Calculate stats for each storage location
-  const getStorageLocationStats = (items: LiveStockItem[]) => {
+  // Calculate stats for each bin location
+  const getBinStats = (items: LiveStockItem[]) => {
     const totalStock = items.reduce((sum, item) => sum + item.Available_Stock, 0);
-    const uniqueMaterials = new Set(items.map(item => item.MATERIAL)).size;
-    const uniqueBatches = new Set(items.map(item => item.BATCH)).size;
-    const uniqueLocations = new Set(items.map(item => item.Location)).size;
+    const uniqueProducts = new Set(items.map(item => item.product_code)).size;
     
     return {
       totalStock,
-      uniqueMaterials,
-      uniqueBatches,
-      uniqueLocations,
+      uniqueProducts,
       itemCount: items.length
     };
   };
@@ -186,17 +158,13 @@ const LiveStock: React.FC = () => {
   // Calculate overall stats
   const getTotalStats = () => {
     const totalStock = filteredData.reduce((sum, item) => sum + item.Available_Stock, 0);
-    const uniqueMaterials = new Set(filteredData.map(item => item.MATERIAL)).size;
-    const uniqueBatches = new Set(filteredData.map(item => item.BATCH)).size;
-    const uniqueStorageLocations = new Set(filteredData.map(item => item.STORAGE_LOCATION)).size;
-    const uniqueLocations = new Set(filteredData.map(item => item.Location)).size;
+    const uniqueProducts = new Set(filteredData.map(item => item.product_code)).size;
+    const uniqueBins = new Set(filteredData.map(item => item.bin)).size;
     
     return {
       totalStock,
-      uniqueMaterials,
-      uniqueBatches,
-      uniqueStorageLocations,
-      uniqueLocations,
+      uniqueProducts,
+      uniqueBins,
       itemCount: filteredData.length
     };
   };
@@ -204,30 +172,18 @@ const LiveStock: React.FC = () => {
   const exportToExcel = () => {
     // Create CSV content
     const headers = [
-      'Material', 
-      'Description', 
-      'Batch Number', 
-      'Warehouse Code', 
-      'Bin Number', 
-      'Available Quantity',
-      'Box / Tray per Pallet',
-      'Pack size per Box/Tray',
-      'Total Box',
-      'Total Pallet'
+      'Product Code', 
+      'Product Name', 
+      'Bin Location', 
+      'Available Stock'
     ];
     const csvContent = [
       headers.join(','),
       ...filteredData.map(item => [
-        item.MATERIAL.replace(/^0+/, ''),
-        `"${item.MATERIAL_TEXT.replace(/"/g, '""')}"`,
-        item.BATCH,
-        item.STORAGE_LOCATION,
-        item.Location,
-        item.Available_Stock,
-        item.PackUnitPerPallet ?? 'NA',
-        item.PcsPerPackunit ?? 'NA',
-        item.Total_Box ?? 'NA',
-        item.Total_Pallet ?? 'NA'
+        item.product_code,
+        `"${item.product_name.replace(/"/g, '""')}"`,
+        item.bin,
+        item.Available_Stock
       ].join(','))
     ].join('\n');
 
@@ -292,7 +248,7 @@ const LiveStock: React.FC = () => {
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search materials..."
+              placeholder="Search products by code or name..."
               className="pl-10 h-10 border-slate-200 dark:border-slate-700 focus:border-red-500"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -311,51 +267,35 @@ const LiveStock: React.FC = () => {
                 <SelectGroup>
                   <SelectLabel>Filter Options</SelectLabel>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="material">Material</SelectItem>
-                  <SelectItem value="batch">Batch</SelectItem>
-                  <SelectItem value="storageLocation">Storage Location</SelectItem>
+                  <SelectItem value="product">Product</SelectItem>
+                  <SelectItem value="bin">Bin Location</SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
             
-            {filterOption === "material" && (
+            {filterOption === "product" && (
               <CustomDropdown
-                options={uniqueOptions.materials}
+                options={uniqueOptions.products}
                 value={filterValue}
                 onValueChange={setFilterValue}
-                placeholder="Select Material"
-                searchPlaceholder="Search materials..."
-                emptyText="No materials available"
+                placeholder="Select Product"
+                searchPlaceholder="Search products..."
+                emptyText="No products available"
                 disabled={false}
               />
             )}
             
-            {filterOption === "batch" && (
+            {filterOption === "bin" && (
               <CustomDropdown
-                options={uniqueOptions.batches.map(batch => ({
-                  value: batch,
-                  label: batch
+                options={uniqueOptions.bins.map(bin => ({
+                  value: bin,
+                  label: bin
                 }))}
                 value={filterValue}
                 onValueChange={setFilterValue}
-                placeholder="Select Batch"
-                searchPlaceholder="Search batches..."
-                emptyText="No batches available"
-                disabled={false}
-              />
-            )}
-            
-            {filterOption === "storageLocation" && (
-              <CustomDropdown
-                options={uniqueOptions.storageLocations.map(location => ({
-                  value: location,
-                  label: location
-                }))}
-                value={filterValue}
-                onValueChange={setFilterValue}
-                placeholder="Select Storage Location"
-                searchPlaceholder="Search storage locations..."
-                emptyText="No storage locations available"
+                placeholder="Select Bin"
+                searchPlaceholder="Search bins..."
+                emptyText="No bins available"
                 disabled={false}
               />
             )}
@@ -377,7 +317,7 @@ const LiveStock: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent className="pt-0">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all min-w-0 cursor-help">
@@ -400,52 +340,16 @@ const LiveStock: React.FC = () => {
                 <TooltipTrigger asChild>
                   <div className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all min-w-0 cursor-help">
                     <Archive className="h-5 w-5 text-red-500 mb-2 flex-shrink-0" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400 text-center mb-1">Materials</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 text-center mb-1">Products</span>
                     <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 text-center break-all leading-tight">
-                      {getReadableFormat(totalStats.uniqueMaterials)}
+                      {getReadableFormat(totalStats.uniqueProducts)}
                     </span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className="text-center">
-                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueMaterials)} Materials</p>
-                    <p className="text-xs text-slate-400 mt-1">Total unique materials</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all min-w-0 cursor-help">
-                    <Hash className="h-5 w-5 text-red-500 mb-2 flex-shrink-0" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400 text-center mb-1">Batches</span>
-                    <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 text-center break-all leading-tight">
-                      {getReadableFormat(totalStats.uniqueBatches)}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-center">
-                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueBatches)} Batches</p>
-                    <p className="text-xs text-slate-400 mt-1">Total unique batches</p>
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex flex-col items-center p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-100 dark:border-slate-700 shadow-sm hover:shadow-md transition-all min-w-0 cursor-help">
-                    <MapPin className="h-5 w-5 text-red-500 mb-2 flex-shrink-0" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400 text-center mb-1">Storage Locations</span>
-                    <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 text-center break-all leading-tight">
-                      {getReadableFormat(totalStats.uniqueStorageLocations)}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="text-center">
-                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueStorageLocations)} Storage Locations</p>
-                    <p className="text-xs text-slate-400 mt-1">Total storage areas</p>
+                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueProducts)} Products</p>
+                    <p className="text-xs text-slate-400 mt-1">Total unique products</p>
                   </div>
                 </TooltipContent>
               </Tooltip>
@@ -456,13 +360,13 @@ const LiveStock: React.FC = () => {
                     <MapPin className="h-5 w-5 text-red-500 mb-2 flex-shrink-0" />
                     <span className="text-xs text-slate-500 dark:text-slate-400 text-center mb-1">Bin Locations</span>
                     <span className="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 text-center break-all leading-tight">
-                      {getReadableFormat(totalStats.uniqueLocations)}
+                      {getReadableFormat(totalStats.uniqueBins)}
                     </span>
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
                   <div className="text-center">
-                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueLocations)} Bin Locations</p>
+                    <p className="font-semibold">{formatIndianNumber(totalStats.uniqueBins)} Bin Locations</p>
                     <p className="text-xs text-slate-400 mt-1">Total bin positions</p>
                   </div>
                 </TooltipContent>
@@ -471,23 +375,23 @@ const LiveStock: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Storage Location Cards */}
+        {/* Bin Location Cards */}
         <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {Object.entries(groupedByStorageLocation).map(([location, items]) => {
-            const stats = getStorageLocationStats(items);
+          {Object.entries(groupedByBin).map(([bin, items]) => {
+            const stats = getBinStats(items);
             
             return (
-              <Card key={location} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-200">
+              <Card key={bin} className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-lg transition-all duration-200">
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-700 dark:to-slate-800 pb-4">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-base font-semibold text-slate-800 dark:text-slate-100 truncate">
-                      {location}
+                      {bin}
                     </CardTitle>
                     <span className="text-xs font-medium px-3 py-1 bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 rounded-full flex-shrink-0">
                       {stats.itemCount} items
                     </span>
                   </div>
-                  <div className="grid grid-cols-4 gap-2 mt-3">
+                  <div className="grid grid-cols-2 gap-2 mt-3">
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="text-center p-2 bg-white dark:bg-slate-800 rounded border min-w-0 cursor-help">
@@ -508,50 +412,16 @@ const LiveStock: React.FC = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="text-center p-2 bg-white dark:bg-slate-800 rounded border min-w-0 cursor-help">
-                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Materials</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Products</div>
                           <div className="text-xs font-bold text-slate-800 dark:text-slate-100 break-all leading-tight">
-                            {getReadableFormat(stats.uniqueMaterials)}
+                            {getReadableFormat(stats.uniqueProducts)}
                           </div>
                         </div>
                       </TooltipTrigger>
                       <TooltipContent>
                         <div className="text-center">
-                          <p className="font-semibold">{formatIndianNumber(stats.uniqueMaterials)} Materials</p>
-                          <p className="text-xs text-slate-400 mt-1">Unique materials</p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="text-center p-2 bg-white dark:bg-slate-800 rounded border min-w-0 cursor-help">
-                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Batches</div>
-                          <div className="text-xs font-bold text-slate-800 dark:text-slate-100 break-all leading-tight">
-                            {getReadableFormat(stats.uniqueBatches)}
-                          </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-center">
-                          <p className="font-semibold">{formatIndianNumber(stats.uniqueBatches)} Batches</p>
-                          <p className="text-xs text-slate-400 mt-1">Unique batches</p>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="text-center p-2 bg-white dark:bg-slate-800 rounded border min-w-0 cursor-help">
-                          <div className="text-xs text-slate-500 dark:text-slate-400 mb-1">Locations</div>
-                          <div className="text-xs font-bold text-slate-800 dark:text-slate-100 break-all leading-tight">
-                            {getReadableFormat(stats.uniqueLocations)}
-                          </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <div className="text-center">
-                          <p className="font-semibold">{formatIndianNumber(stats.uniqueLocations)} Locations</p>
-                          <p className="text-xs text-slate-400 mt-1">Bin positions</p>
+                          <p className="font-semibold">{formatIndianNumber(stats.uniqueProducts)} Products</p>
+                          <p className="text-xs text-slate-400 mt-1">Unique products</p>
                         </div>
                       </TooltipContent>
                     </Tooltip>
@@ -562,22 +432,18 @@ const LiveStock: React.FC = () => {
                     <Table>
                       <TableHeader className="sticky top-0 bg-white dark:bg-slate-800 border-b">
                         <TableRow>
-                          <TableHead className="py-2 px-3 text-xs font-medium">Material</TableHead>
-                          <TableHead className="py-2 px-3 text-xs font-medium">Batch</TableHead>
-                          <TableHead className="py-2 px-3 text-xs font-medium">Location</TableHead>
+                          <TableHead className="py-2 px-3 text-xs font-medium">Product Code</TableHead>
                           <TableHead className="py-2 px-3 text-xs font-medium text-right">Stock</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {items.map((item, idx) => (
-                          <TableRow key={`${item.MATERIAL}-${item.BATCH}-${item.Location}-${idx}`} 
+                          <TableRow key={`${item.product_code}-${item.bin}-${idx}`} 
                                     className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <TableCell className="py-2 px-3 text-sm font-medium" title={item.MATERIAL_TEXT}>
-                              {item.MATERIAL.replace(/^0+/, '')}
+                            <TableCell className="py-1.5 px-3 text-xs font-medium" title={item.product_name}>
+                              {item.product_code}
                             </TableCell>
-                            <TableCell className="py-2 px-3 text-sm">{item.BATCH}</TableCell>
-                            <TableCell className="py-2 px-3 text-sm">{item.Location}</TableCell>
-                            <TableCell className="py-2 px-3 text-sm font-semibold text-right text-red-600 dark:text-red-400">
+                            <TableCell className="py-1.5 px-3 text-xs font-semibold text-right text-red-600 dark:text-red-400">
                               {item.Available_Stock.toLocaleString()}
                             </TableCell>
                           </TableRow>
@@ -591,13 +457,13 @@ const LiveStock: React.FC = () => {
           })}
         </div>
 
-        {/* Material Details Table */}
+        {/* Product Details Table */}
         <Card className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
               <CardTitle className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <FileSpreadsheet className="h-5 w-5 text-green-500" />
-                Material Details
+                Product Details
               </CardTitle>
               <Button 
                 variant="outline" 
@@ -615,43 +481,23 @@ const LiveStock: React.FC = () => {
               <Table>
                 <TableHeader className="sticky top-0 bg-white dark:bg-slate-800 border-b">
                   <TableRow>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Material</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Description</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Batch</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Storage Location</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Product Code</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Product Name</TableHead>
                     <TableHead className="py-3 px-4 text-sm font-medium">Bin Location</TableHead>
                     <TableHead className="py-3 px-4 text-sm font-medium text-right">Available Stock</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Pack Unit/Pallet</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Pcs/Pack Unit</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Total Box</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Total Pallet</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredData.map((item, idx) => (
-                    <TableRow key={`${item.MATERIAL}-${item.BATCH}-${item.Location}-${idx}`}
+                    <TableRow key={`${item.product_code}-${item.bin}-${idx}`}
                               className="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
-                      <TableCell className="py-2.5 px-4 text-sm font-medium">{item.MATERIAL.replace(/^0+/, '')}</TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm max-w-xs truncate" title={item.MATERIAL_TEXT}>
-                        {item.MATERIAL_TEXT}
+                      <TableCell className="py-2.5 px-4 text-sm font-medium">{item.product_code}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm max-w-xs truncate" title={item.product_name}>
+                        {item.product_name}
                       </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm">{item.BATCH}</TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm">{item.STORAGE_LOCATION}</TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm">{item.Location}</TableCell>
+                      <TableCell className="py-2.5 px-4 text-sm">{item.bin}</TableCell>
                       <TableCell className="py-2.5 px-4 text-sm font-semibold text-right text-red-600 dark:text-red-400">
                         {item.Available_Stock.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm text-right">
-                        {item.PackUnitPerPallet !== null ? item.PackUnitPerPallet.toLocaleString() : 'NA'}
-                      </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm text-right">
-                        {item.PcsPerPackunit !== null ? item.PcsPerPackunit.toLocaleString() : 'NA'}
-                      </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm text-right">
-                        {item.Total_Box !== null ? item.Total_Box.toLocaleString() : 'NA'}
-                      </TableCell>
-                      <TableCell className="py-2.5 px-4 text-sm text-right">
-                        {item.Total_Pallet !== null ? item.Total_Pallet.toLocaleString() : 'NA'}
                       </TableCell>
                     </TableRow>
                   ))}

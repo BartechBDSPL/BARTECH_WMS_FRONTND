@@ -10,7 +10,7 @@ import RMLabelManualPrinting from "@/components/transaction/rm-label-manual-prin
 
 export default function DashboardPage() {
   return (
-    <ContentLayout title="RM Label Printing">
+    <ContentLayout title="RM Label Manual Printing">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>  
