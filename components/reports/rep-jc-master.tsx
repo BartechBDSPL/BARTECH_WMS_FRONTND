@@ -722,6 +722,12 @@ console.log("Report " , reportData)
                   <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Number of labels per roll</td>
                   <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.NumberOfLabel}</td>
                 </tr>
+                <tr>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Approved By</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.ApprovedBy}</td>
+                  <td className="border border-gray-800 font-bold px-2 py-1 bg-gray-100">Approved Date</td>
+                  <td className="border border-gray-800 px-2 py-1 font-semibold">{jobCard.ApprovedDate ? new Date(jobCard.ApprovedDate).toLocaleDateString() : ""}</td>
+                </tr>
               </tbody>
             </table>
             

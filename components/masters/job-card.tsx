@@ -55,6 +55,7 @@ import {
   type JobCardControlSchema,
 } from "./job-card-controller-schema";
 import { formatDateToDDMMYY } from "@/utills/dateUtils";
+import { getWindingImagePath } from '@/utills/new/getWindingImagePath';
 
 interface CustomDropdownOptions {
   label: string;
@@ -170,6 +171,7 @@ const JobCard: React.FC = () => {
   const core = watch("core") || "";
   const cut = watch("cut") || "";
   const perforation = watch("perforation") || "";
+  
 
   const isStepCompleted = (step: number) => completedSteps.includes(step);
 
@@ -1030,15 +1032,9 @@ const JobCard: React.FC = () => {
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
                     {jcAllData.ArtworkNo}
                   </td>
-                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Winding Direction
-                  </td>
-                  <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
-                    {jcAllData.WindingDirection
-                      ? jcAllData.WindingDirection
-                      : ""}
-                  </td>
+                 
                 </tr>
+                
 
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
@@ -1321,7 +1317,11 @@ const JobCard: React.FC = () => {
                     className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
                     colSpan={3}
                   >
-                    {jcAllData.WindingDirection}
+                    <img
+                      className="winding-image"
+                      src={getWindingImagePath(jcAllData.WindingDirection)}
+                      alt="Winding Image"
+                  />
                   </td>
                 </tr>
                 <tr>

@@ -54,6 +54,7 @@ const webAccessOptions = [
   { label: "15) - Approve Job Control", value: "3_1" },
   { label: "16) - GRN Excel Upload", value: "3_2" },
   { label: "17) - RM Label Printing", value: "3_3" },
+  { label: "17) - RM Label Manual Printing", value: "3_4" },
   { label: "18) - Reprint RM Label", value: "8_2" },
   { label: "19) - Job Card", value: "3_4" },
 

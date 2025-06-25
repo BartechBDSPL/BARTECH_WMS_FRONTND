@@ -182,6 +182,12 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/rm-label-printing",
               value: "3_3",
             },
+              {
+              href: "/rm-label-manual-print",
+              label: "RM Label Manual Printing",
+              active: pathname === "/rm-label-manual-print",
+              value: "3_4",
+            },
            // software-tracking
           //  {
           //   href: "/software-tracking",
