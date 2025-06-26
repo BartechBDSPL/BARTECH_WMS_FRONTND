@@ -421,12 +421,12 @@ export function getMenuList(pathname: string): Group[] {
               active: pathname === "/change-password",
               value: "6_3",
             },
-            {
-              href: "/android-access",
-              label: "Android access",
-              active: pathname === "/android-access",
-              value: "6_4",
-            },
+            // {
+            //   href: "/android-access",
+            //   label: "Android access",
+            //   active: pathname === "/android-access",
+            //   value: "6_4",
+            // },
 
           ],
         },

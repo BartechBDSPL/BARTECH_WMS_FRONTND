@@ -158,7 +158,7 @@ const RePrintHardWareTraking: React.FC = () => {
 
       const printers = response.data.Data.map((printer: any) => ({
         label: printer.Printer_Name,
-        value: `${printer.Printer_ip}:${printer.Printer_port}`, // <-- value to send
+        value: `${printer.Printer_ip}:${printer.Printer_port}-${printer.Printer_dpi}`, // <-- value to send
       }));
 
       setPrinterOptions(printers);

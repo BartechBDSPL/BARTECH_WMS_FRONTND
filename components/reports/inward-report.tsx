@@ -48,6 +48,7 @@ interface JobCardReportData {
   inward_status: string;
   inward_by: string;
   product_name: string;
+  inward_date:string;
 
 }
 
@@ -88,7 +89,8 @@ const InwordReport = () => {
         'voucher_no', 
         'invoice_no', 
         'inward_status',
-        'inward_by'
+        'inward_by',
+        'inward_date'
       ];
       return searchableFields.some(key => {
         const value = (item as any)[key];
@@ -214,7 +216,8 @@ const InwordReport = () => {
         { header: 'Product Code', dataKey: 'product_code' },
         { header: 'Product Name', dataKey: 'product_name' },
         { header: 'Inward Status', dataKey: 'inward_status' },
-        { header: 'Inward By', dataKey: 'inward_by' }
+        { header: 'Inward By', dataKey: 'inward_by' },
+         { header: 'Inward Date', dataKey: 'inward_date' }
         
         
       ];
@@ -441,7 +444,7 @@ const InwordReport = () => {
                 <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
                   <CardHeader>
                     <CardTitle className="text-base text-muted-foreground underline">
-                      Unique Pary name{" "}
+                      Unique Party name{" "}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -528,6 +531,7 @@ const InwordReport = () => {
                     <TableCell>Product Name</TableCell>
                     <TableHead>Inward Status</TableHead>
                     <TableHead>Inward By</TableHead>
+                     <TableHead>Inward Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -545,6 +549,7 @@ const InwordReport = () => {
                           <TableCell>{row.product_name}</TableCell>
                           <TableCell>{row.inward_status}</TableCell>
                           <TableCell>{row.inward_by}</TableCell>
+                           <TableCell>{row.inward_date ? format(new Date(row.inward_date), 'yyyy-MM-dd') : ''}</TableCell>
                          
                         </TableRow>
                         

@@ -56,7 +56,7 @@ const webAccessOptions = [
   { label: "17) - RM Label Printing", value: "3_3" },
   { label: "17) - RM Label Manual Printing", value: "3_4" },
   { label: "18) - Reprint RM Label", value: "8_2" },
-  { label: "19) - Job Card", value: "3_4" },
+  { label: "19) - Job Card", value: "3_5" },
 
   { label: "19) - Hardware Tracking", value: "4_1" },
   { label: "20) - Hardware Tracking Reprint", value: "4_2" },
@@ -88,11 +88,16 @@ const webAccessOptions = [
 ];
 
 const hhtAccessOptions = [
-  { label: "1) Link Barcode and RFID", value: "1_1" },
-  { label: "2) Material Find", value: "1_2" },
-  { label: "3) Reports", value: "1_3" },
-  { label: "4) Change Password", value: "1_4" },
-  { label: "5) Material Stock Take", value: "1_5"},
+  { label:"Quality Check", value: "1_1" },
+  { label:"Palletization", value: "1_2" },
+  { label:"Material Inward", value: "1_3" },
+  { label:"Put Away", value: "1_4" },
+  { label:"Internal Movement", value: "1_5" },
+  { label:"RM Production Issue", value: "1_6" },
+  { label:"RM Production Receive", value: "1_7" },
+  { label:"RM Production Return", value: "1_8" },
+  { label:"RM Warehouse Receive", value: "1_9" },
+  { label:"Reports", value: "1_10" },
 ]
 
 // const desktopAccessOptions = [
@@ -104,8 +109,8 @@ const hhtAccessOptions = [
 
 const UserRoleMaster: React.FC = () => {
   const [userRole, setUserRole] = useState("");
-  const [webAccess, setWebAccess] = useState<string[]>(["1", "5_3"]);
-  const [hhtAccess, setHhtAccess] = useState<string[]>(["1_4"]);
+  const [webAccess, setWebAccess] = useState<string[]>(["1"]);
+  const [hhtAccess, setHhtAccess] = useState<string[]>([]);
   const [desktopAccess, setDesktopAccess] = useState<string[]>(["1"]);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [isEditing, setIsEditing] = useState(false);

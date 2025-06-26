@@ -81,6 +81,7 @@ interface JobCardReportData {
   pur_order_no: string | null;
   qc_status: string;
   qc_by: string;
+  qc_date: string;
   qty: number;
   product_name: string;
 }
@@ -139,6 +140,7 @@ const QcReport = () => {
         "qty",
         "product_name",
         "serial_no",
+        "qc_date"
       ];
       return searchableFields.some((key) => {
         const value = (item as any)[key];
@@ -271,6 +273,7 @@ const QcReport = () => {
         { header: "Product Name", dataKey: "product_name" },
         { header: "QC Status", dataKey: "qc_status" },
         { header: "QC By", dataKey: "qc_by" },
+        { header: "QC Date", dataKey: "qc_date" },
       ];
 
       const formattedData = data.map((row) => ({
@@ -541,7 +544,7 @@ const QcReport = () => {
           <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
             <CardHeader>
               <CardTitle className="text-base text-muted-foreground underline">
-                Unique Pary name{" "}
+                Unique Party name{" "}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -627,6 +630,7 @@ const QcReport = () => {
                     <TableHead>Product Name</TableHead>
                     <TableHead>QC Status</TableHead>
                     <TableHead>QC By</TableHead>
+                     <TableHead>QC Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -645,6 +649,7 @@ const QcReport = () => {
                           <TableCell>{row.product_name}</TableCell>
                           <TableCell>{row.qc_status}</TableCell>
                           <TableCell>{row.qc_by}</TableCell>
+                          <TableCell>{row.qc_date ? format(new Date(row.qc_date), 'yyyy-MM-dd') : ''}</TableCell>
                         </TableRow>
                       </React.Fragment>
                     ))

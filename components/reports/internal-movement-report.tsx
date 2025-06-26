@@ -64,6 +64,7 @@ interface JobCardReportData {
   serial_no: string;
   pallet_barcode: string | null;
   movement_by: string;
+   movement_date: string;
 }
 
 const InternalMoveMentReport = () => {
@@ -98,6 +99,7 @@ const InternalMoveMentReport = () => {
         "serial_no",
         "pallet_barcode",
         "movement_by",
+         "movement_date"
       ];
       return searchableFields.some((key) => {
         const value = (item as any)[key];
@@ -219,6 +221,7 @@ const InternalMoveMentReport = () => {
         { header: "Serial No", dataKey: "serial_no" },
         { header: "Pallet Barcode", dataKey: "pallet_barcode" },
         { header: "Movement By", dataKey: "movement_by" },
+         { header: "Movement Date", dataKey: "movement_date" },
       ];
 
       const formattedData = data.map((row) => ({
@@ -233,6 +236,7 @@ const InternalMoveMentReport = () => {
         SerialNo: row.serial_no,
         PalletBarcode: row.pallet_barcode,
         MovementBy: row.movement_by,
+        
       }));
 
       doc.setFontSize(18);
@@ -553,6 +557,7 @@ const InternalMoveMentReport = () => {
                     <TableHead>Serial No</TableHead>
                     <TableHead>Pallet barcode</TableHead>
                     <TableHead>Movement By</TableHead>
+                    <TableHead>Movement Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -571,6 +576,7 @@ const InternalMoveMentReport = () => {
                           <TableCell>{row.serial_no}</TableCell>
                           <TableCell>{row.pallet_barcode}</TableCell>
                           <TableCell>{row.movement_by}</TableCell>
+                          <TableCell>{row.movement_date? format(new Date(row.movement_date), 'yyyy-MM-dd') : ''}</TableCell>
                         </TableRow>
                       </React.Fragment>
                     ))
