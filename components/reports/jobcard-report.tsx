@@ -210,7 +210,6 @@ interface JobCardPreviewDialogProps {
   isSubmitting?: boolean;
 }
 
-
 const JobCardNewReport = () => {
   
   const [soNo, setSoNo] = useState("");

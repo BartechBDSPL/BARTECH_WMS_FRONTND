@@ -62,6 +62,7 @@ interface PrinterData {
   Printer_Name: string;
   Printer_ip: string;
   Printer_port: string;
+  Printer_dpi: string;
 }
 
 interface DropdownOption {
@@ -331,7 +332,8 @@ const ReprintRMLabelPrinting: React.FC = () => {
           print_date: new Date().toISOString(),
           RePrintReason: formData.reason,
           RePrintQty: formData.noOfLabels,
-          RePrintBy: getUserID()
+          RePrintBy: getUserID(),
+          PrinterIpPort: selectedPrinterIp
         };
 
         const response = await fetch(`${BACKEND_URL}/api/reprint/insert-reprint-rm-label-print-data`, {
@@ -415,7 +417,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
         
         if (result.Status === "T" && result.Data) {
           const printerOptions = result.Data.map((printer: PrinterData) => ({
-            value: printer.Printer_ip,
+            value: `${printer.Printer_ip}:${printer.Printer_port}-${printer.Printer_dpi}`,
             label: printer.Printer_Name
           }));
           setPrinters([...printerOptions]);
@@ -446,7 +448,9 @@ const ReprintRMLabelPrinting: React.FC = () => {
   };
 
   const handleCustomPrinterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, customPrinter: e.target.value, assignPrinter: e.target.value }));
+    const customPrinterValue = e.target.value;
+    setFormData(prev => ({ ...prev, customPrinter: customPrinterValue, assignPrinter: customPrinterValue }));
+    setSelectedPrinterIp(customPrinterValue);
   };
 
   return (

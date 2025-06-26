@@ -70,6 +70,11 @@ interface RecentLabelPrinting {
   serial_no: string;
 }
 
+interface dropdownsOptions {
+  value: string;
+  label: string;
+}
+
 const RMLabelManualPrinting: React.FC = () => {
   const [materialOptions, setMaterialOptions] = useState<MaterialResponse[]>([]);
   const [locationOptions, setLocationOptions] = useState<LocationResponse[]>([]);
@@ -93,6 +98,9 @@ const RMLabelManualPrinting: React.FC = () => {
   const [recentPrintingsPerPage, setRecentPrintingsPerPage] = useState<number>(10);
   const [isLoadingRecent, setIsLoadingRecent] = useState<boolean>(false);
   
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState<string>('');
+  
   const router = useRouter();
   const token = Cookies.get('token');
   const grnInputRef = useRef<HTMLInputElement>(null);
@@ -101,6 +109,7 @@ const RMLabelManualPrinting: React.FC = () => {
     fetchMaterialDetails();
     fetchLocationOptions();
     fetchRecentLabelPrinting();
+    getPrinterDetails();
   }, [token]);
 
   useEffect(() => {
@@ -197,6 +206,36 @@ const RMLabelManualPrinting: React.FC = () => {
     }
   };
 
+  const getPrinterDetails = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/master/get-printer-name`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch printer details');
+      }
+
+      const data = await response.json();
+      const printers = data.Data.map((printer: any) => ({
+        label: printer.Printer_Name,
+        value: `${printer.Printer_ip}:${printer.Printer_port}-${printer.Printer_dpi}`, 
+      }));
+
+      setPrinterOptions(printers);
+    } catch (error) {
+      console.error('Error fetching printer details:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch printer details."
+      });
+    }
+  };
+
   const handleRawMatCodeChange = (value: string) => {
     setSelectedRawMatCode(value);
     // Clear description when code changes
@@ -266,24 +305,6 @@ const RMLabelManualPrinting: React.FC = () => {
   }));
 
   const handleGenerateSerialNumbers = async () => {
-    if (!grnNumber.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter GRN Number."
-      });
-      return;
-    }
-
-    if (!narration.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please enter Narration."
-      });
-      return;
-    }
-
     if (!selectedRawMatCode) {
       toast({
         variant: "destructive",
@@ -324,7 +345,7 @@ const RMLabelManualPrinting: React.FC = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          trans_serialno: grnNumber,
+          trans_serialno: grnNumber.trim() || 'NA',
           product_name: selectedRawMatDes
         })
       });
@@ -343,7 +364,8 @@ const RMLabelManualPrinting: React.FC = () => {
       let totalAssigned = 0;
       
       for (let i = 0; i < numberOfLabels; i++) {
-        const serialNo = `${selectedRawMatCode}|${grnNumber}|${startSerialNo + i}`;
+        const grnValue = grnNumber.trim() || 'NA';
+        const serialNo = `${selectedRawMatCode}|${grnValue}|${startSerialNo + i}`;
         let labelQty = baseQtyPerLabel;
         
         if (i === numberOfLabels - 1 && remainder > 0) {
@@ -411,6 +433,15 @@ const RMLabelManualPrinting: React.FC = () => {
       return;
     }
     
+    if (!selectedPrinter) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a printer."
+      });
+      return;
+    }
+    
     if (!token) {
       toast({
         variant: "destructive",
@@ -433,14 +464,15 @@ const RMLabelManualPrinting: React.FC = () => {
           Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
-          trans_serialno: grnNumber,
+          trans_serialno: grnNumber.trim() || 'NA',
           product_code: selectedRawMatCode,
           product_name: selectedRawMatDes,
           print_qty: printQtyString,
           serial_no: serialNumberString,
-          narration: narration,
+          narration: narration.trim() || 'NA',
           location: selectedLocation || '',
-          userID: getUserID()
+          user_id: getUserID(),
+          PrinterIpPort: selectedPrinter
         })
       });
 
@@ -477,6 +509,7 @@ const RMLabelManualPrinting: React.FC = () => {
     setSelectedLocation('');
     setPrintQty('');
     setNoOfLabels('');
+    setSelectedPrinter('');
     setShowSerialNumbers(false);
     setGeneratedSerialNumbers([]);
   };
@@ -525,28 +558,6 @@ const RMLabelManualPrinting: React.FC = () => {
           <CardTitle>Manual Label Printing</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="space-y-2">
-              <Label htmlFor="grn-number">GRN Number *</Label>
-              <Input
-                ref={grnInputRef}
-                id="grn-number"
-                value={grnNumber}
-                onChange={(e) => setGrnNumber(e.target.value)}
-                placeholder="Enter GRN Number"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="narration">Narration *</Label>
-              <Input
-                id="narration"
-                value={narration}
-                onChange={(e) => setNarration(e.target.value)}
-                placeholder="Enter Narration"
-              />
-            </div>
-          </div>
-
           {/* Line Item Card */}
           <Card className="mt-4">
             <CardHeader>
@@ -584,6 +595,29 @@ const RMLabelManualPrinting: React.FC = () => {
                       setSelectedRawMatDes(value);
                       setSelectedRawMatCode('');
                     }}
+                  />
+                </div>
+              </div>
+
+              {/* GRN Number and Narration */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="grn-number">GRN Number (Optional)</Label>
+                  <Input
+                    ref={grnInputRef}
+                    id="grn-number"
+                    value={grnNumber}
+                    onChange={(e) => setGrnNumber(e.target.value)}
+                    placeholder="Enter GRN Number"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="narration">Narration (Optional)</Label>
+                  <Input
+                    id="narration"
+                    value={narration}
+                    onChange={(e) => setNarration(e.target.value)}
+                    placeholder="Enter Narration"
                   />
                 </div>
               </div>
@@ -636,6 +670,24 @@ const RMLabelManualPrinting: React.FC = () => {
                 </div>
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="space-y-2">
+                  <Label htmlFor="printer">Printer *</Label>
+                  <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Printer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {printerOptions.map((printer) => (
+                        <SelectItem key={printer.value} value={printer.value}>
+                          {printer.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <div className="space-y-2">
                   <Label htmlFor="print-qty">Print Qty *</Label>
@@ -662,7 +714,7 @@ const RMLabelManualPrinting: React.FC = () => {
                 <div className="flex gap-2">
                   <Button 
                     onClick={handleGenerateSerialNumbers}
-                    disabled={isLoading || !grnNumber || !narration || !selectedRawMatCode || !printQty || !noOfLabels}
+                    disabled={isLoading || !selectedRawMatCode || !printQty || !noOfLabels || !selectedPrinter}
                     className="flex-1"
                   >
                     {isLoading ? "Generating..." : "Generate S/N"}

@@ -87,6 +87,11 @@ interface ErrorResponse {
   Message: string;
 }
 
+interface dropdownsOptions {
+  value: string;
+  label: string;
+}
+
 const RMLabelPrinting: React.FC = () => {
   const [grnNumbers, setGRNNumbers] = useState<GRNOption[]>([]);
   const [selectedGrn, setSelectedGrn] = useState<string>('');
@@ -106,6 +111,9 @@ const RMLabelPrinting: React.FC = () => {
   const [recentPrintingsPerPage, setRecentPrintingsPerPage] = useState<number>(10);
   const [isLoadingRecent, setIsLoadingRecent] = useState<boolean>(false);
   
+  const [printerOptions, setPrinterOptions] = useState<dropdownsOptions[]>([]);
+  const [selectedPrinter, setSelectedPrinter] = useState<string>('');
+  
   const router = useRouter();
   const token = Cookies.get('token');
   const grnInputRef = useRef<HTMLInputElement>(null);
@@ -113,6 +121,7 @@ const RMLabelPrinting: React.FC = () => {
   useEffect(() => {
     fetchGRNNumbers();
     fetchRecentLabelPrinting();
+    getPrinterDetails();
   }, [token]);
 
   useEffect(() => {
@@ -186,6 +195,36 @@ const RMLabelPrinting: React.FC = () => {
       });
     } finally {
       setIsLoadingRecent(false);
+    }
+  };
+
+  const getPrinterDetails = async () => {
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/master/get-printer-name`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch printer details');
+      }
+
+      const data = await response.json();
+      const printers = data.Data.map((printer: any) => ({
+        label: printer.Printer_Name,
+        value: `${printer.Printer_ip}:${printer.Printer_port}-${printer.Printer_dpi}`, 
+      }));
+
+      setPrinterOptions(printers);
+    } catch (error) {
+      console.error('Error fetching printer details:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch printer details."
+      });
     }
   };
 
@@ -313,6 +352,7 @@ const RMLabelPrinting: React.FC = () => {
     setPrintQty({});
     setPackSize({});
     setActiveProductCode(null);
+    setSelectedPrinter('');
     setShowSerialNumbers(false);
     setGeneratedSerialNumbers([]);
   };
@@ -328,6 +368,15 @@ const RMLabelPrinting: React.FC = () => {
         variant: "destructive",
         title: "Quantity Mismatch",
         description: `Total quantity of all serial numbers (${totalSerialQty}) must exactly match the print quantity (${currentPrintQty}).`
+      });
+      return;
+    }
+    
+    if (!selectedPrinter) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a printer."
       });
       return;
     }
@@ -359,7 +408,8 @@ const RMLabelPrinting: React.FC = () => {
         narration: productDetails.narration || "",
         print_qty: printQtyString,
         serial_no: serialNoString,
-        print_by: getUserID() 
+        print_by: getUserID(),
+        PrinterIpPort: selectedPrinter
       };
 
       const response = await fetch(`${BACKEND_URL}/api/transaction/insert-rm-label-printing`, {
@@ -425,6 +475,14 @@ const RMLabelPrinting: React.FC = () => {
     const printQtyValue = printQty[uniqueKey];
     const packSizeValue = packSize[uniqueKey];
     
+    if (!selectedPrinter) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Please select a printer first."
+      });
+      return;
+    }
     
     if (!printQtyValue || parseInt(printQtyValue) <= 0) {
       toast({
@@ -627,6 +685,32 @@ const RMLabelPrinting: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Printer Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Printer Selection</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="printer">Printer *</Label>
+              <Select value={selectedPrinter} onValueChange={setSelectedPrinter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Printer" />
+                </SelectTrigger>
+                <SelectContent>
+                  {printerOptions.map((printer) => (
+                    <SelectItem key={printer.value} value={printer.value}>
+                      {printer.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* GRN Details */}
       {grnDetails && grnDetails.length > 0 && (
         <motion.div
@@ -720,7 +804,7 @@ const RMLabelPrinting: React.FC = () => {
                               <Button 
                                 size="sm"
                                 onClick={() => handleGenerateSerialNumbers(item.product_code, item.product_name, index, item.qty)}
-                                disabled={isLoading || !printQty[uniqueKey] || parseInt(printQty[uniqueKey]) <= 0 || !packSize[uniqueKey] || parseInt(packSize[uniqueKey]) <= 0}
+                                disabled={isLoading || !selectedPrinter || !printQty[uniqueKey] || parseInt(printQty[uniqueKey]) <= 0 || !packSize[uniqueKey] || parseInt(packSize[uniqueKey]) <= 0}
                               >
                                 Generate S/N
                               </Button>
