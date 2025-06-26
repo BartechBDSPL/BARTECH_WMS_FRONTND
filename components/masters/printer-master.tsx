@@ -67,6 +67,7 @@ interface TableData {
  // label_size:string;
   Printer_ip: string;
   Printer_port: string;
+  Printer_dpi: string;
   Status: string;
   Create_by: string;
   Create_at: string;
@@ -85,6 +86,7 @@ const PrinterMaster = () => {
   const [printerName, setPrinterName] = useState<string>("");
   const [printerIP, setPrinterIP] = useState<string>("");
   const [printerPort, setPrinterPort] = useState<string>("");
+  const [printerDpi, setPrinterDpi] = useState<string>("");
   const [data, setData] = useState<TableData[]>([]);
   const [plantOptions, setPlantOptions] = useState<PlantOption[]>([]);
   const [PlantCode, setPlantCode] = useState<string>("");
@@ -105,6 +107,7 @@ const PrinterMaster = () => {
   const printerNameRef = useRef<HTMLInputElement>(null);
   const printerIPRef = useRef<HTMLInputElement>(null);
   const printerPortRef = useRef<HTMLInputElement>(null);
+   const printerDpiRef = useRef<HTMLInputElement>(null);
 
   
   // const plant = getUserPlantCode() 
@@ -221,6 +224,7 @@ const PrinterMaster = () => {
    // setSize(selectedData.label_size)
     setPrinterIP(selectedData.Printer_ip);
     setPrinterPort(selectedData.Printer_port);
+    setPrinterDpi(selectedData.Printer_dpi);
     setStatus(selectedData.Status);
    // setPlantCode(selectedData.Plant_code);
     setIsUpdateMode(true);
@@ -234,6 +238,7 @@ const PrinterMaster = () => {
     setSize("Select size");
     setPrinterIP("");
     setPrinterPort("");
+    setPrinterDpi("");
     setStatus("active");
     setError("");
     setPlantCode("");
@@ -261,6 +266,7 @@ const handleSave = async () => {
       Printer_Name: printerName,
       Printer_ip: printerIP,
       Printer_port: printerPort,
+      Printer_dpi:printerDpi,
       Status: status,
       Create_by: getUserID(),
     };
@@ -322,6 +328,7 @@ const handleSave = async () => {
       Printer_Name: printerName,
       Printer_ip: printerIP,
       Printer_port: printerPort,
+      Printer_dpi:printerDpi,
       Status: status,
       Update_by: getUserID(),
     };
@@ -364,6 +371,7 @@ const handleSave = async () => {
         "Printer_ip",
        // "label_size",
         "Printer_port",
+        "Printer_dpi",
         "Status",
         "Create_by",
         "Create_at",
@@ -484,6 +492,21 @@ const handleSave = async () => {
                 />
               </div>
 
+               <div className="space-y-2">
+                <Label htmlFor="PrinterDpi">
+                  Printer DPI <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="number"
+                  ref={printerDpiRef}
+                  id="PrinterDpi"
+                  value={printerDpi}
+                  onChange={(e) => setPrinterDpi(e.target.value)}
+                  required
+                />
+              </div>
+
+
               <div className="space-y-2">
                 <Label htmlFor="status">
                   Status <span className="text-red-500">*</span>
@@ -565,6 +588,7 @@ const handleSave = async () => {
                   {/* <TableHead>Label Size</TableHead> */}
                   <TableHead>Printer IP</TableHead>
                   <TableHead>Printer PORT</TableHead>
+                  <TableHead>Printer DPI</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created by</TableHead>
                   <TableHead>Created On</TableHead>
@@ -620,7 +644,7 @@ const handleSave = async () => {
                       {/* <TableCell>{row.label_size}</TableCell> */}
                       <TableCell>{row.Printer_ip}</TableCell>
                       <TableCell>{row.Printer_port}</TableCell>
-
+                      <TableCell>{row.Printer_dpi}</TableCell>
                       <TableCell>{row.Status ? row.Status : ""}</TableCell>
                       <TableCell>
                         {row.Create_by ? row.Create_by : "-"}
