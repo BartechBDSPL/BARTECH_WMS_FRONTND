@@ -93,6 +93,16 @@ const hhtAccessOptions = [
   { label: "3) Reports", value: "1_3" },
   { label: "4) Change Password", value: "1_4" },
   { label: "5) Material Stock Take", value: "1_5"},
+  { label: "6) Quality Check", value: "1_6" },
+  { label: "7) Palletization", value: "1_7" },
+  { label: "8) Material Inward", value: "1_8" },
+  { label: "9) Put Away", value: "1_9" },
+  { label: "10) Internal Movement", value: "1_10" },
+  { label: "11) RM Production Issue", value: "1_11" },
+  { label: "12) RM Production Receive", value: "1_12" },
+  { label: "13) RM Production Return", value: "1_13" },
+  { label: "14) RM Warehouse Receive", value: "1_14" },
+  { label: "15) Reports", value: "1_15" }
 ]
 
 // const desktopAccessOptions = [
