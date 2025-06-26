@@ -347,7 +347,7 @@ useEffect(() => {
   
         const printers = response.data.Data.map((printer: any) => ({
           label: printer.Printer_Name,
-          value: `${printer.Printer_ip}:${printer.Printer_port}`, // <-- value to send
+          value: `${printer.Printer_ip}:${printer.Printer_port}-${printer.Printer_dpi}`, 
         }));
   
         setPrinterOptions(printers);
@@ -2057,7 +2057,6 @@ const handlePrintLabel = async (row: HardwareData) => {
                                       return;
                                     }
 
-                                    // Check if printer is selected
                                     if (!selectedPrinter) {
                                       toast({
                                         variant: "destructive",
@@ -2067,33 +2066,6 @@ const handlePrintLabel = async (row: HardwareData) => {
                                       setIsProcessing(false);
                                       return;
                                     }
-
-                                    //Split IP and port
-                                    // const [ip, portStr] = selectedPrinter.split(":");
-                                    // const port = parseInt(portStr) || 9100;
-
-                                    // // Ping the printer
-                                    // const pingRes = await fetch(`${BACKEND_URL}/api/master/ping-printer`, {
-                                    //   method: "POST",
-                                    //   headers: {
-                                    //     "Content-Type": "application/json",
-                                    //   },
-                                    //   body: JSON.stringify({ ip, port }),
-                                    // });
-
-                                    // const pingData = await pingRes.json();
-
-                                    // if (!pingData.status) {
-                                    //   toast({
-                                    //     variant: "destructive",
-                                    //     title: "Printer Not Reachable",
-                                    //     description: pingData.message || "Selected printer is not responding.",
-                                    //   });
-                                    //   setIsProcessing(false);
-                                    //   return;
-                                    // }
-
-                                    // Validate quantity and serial numbers
                                     const currentData = getValues();
                                     const quantity = Number(currentData.qty);
 
