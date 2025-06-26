@@ -84,7 +84,7 @@ const RMPickingReport = () => {
   
   const formattedData = reportData.map((item) => ({
   "Serial No": item.serial_no,
-  "Transaction Serial No": item.trans_serialno,
+  "GRN No": item.trans_serialno,
   "Job Card No": item.work_orderno,
   "Product Code": item.product_code,
   "Product Name": item.product_name,
@@ -309,12 +309,12 @@ const RMPickingReport = () => {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor='transSerialNo'>Transaction Serial No</Label>
+              <Label htmlFor='transSerialNo'>GRN No</Label>
               <Input 
                 id="transSerialNo"
                 value={transSerialNo} 
                 onChange={(e) => setTransSerialNo(e.target.value)} 
-                placeholder='Enter Transaction Serial No'
+                placeholder='Enter GRN No'
               />
             </div>
             
@@ -460,7 +460,7 @@ const RMPickingReport = () => {
                         <TableRow>
                         <TableHead>No</TableHead>
                         <TableHead>Serial No</TableHead>
-                        <TableHead>Transaction Serial No</TableHead>
+                        <TableHead>GRN No</TableHead>
                         <TableHead>Job Card No</TableHead>
                         <TableHead>Product Code</TableHead>
                         <TableHead>Product Name</TableHead>

@@ -2057,15 +2057,7 @@ const handlePrintLabel = async (row: HardwareData) => {
                                       return;
                                     }
 
-                                    if (!selectedPrinter) {
-                                      toast({
-                                        variant: "destructive",
-                                        title: "Printer not selected",
-                                        description: "Please select a printer before submitting.",
-                                      });
-                                      setIsProcessing(false);
-                                      return;
-                                    }
+                                   
                                     const currentData = getValues();
                                     const quantity = Number(currentData.qty);
 

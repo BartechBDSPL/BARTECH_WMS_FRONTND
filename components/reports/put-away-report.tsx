@@ -67,6 +67,7 @@ interface JobCardReportData {
   put_qty: number;
   put_status: string;
   put_by: string;
+  put_date:string;
 }
 
 const PutAwayReport = () => {
@@ -105,6 +106,7 @@ const PutAwayReport = () => {
         "movement_by",
         "put_status",
         "product_name",
+        "put_date"
       ];
       return searchableFields.some((key) => {
         const value = (item as any)[key];
@@ -220,6 +222,7 @@ const PutAwayReport = () => {
         { header: "Bin", dataKey: "bin" },
         { header: "Put Status", dataKey: "put_status" },
         { header: "Put By", dataKey: "put_by" },
+         { header: "Put Date", dataKey: "put_date" },
       ];
 
       const formattedData = data.map((row) => ({
@@ -494,7 +497,7 @@ const PutAwayReport = () => {
                 <Card className="w-full sm:w-[48%] lg:w-[23%] shadow-md">
                   <CardHeader>
                     <CardTitle className="text-base text-muted-foreground underline">
-                      Total Put Qantity
+                      Total Put Quantity
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -569,6 +572,7 @@ const PutAwayReport = () => {
                     <TableHead>Bin</TableHead>
                     <TableHead>Put Status</TableHead>
                     <TableHead>Put By</TableHead>
+                    <TableHead>Put Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -590,6 +594,7 @@ const PutAwayReport = () => {
                           </TableCell>
                           <TableCell>{row.put_status}</TableCell>
                           <TableCell>{row.put_by}</TableCell>
+                          <TableCell>{row.put_date? format(new Date(row.put_date), 'yyyy-MM-dd') : ''}</TableCell>
                         </TableRow>
                       </React.Fragment>
                     ))

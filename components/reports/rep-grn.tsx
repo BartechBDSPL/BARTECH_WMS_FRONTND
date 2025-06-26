@@ -97,7 +97,7 @@ const GrnReport = () => {
   const formattedData = reportData.map((item, index) => ({
     "Sr. No": index + 1,
     "File Name": item.file_name,
-    "Trans Serial No": item.trans_serialno,
+    "GRN No": item.trans_serialno,
     "Trans Date": item.trans_date ? format(new Date(item.trans_date), 'yyyy-MM-dd') : '',
     "Voucher No": item.voucher_no,
     "Voucher Date": item.voucher_date ? format(new Date(item.voucher_date), 'yyyy-MM-dd') : '',
@@ -219,7 +219,7 @@ const GrnReport = () => {
       
       const columns = [
         { header: 'File Name', dataKey: 'file_name' },
-        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
+        { header: 'GRN No', dataKey: 'trans_serialno' },
         { header: 'Trans Date', dataKey: 'trans_date' },
         { header: 'Party Name', dataKey: 'party_name' },
         { header: 'Product Code', dataKey: 'product_code' },
@@ -353,12 +353,12 @@ const GrnReport = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor='transSerialNo'>Trans Serial No</Label>
+              <Label htmlFor='transSerialNo'>GRN No</Label>
               <Input 
                 id="transSerialNo"
                 value={transSerialNo} 
                 onChange={(e) => setTransSerialNo(e.target.value)} 
-                placeholder='Enter Trans Serial No'
+                placeholder='Enter GRN No'
               />
             </div>
 
@@ -514,7 +514,7 @@ const GrnReport = () => {
                   <TableRow>
                     <TableHead>No</TableHead>
                     <TableHead>File Name</TableHead>
-                    <TableHead>Trans Serial No</TableHead>
+                    <TableHead>GRN No</TableHead>
                     <TableHead>Trans Date</TableHead>
                     <TableHead>Voucher No</TableHead>
                     <TableHead>Party Name</TableHead>

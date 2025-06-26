@@ -2775,7 +2775,7 @@ const JobCard: React.FC = () => {
                               {isSubmitting && (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               )}
-                              {isSubmitting ? "Saving..." : "Save Job Control"}
+                              {isSubmitting ? "Saving..." : "Save Job Card"}
                             </Button>
                           </div>
                         </div>
