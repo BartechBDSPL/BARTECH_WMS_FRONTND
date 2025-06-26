@@ -439,8 +439,8 @@ const RMLabelManualPrinting: React.FC = () => {
           print_qty: printQtyString,
           serial_no: serialNumberString,
           narration: narration,
-          location: selectedLocation || null,
-          usercode: getUserID()
+          location: selectedLocation || '',
+          userID: getUserID()
         })
       });
 
