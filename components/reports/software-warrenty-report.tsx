@@ -589,9 +589,11 @@ const SoftwareTrackingReport = () => {
                         <TableCell>{row.SerialNo}</TableCell>
                         <TableCell>{row.UniqueSerialNo}</TableCell>
                         <TableCell>{row.TransBy}</TableCell>
-                        <TableCell className="min-w-[150px]">
-                          {format(row.TransDate, "dd-MM-yyyy")}
-                        </TableCell>
+                         <TableCell className='min-w-[150px]'>
+                           { row.TransDate
+                              ? new Date(row.TransDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })
+                              : ''}
+                          </TableCell>
                       </TableRow>
                     ))
                   ) : (

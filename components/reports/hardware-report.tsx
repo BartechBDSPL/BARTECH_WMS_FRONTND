@@ -887,7 +887,7 @@ const handleSubmitSearch = async () => {
                 </TableHeader>
                 <TableBody>
                   {paginatedData.length > 0 ? (
-                    paginatedData.map((row, index) => (
+                    paginatedData.map((row, index) => 
                       <React.Fragment key={index}>
                         <TableRow>
                             <TableCell>{index +1}. </TableCell>
@@ -916,8 +916,11 @@ const handleSubmitSearch = async () => {
                           <TableCell>{row.UniqueSerialNo}</TableCell>
                           <TableCell>{row.TransBy}</TableCell>
                           <TableCell className='min-w-[150px]'>
-                              {row.TransDate ? format(new Date(row.TransDate), "dd-MM-yyyy") : "-"}
+                             { row.TransDate
+                                ? new Date(row.TransDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })
+                                : ''}
                             </TableCell>
+                            
 
                           <TableCell>{row.WarrentyStatus}</TableCell>
                          
@@ -925,7 +928,7 @@ const handleSubmitSearch = async () => {
                         
                         
                       </React.Fragment>
-                    ))
+                    )
                   ) : (
                     <TableRow>
                       <TableCell colSpan={12} className="text-center">No Data Found</TableCell>

@@ -2088,9 +2088,12 @@ const handlePrintLabel = async (row: SoftwareData) => {
                     </TableCell>
                     <TableCell>{row.WarrentyStatus}</TableCell>
                     <TableCell>{row.TransBy}</TableCell>
-                    <TableCell>
-                      {row.TransDate ? new Date(row.TransDate).toLocaleDateString("en-GB") : ""}
-                    </TableCell>
+                   <TableCell>
+                    {row.TransDate
+                      ? new Date(row.TransDate).toLocaleDateString('en-GB', { timeZone: 'UTC' })
+                      : ''}
+                  </TableCell>
+
                   </TableRow>
                 ))
               )}
