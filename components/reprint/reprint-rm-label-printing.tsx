@@ -56,6 +56,7 @@ interface TableData {
   print_date: string;
   print_qty: number;
   serial_no: string;
+  label_serialno:string;
 }
 
 interface PrinterData {
@@ -332,6 +333,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
           print_date: new Date().toISOString(),
           RePrintReason: formData.reason,
           RePrintQty: formData.noOfLabels,
+          label_serialno:item.label_serialno,
           RePrintBy: getUserID(),
           PrinterIpPort: selectedPrinterIp
         };
@@ -670,6 +672,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
                       <TableHead>Print By</TableHead>
                       <TableHead>Print Date</TableHead>
                       <TableHead>Print Qty</TableHead>
+                      <TableHead>Serial No</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -695,6 +698,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
                         <TableCell>{item.print_by}</TableCell>
                         <TableCell>{format(new Date(item.print_date), "dd/MM/yyyy HH:mm")}</TableCell>
                         <TableCell>{item.print_qty}</TableCell>
+                        <TableCell>{item.label_serialno}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

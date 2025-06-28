@@ -792,7 +792,7 @@ const RMLabelManualPrinting: React.FC = () => {
                               min="1"
                               value={sn.qty}
                               onChange={(e) => handleSerialQtyChange(actualIndex, parseInt(e.target.value) || 0)}
-                              className="w-20"
+                              className="w-21"
                             />
                           </TableCell>
                         </TableRow>
