@@ -409,7 +409,8 @@ const RMLabelPrinting: React.FC = () => {
         print_qty: printQtyString,
         serial_no: serialNoString,
         print_by: getUserID(),
-        PrinterIpPort: selectedPrinter
+        PrinterIpPort: selectedPrinter,
+    
       };
 
       const response = await fetch(`${BACKEND_URL}/api/transaction/insert-rm-label-printing`, {
@@ -470,7 +471,8 @@ const RMLabelPrinting: React.FC = () => {
     } finally {
       setIsPrinting(false);
     }
-  };  const handleGenerateSerialNumbers = async (productCode: string, productName: string, rowIndex: number, qty: number) => {
+  };  
+  const handleGenerateSerialNumbers = async (productCode: string, productName: string, rowIndex: number, qty: number) => {
     const uniqueKey = `${productCode}_${rowIndex}_${qty}`;
     const printQtyValue = printQty[uniqueKey];
     const packSizeValue = packSize[uniqueKey];

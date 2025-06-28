@@ -136,6 +136,10 @@ const JobCard: React.FC = () => {
   const [totalImpressions, setTotalImpressions] = useState("");
 
   const [remarksOne, setRemarksOne] = useState("");
+  interface JcData {
+  JobCardNumber: string;
+  JobDescription: string;
+}
 
   // --------------------------------- Slitting/Finishing --------------------------------
   // const [jobbcardDateFinishing, setJobbcardDateFinishing] = useState<Date | undefined>(undefined);
@@ -157,6 +161,9 @@ const JobCard: React.FC = () => {
   const [jcDescriptionErr, setJcDescriptionErr] = useState(false)
   const [QuantityErr, setQuantityErr] = useState(false)
   const [jobCardDateErr, setJobCardDateErr] = useState(false);
+  // state to store all JC data
+const [jcList, setJcList] = useState<JcData[]>([]);
+
 
   /**
   |--------------------------------------------------
@@ -300,60 +307,79 @@ const JobCard: React.FC = () => {
     }
   };
 
-  const getJcNumber = async () => {
-    try {
-      const response = await axios.post(
-        `${BACKEND_URL}/api/master/get-all-jc-Number`
-      );
-      const data: { JobDescription: string }[] = response.data.result;
-      setJcNumberOption(
-        data.map((item) => ({
-          value: item.JobDescription,
-          label: item.JobDescription,
-        }))
-      );
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch job card number",
-      });
-    }
-  };
+const getJcNumber = async () => {
+  try {
+    const response = await axios.post(`${BACKEND_URL}/api/master/get-all-jc-Number`);
+    type JcData = { JobCardNumber: string; JobDescription: string };
+    const data: JcData[] = response.data.result || [];
+    setJcList(data);
 
-  const getJcDescription = async (jobNumber: string) => {
-    if (!jobNumber) return;
+    // store in state for JC description dropdown
+    setJcNumberOption(
+      data.map((item) => ({
+        value: item.JobCardNumber,
+        label: item.JobDescription,
+      }))
+    );
 
-    try {
-      const dataValue = {
-        JobCardNumber: jobNumber,
-      };
-      const response = await axios.post(
-        `${BACKEND_URL}/api/master/get-all-jc-Description`,
-        dataValue
-      );
-      const data: { JobDescription: string }[] = response.data.result;
-      setJcDescriptionOption(
-        data.map((item) => ({
-          value: item.JobDescription,
-          label: item.JobDescription,
-        }))
-      );
+    // store in state for JC number dropdown
+    setJcDescriptionOption(
+      data.map((item) => ({
+        value: item.JobDescription,
+        label: item.JobCardNumber,
+      }))
+    );
 
-      // this is to new code for set data 
+  } catch (error) {
+    console.error("getJcNumber error:", error);
+    toast({
+      variant: "destructive",
+      title: "Failed to fetch job card numbers",
+    });
+  }
+};
 
-      const res = response.data.result[0];
+ const getJcDescription = async (jobNumber: string, jobDescription: string = "") => {
+  if (!jobNumber && !jobDescription) return;
+
+  try {
+    const dataValue = {
+      JobCardNumber: jobNumber,
+      JobDescription: jobDescription,
+    };
+
+    const response = await axios.post(
+      `${BACKEND_URL}/api/master/get-all-jc-Description`,
+      dataValue
+    );
+
+    const data = response.data.result;
+
+    // for JC description dropdown options
+    setJcDescriptionOption(
+      data.map((item: { JobDescription: any; }) => ({
+        value: item.JobDescription,
+        label: item.JobDescription,
+      }))
+    );
+
+    // store everything for details display
+    if (data && data.length > 0) {
+      const res = data[0];
       setJCAllData(res);
-
-      setMaterialWeb(res.MaterialWeb ? res.MaterialWeb : "");
-      setUpAcross(res.UpsAcross ? res.UpsAcross : "");
-      setNumberOfLabels(res.NumberOfLabel ? res.NumberOfLabel : "");
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to fetch job card description",
-      });
+      setMaterialWeb(res.MaterialWeb || "");
+      setUpAcross(res.UpsAcross || "");
+      setNumberOfLabels(res.NumberOfLabel || "");
     }
-  };
+
+  } catch (error) {
+    toast({
+      variant: "destructive",
+      title: "Failed to fetch job card description",
+    });
+  }
+};
+
 
   // const getAllJobCardData = async (jc: string, jcDescription: string) => {
   //   if (!jc || !jcDescription) return;
@@ -377,21 +403,36 @@ const JobCard: React.FC = () => {
   //   }
   // };
 
-  const handleJcNumberChange = (value: string) => {
-    setJcNumber(value);
-    getJcDescription(value);
-    setValue("jcNumber", value);
+ const handleJcNumberChange = (value: string) => {
+  setJcNumber(value);
+  setValue("jcNumber", value);
+
+  // find matching description from jcList
+  const found = jcList.find((item) => item.JobCardNumber === value);
+  if (found) {
+    setJcDescription(found.JobDescription);
+    getJcDescription(value, found.JobDescription);
+  } else {
     setJcDescription("");
-  };
+    getJcDescription(value, "");
+  }
+};
 
-  const handleJcDescriptionChange = (value: string) => {
-    setJcDescription(value);
-    setValue("jcDescription", value);
-    // getAllJobCardData(jcNumber, value);
-    setQuantity("");
-    setMetarsOfRuns("");
-  };
+// when selecting JC Description
+const handleJcDescriptionChange = (value: string) => {
+  setJcDescription(value);
+  setValue("jcDescription", value);
 
+  // find matching JC number from jcList
+  const found = jcList.find((item) => item.JobDescription === value);
+  if (found) {
+    setJcNumber(found.JobCardNumber);
+    getJcDescription(found.JobCardNumber, value);
+  } else {
+    setJcNumber("");
+    getJcDescription("", value);
+  }
+};
   const handleJobDateChange = (value: Date | undefined) => {
     setJobbcardDate(value);
     setValue("jobDate", value);
@@ -540,7 +581,7 @@ const JobCard: React.FC = () => {
       const payload = {
         WorkOrderNo: generatorJCNO || "",
         SONo: soNo || "",
-        SODate: soDT || "",
+        SODate: soDT?.toLocaleDateString() || "",
         Date: jobbcardDate?.toLocaleDateString() || "",
         Shift: shift || "",
         JobDescription: jcNumber || "",
@@ -1032,7 +1073,19 @@ const JobCard: React.FC = () => {
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
                     {jcAllData.ArtworkNo}
                   </td>
-                 
+                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
+                    Winding Direction
+                  </td>
+                  <td
+                    className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
+                    colSpan={3}
+                  >
+                    <img
+                      className="winding-image"
+                      src={getWindingImagePath(jcAllData.WindingDirection)}
+                      alt="Winding Image"
+                  />
+                  </td>
                 </tr>
                 
 
@@ -1494,7 +1547,11 @@ const JobCard: React.FC = () => {
                     className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
                     colSpan={3}
                   >
-                    {windingDirection}
+                  <img
+                      className="winding-image"
+                      src={getWindingImagePath(jcAllData.WindingDirection)}
+                      alt="Winding Image"
+                  />
                   </td>
                 </tr>
                 <tr>
@@ -1561,6 +1618,7 @@ const JobCard: React.FC = () => {
                     {jcAllData.ArtworkNo}
                   </td>
                 </tr>
+                
                 <tr>
                   <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
                     QC Sign
@@ -1814,49 +1872,59 @@ const JobCard: React.FC = () => {
                                 onChange={(date) => setSODT(date)}
                               />
                           </div>
-                          <div className="space-y-2">
-                            <Label
-                              className={
-                                errors.jcNumber || jcDescriptionErr ? "text-destructive" : ""
-                              }
-                            >
-                              Job Control Description  <span className="text-destructive">*</span>
-                            </Label>
-                            <CustomDropdown
-                              options={jcNumberOption}
-                              value={jcNumber}
-                              onValueChange={handleJcNumberChange}
-                              placeholder="Select Job Control Description"
-                              searchPlaceholder="Search JC Description..."
-                              emptyText="No JC Description found"
-                              allowCustomValue
-                              onCustomValueChange={handleCustomValueChange(
-                                "jcNumber"
-                              )}
-                              
-                            />
-                            {(errors.jcNumber || jcDescriptionErr) && (
-                              <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="text-sm text-destructive"
-                              >
-                                {errors.jcNumber?.message  || `Plz Select the Dropdown !!!`}
-                              </motion.p>
-                            )}
-                          </div>
-                          
+                        {/* JC Description Dropdown */}
+<div className="space-y-2">
+  <Label className={errors.jcDescription ? "text-destructive" : ""}>
+    Job Control Description <span className="text-destructive">*</span>
+  </Label>
+  <CustomDropdown
+    options={jcList.map((item) => ({
+      value: item.JobDescription,
+      label: item.JobDescription,
+    }))}
+    value={jcDescription}
+    onValueChange={handleJcDescriptionChange}
+    placeholder="Select Job Control Description"
+    searchPlaceholder="Search JC Description..."
+    emptyText="No JC Description found"
+  />
+  {errors.jcDescription && (
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-sm text-destructive"
+    >
+      {errors.jcDescription?.message || "Please select a description"}
+    </motion.p>
+  )}
+</div>
 
-                          <div className="space-y-2">
-                            <Label>Job Control Number</Label>
-                            <Input
-                              value={jcAllData.JobCardNumber ? jcAllData.JobCardNumber : ''}
-                              // onChange={(e) => setJcDescription(e.target.value)}
-                              placeholder="Enter Job Control Number"
-                              disabled
-                            />
-                          
-                          </div>
+{/* JC Number Dropdown */}
+<div className="space-y-2">
+  <Label className={errors.jcNumber ? "text-destructive" : ""}>
+    Job Control Number <span className="text-destructive">*</span>
+  </Label>
+  <CustomDropdown
+    options={jcList.map((item) => ({
+      value: item.JobCardNumber,
+      label: item.JobCardNumber,
+    }))}
+    value={jcNumber}
+    onValueChange={handleJcNumberChange}
+    placeholder="Select Job Control Number"
+    searchPlaceholder="Search JC Number..."
+    emptyText="No JC Number found"
+  />
+  {errors.jcNumber && (
+    <motion.p
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="text-sm text-destructive"
+    >
+      {errors.jcNumber?.message || "Please select a JC number"}
+    </motion.p>
+  )}
+</div>
 
                           <div className="space-y-2">
                             <Label

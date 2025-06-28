@@ -724,14 +724,20 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                   <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
                     {selectedJobCard.ArtworkNo}
                   </td>
-                  <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
-                    Winding Direction
-                  </td>
-                  <td className="border border-gray-800 px-2 py-1 w-1/6 font-semibold">
-                    {selectedJobCard.WindingDirection
-                      ? selectedJobCard.WindingDirection
-                      : ""}
-                  </td>
+                     <td className="border border-gray-800 font-bold px-2 py-1 w-1/6 bg-gray-100">
+                        Winding Direction
+                      </td>
+                      <td
+                        className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
+                        colSpan={3}
+                      >
+                        <img
+                          className="winding-image"
+                          src={getWindingImagePath(selectedJobCard.WindingDirection)}
+                          alt="Winding Image"
+                      />
+                      </td>
+    
                 </tr>
 
                 <tr>
@@ -1011,7 +1017,11 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                     className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
                     colSpan={3}
                   >
-                    {selectedJobCard.WindingDirection}
+                    <img
+                     className="winding-image"
+                     src={getWindingImagePath(selectedJobCard.WindingDirection)}
+                     alt="Winding Image"
+                 />
                   </td>
                 </tr>
                 <tr>
@@ -1184,7 +1194,11 @@ const JobCardPreviewDialog = ({ selectedJobCard, isPreviewOpen, setIsPreviewOpen
                     className="border border-gray-800 px-2 py-1 w-1/6 font-semibold"
                     colSpan={3}
                   >
-                    {selectedJobCard.WindingDirection ||  ""}
+                  <img
+                     className="winding-image"
+                     src={getWindingImagePath(selectedJobCard.WindingDirection)}
+                     alt="Winding Image"
+                 />
                   </td>
                 </tr>
                 <tr>

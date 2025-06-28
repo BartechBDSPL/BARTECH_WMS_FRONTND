@@ -266,7 +266,7 @@ const QcReport = () => {
       const doc = new jsPDF("l", "mm", "a4");
       const columns = [
         { header: "Serial No", dataKey: "serial_no" },
-        { header: "Trans Serial No", dataKey: "TransSerialNo" },
+        { header: "GRN No", dataKey: "TransSerialNo" },
         { header: "Voucher No", dataKey: "voucher_no" },
         { header: "Party Name", dataKey: "party_name" },
         { header: "Product Code", dataKey: "product_code" },
@@ -623,7 +623,7 @@ const QcReport = () => {
                   <TableRow>
                     <TableHead>No.</TableHead>
                     <TableCell>Serial No</TableCell>
-                    <TableHead>Trans Serial No</TableHead>
+                    <TableHead>GRN No</TableHead>
                     <TableHead>Voucher No</TableHead>
                     <TableHead>Party Name</TableHead>
                     <TableHead>Product Code</TableHead>
