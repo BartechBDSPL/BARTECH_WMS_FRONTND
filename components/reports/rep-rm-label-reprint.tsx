@@ -95,7 +95,7 @@ const RMReprintLabelPrintingReport = () => {
   const formattedData = reportData.map((item) => ({
     "Row No": item.CountRow,
     "ID": item.id,
-    "Transaction Serial No": item.trans_serialno,
+    "GRN No": item.trans_serialno,
     "Serial No": item.serial_no,
     "Voucher No": item.voucher_no,
     "Party Name": item.party_name,
@@ -208,7 +208,7 @@ const RMReprintLabelPrintingReport = () => {
       
       const columns = [
         { header: 'Row No', dataKey: 'CountRow' },
-        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
+        { header: 'GRN No', dataKey: 'trans_serialno' },
         { header: 'Serial No', dataKey: 'serial_no' },
         { header: 'Voucher No', dataKey: 'voucher_no' },
         { header: 'Party Name', dataKey: 'party_name' },
@@ -361,12 +361,12 @@ const RMReprintLabelPrintingReport = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor='transSerialNo'>Transaction Serial No</Label>
+              <Label htmlFor='transSerialNo'>GRN No</Label>
               <Input 
                 id="transSerialNo"
                 value={transSerialNo} 
                 onChange={(e) => setTransSerialNo(e.target.value)} 
-                placeholder='Enter Transaction Serial No'
+                placeholder='Enter GRN No'
               />
             </div>
             
@@ -491,7 +491,7 @@ const RMReprintLabelPrintingReport = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>No</TableHead>
-                    <TableHead>Transaction Serial No</TableHead>
+                    <TableHead>GRN No</TableHead>
                     <TableHead>Serial No</TableHead>
                     <TableHead>Voucher No</TableHead>
                     <TableHead>Party Name</TableHead>

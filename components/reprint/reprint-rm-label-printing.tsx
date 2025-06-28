@@ -474,13 +474,13 @@ const ReprintRMLabelPrinting: React.FC = () => {
               />
             </div>
             <div>
-              <Label htmlFor="transSerialNo">Transaction Serial No</Label>
+              <Label htmlFor="transSerialNo">GRN No</Label>
               <Input
                 id="transSerialNo"
                 name="transSerialNo"
                 value={formData.transSerialNo}
                 onChange={handleInputChange}
-                placeholder="Enter transaction serial no"
+                placeholder="Enter GRN no"
               />
             </div>
             <div>
@@ -661,7 +661,7 @@ const ReprintRMLabelPrinting: React.FC = () => {
                         />
                       </TableHead>
                       <TableHead>Sr No</TableHead>
-                      <TableHead>Trans Serial No</TableHead>
+                      <TableHead>GRN No</TableHead>
                       <TableHead>Voucher No</TableHead>
                       <TableHead>Party Name</TableHead>
                       <TableHead>Product Code</TableHead>
