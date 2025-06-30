@@ -191,7 +191,7 @@ const RMPickingReport = () => {
       
       const columns = [
         { header: 'Serial No', dataKey: 'serial_no' },
-        { header: 'Trans Serial No', dataKey: 'trans_serialno' },
+        { header: 'GRN No', dataKey: 'trans_serialno' },
         { header: 'Job Card No', dataKey: 'work_orderno' },
         { header: 'Product Code', dataKey: 'product_code' },
         { header: 'Product Name', dataKey: 'product_name' },

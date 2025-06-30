@@ -261,7 +261,7 @@ const RMReprintLabelPrintingReport = () => {
         },
         columnStyles: {
           0: { cellWidth: 12 }, // Row No
-          1: { cellWidth: 18 }, // Trans Serial No
+          1: { cellWidth: 18 }, // GRN No
           2: { cellWidth: 15 }, // Serial No
           3: { cellWidth: 18 }, // Voucher No
           4: { cellWidth: 20 }, // Party Name

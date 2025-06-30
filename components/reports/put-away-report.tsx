@@ -213,7 +213,7 @@ const PutAwayReport = () => {
 
       const columns = [
         { header: "Serial No", dataKey: "serial_no" },
-        { header: "Trans Serial No", dataKey: "trans_serialno" },
+        { header: "GRN No", dataKey: "trans_serialno" },
         { header: "Product Code", dataKey: "product_code" },
         { header: "Party Name", dataKey: "party_name" },
         { header: "Voucher No", dataKey: "voucher_no" },
@@ -336,11 +336,11 @@ const PutAwayReport = () => {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Trans SerialNo</Label>
+              <Label htmlFor="customerName">GRN No</Label>
               <Input
                 value={transSerialNo}
                 onChange={(e) => setTransSerialNo(e.target.value)}
-                placeholder=" Enter Trans SerialNo"
+                placeholder=" Enter GRN No"
               />
             </div>
             <div className="space-y-2">
@@ -564,7 +564,7 @@ const PutAwayReport = () => {
                   <TableRow>
                     <TableHead>No.</TableHead>
                     <TableHead>Serial No</TableHead>
-                    <TableHead>Trans Serial No</TableHead>
+                    <TableHead>GRN No</TableHead>
                     <TableHead>Product Code</TableHead>
                     <TableHead>Party Name</TableHead>
                     <TableHead>Voucher No</TableHead>

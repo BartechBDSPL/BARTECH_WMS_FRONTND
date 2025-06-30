@@ -89,7 +89,7 @@ const webAccessOptions = [
 
 const hhtAccessOptions = [
   { label:"Quality Check", value: "1_1" },
-  { label:"Palletization", value: "1_2" },
+  // { label:"Palletization", value: "1_2" },
   { label:"Material Inward", value: "1_3" },
   { label:"Put Away", value: "1_4" },
   { label:"Internal Movement", value: "1_5" },
@@ -98,6 +98,7 @@ const hhtAccessOptions = [
   { label:"RM Production Return", value: "1_8" },
   { label:"RM Warehouse Receive", value: "1_9" },
   { label:"Reports", value: "1_10" },
+  { label:"Printer Settings", value: "1_11" },
 ]
 
 // const desktopAccessOptions = [

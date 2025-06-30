@@ -384,11 +384,11 @@ const QcReport = () => {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="customerName">Trans SerialNo</Label>
+              <Label htmlFor="customerName">GRN No</Label>
               <Input
                 value={transSerialNo}
                 onChange={(e) => setTransSerialNo(e.target.value)}
-                placeholder=" Enter Trans SerialNo"
+                placeholder="GRN No"
               />
             </div>
             <div className="space-y-2">
